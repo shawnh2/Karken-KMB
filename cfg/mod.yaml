@@ -1,0 +1,42 @@
+# Configures for modeling and parsing.
+
+ATTR_ID: id
+ATTR_UNIT: u
+ATTR_TITLE: name
+ATTR_START: head
+ATTR_ARG_CLS: c
+
+ATTR_START_VALUE: head
+ATTR_UNIT_VALUE_CON: constraints
+ATTR_UNIT_VALUE_ACT: activations
+ATTR_UNIT_VALUE_INT: initializers
+ATTR_UNIT_VALUE_REG: regularizers
+ATTR_ARG_CLS_VALUE_ID: id
+ATTR_ARG_CLS_VALUE_STR: str
+ATTR_ARG_CLS_VALUE_NUM: num
+ATTR_ARG_CLS_VALUE_SEQ: seq  # Including list, tuple.
+ATTR_ARG_CLS_VALUE_BOL: bool
+
+TAG_VNM: var
+TAG_CLS: class
+TAG_ARGS: args
+TAG_MODE: mode
+TAG_UNIT: unit
+TAG_MODEL: model
+TAG_LAYER: layer
+TAG_PLACEHOLDER: ph
+
+TAG_LAYER_SRC: layers
+TAG_MODEL_SRC: models
+
+TAG_MODE_VALUE_IO: IO
+TAG_MODE_VALUE_CA: CA
+TAG_MODE_VALUE_AC: AC
+TAG_MODEL_CLS_VALUE: Model
+
+L_TAG_INPUT: input
+M_TAG_INPUT: inputs
+L_TAG_OUTPUT: output
+M_TAG_OUTPUT: outputs
+
+IO_SPLIT: ;

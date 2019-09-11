@@ -1,0 +1,45 @@
+# Configures for the node.py database.
+
+# Name of tables
+TNAME_LAYER: layers
+TNAME_ARGS_INHERIT: inh_args
+TNAME_ARGS_ORIGINAL: org_args
+TNAME_ARGS_CANDIDATE: box_args
+
+# Structure of tables
+## layers:
+## ID NAME INFO ORI_ARGS INH_ARGS SORT
+
+## inh_args:
+## ID NAME INIT TYPE INFO
+# ID in inh_args
+ID_FOR_LAYER_ARGS_INH: 1
+
+## org_args:
+## ID NOTE NAME INIT TYPE INFO BOX
+
+## box_args:
+## ID VALUES
+# ID in box_args
+ID_FOR_LAYER_ARGS_CAN_INIT: 1  # initializer
+ID_FOR_LAYER_ARGS_CAN_ACTS: 2  # activations
+ID_FOR_LAYER_ARGS_CAN_DFOR: 3  # data format
+ID_FOR_LAYER_ARGS_CAN_MERG: 4  # merge mode
+ID_FOR_LAYER_ARGS_CAN_PAD1: 5  # padding: valid, same, causal
+ID_FOR_LAYER_ARGS_CAN_PAD2: 6  # padding: valid, same
+ID_FOR_LAYER_ARGS_CAN_INTP: 7  # interpolation
+ID_FOR_LAYER_ARGS_CAN_IMPM: 8  # GRU - implementation mode
+
+# Other details
+SPLIT_SIGN: ;
+#             Operation valid                              Saving valid
+TYPE_VALID: - str     #                                    str
+            - num     #                                    num
+            - unit-i  # initializer                        id
+            - unit-r  # regularizer                        id
+            - unit-a  # activations                        id
+            - unit-c  # constraints                        id
+            - bool    #                                    bool
+            - seq     # including list ang tuple           seq
+            - ph      # placeholder                        id
+            - layer   #                                    id
