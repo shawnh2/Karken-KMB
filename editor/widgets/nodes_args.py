@@ -104,7 +104,7 @@ class NodeArgTypeItem(QStandardItem):
 
     def __init__(self, args):
         type_string = args
-        type_color, raw_type_name  = type_color_map(type_string)
+        type_color, raw_type_name = type_color_map(type_string)
 
         super().__init__(raw_type_name)
         self.setBackground(QColor(type_color))
