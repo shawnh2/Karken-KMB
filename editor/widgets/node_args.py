@@ -35,12 +35,12 @@ class KMBNodesArgsMenu(QTableView):
         self.set_args(inherit, id_string)
 
     def set_args(self, inherit, id_string):
-        self.args = ArgsItemModel(id_string, inherit)
+        self.args = ArgItemsPreviewModel(id_string, inherit)
         self.args.set_all_args()
         self.setModel(self.args)
 
 
-class ArgsItemModel(QStandardItemModel):
+class ArgItemsPreviewModel(QStandardItemModel):
 
     def __init__(self, id_string: str, inherit: str):
         super().__init__()

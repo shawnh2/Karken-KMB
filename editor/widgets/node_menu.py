@@ -9,8 +9,7 @@ from PyQt5.QtGui import QIcon
 DATABASE = sqlite3.connect('lib/node.db')
 CURSOR = DATABASE.cursor()
 
-ICONS_PREFIX = 'editor/icon/'
-ICONS_SUFFIX = '.png'
+NODE_ICON_PATH = 'editor/icon/nodes/{}.png'
 
 
 class KMBNodesMenu(QTabWidget):
@@ -44,8 +43,9 @@ class KMBNodesMenu(QTabWidget):
                 # init tool button
                 tool_button = QToolButton(self)
                 tool_button.setToolTip(io)
+                tool_icon_path = NODE_ICON_PATH.format(nm.lower())
                 self.valid_tool_button(tool_button, nm,
-                                       f'{ICONS_PREFIX}nodes/{s}/{nm.lower()}{ICONS_SUFFIX}')
+                                       tool_icon_path)
                 # add clicked event handler
                 tool_button.clicked.connect(self.clicked_tool_button_handler)
                 # add it in layout
