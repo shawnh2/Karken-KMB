@@ -9,7 +9,7 @@ from PyQt5.QtGui import QIcon
 DATABASE = sqlite3.connect('lib/node.db')
 CURSOR = DATABASE.cursor()
 
-NODE_ICON_PATH = 'editor/icon/nodes/{}.png'
+NODE_ICON_PATH = 'editor/icon/nodesx500/{}.png'
 
 
 class KMBNodesMenu(QTabWidget):

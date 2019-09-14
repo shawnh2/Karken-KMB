@@ -1,14 +1,22 @@
-# Configures for the node.py database.
+# Structure of the node database.
+# It's just for reading, not implement in any file.
 
-# Name of tables
-TNAME_LAYER: layers
+# schemas name
+TNAME_NODES: nodes
 TNAME_ARGS_INHERIT: inh_args
 TNAME_ARGS_ORIGINAL: org_args
 TNAME_ARGS_CANDIDATE: box_args
 
 # Structure of tables
-## layers:
-## ID NAME INFO ORI_ARGS INH_ARGS SORT
+## nodes:
+## ID NAME INFO ORI_ARGS INH_ARGS SORT CATEGORY
+# ID: every node has an unique id.
+# NAME: the name of node.
+# INFO: the information of node.
+# ORI_ARGS: the arguments that are original.
+# INH_ARGS: the arguments that are inherited from super class.
+# SORT: the classification of this node.
+# CATEGORY: the
 
 ## inh_args:
 ## ID NAME INIT TYPE INFO
