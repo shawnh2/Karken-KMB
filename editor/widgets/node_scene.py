@@ -5,16 +5,6 @@ from PyQt5.QtGui import QColor, QPen
 from PyQt5.QtCore import QLine
 
 
-class KMBNodeScene():
-
-    def __init__(self):
-        self.scene_width = 16000
-        self.scene_height = 16000
-        self.graphic_scene = KMBNodeGraphicScene(self)
-        self.graphic_scene.set_graphic_scene(self.scene_width,
-                                             self.scene_height)
-
-
 class KMBNodeGraphicScene(QGraphicsScene):
 
     def __init__(self, scene, parent=None):
@@ -53,13 +43,13 @@ class KMBNodeGraphicScene(QGraphicsScene):
 
         lines_light, lines_dark = [], []
         for x in range(first_left, right, self.grid_size):
-            if (x % (self.grid_size * self.grid_squares) != 0):
+            if x % (self.grid_size * self.grid_squares) != 0:
                 lines_light.append(QLine(x, top, x, bottom))
             else:
                 lines_dark.append(QLine(x, top, x, bottom))
 
         for y in range(first_top, bottom, self.grid_size):
-            if (y % (self.grid_size * self.grid_squares) != 0):
+            if y % (self.grid_size * self.grid_squares) != 0:
                 lines_light.append(QLine(left, y, right, y))
             else:
                 lines_dark.append(QLine(left, y, right, y))

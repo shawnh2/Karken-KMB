@@ -20,8 +20,8 @@ class KMBMainWindow(QMainWindow):
 
         # setting up toolbar
         # register an action
-        self.action_select_mode = QAction(QIcon('editor/icon/arrow.png'), '', self)
-        self.action_hand_mode = QAction(QIcon('editor/icon/hand.png'), '', self)
+        self.action_select_mode = QAction(QIcon('lib/icon/arrow.png'), '', self)
+        self.action_hand_mode = QAction(QIcon('lib/icon/hand.png'), '', self)
         # set action tooltips
         self.action_select_mode.setToolTip("Select")
         self.action_hand_mode.setToolTip("Move")

@@ -1,7 +1,8 @@
 from PyQt5.QtWidgets import QWidget, QHBoxLayout
 from PyQt5.QtCore import Qt
 
-from editor.widgets import (KMBNodesMenu, KMBNodesArgsMenu, KMBNodeGraphicView, KMBNodeScene)
+from editor.widgets import KMBNodesMenu, KMBNodeGraphicView
+from editor.core import KMBNodeScene, KMBArgsMenu
 
 
 class MainNodeEditor(QWidget):
@@ -11,7 +12,7 @@ class MainNodeEditor(QWidget):
 
         # init UI
         self.nodes_menu = KMBNodesMenu(self)
-        self.nodes_args = KMBNodesArgsMenu(self)
+        self.args_menu = KMBArgsMenu(self)
         self.node_scene = KMBNodeScene()
         self.nodes_view = KMBNodeGraphicView(self.node_scene.graphic_scene,
                                              parent.statusBar().showMessage,
@@ -23,13 +24,17 @@ class MainNodeEditor(QWidget):
 
         self.layout.addWidget(self.nodes_menu, alignment=Qt.AlignLeft)
         self.layout.addWidget(self.nodes_view)
-        self.layout.addWidget(self.nodes_args, alignment=Qt.AlignRight)
+        self.layout.addWidget(self.args_menu.panel, alignment=Qt.AlignRight)
 
-        # loading node's args and preview.
+        # preview node's args.
         self.nodes_menu.clicked_tool_button_item.connect(
-            self.nodes_args.load_args_by_name
+            self.args_menu.panel.set_preview_args
         )
         # add the token node to mouse.
         self.nodes_menu.clicked_tool_button_item.connect(
             self.nodes_view.set_editing_mode
+        )
+        # load selected node's args.
+        self.nodes_view.selected_node_item.connect(
+            self.args_menu.panel.set_editing_args
         )

@@ -16,19 +16,28 @@ TNAME_ARGS_CANDIDATE: box_args
 # ORI_ARGS: the arguments that are original.
 # INH_ARGS: the arguments that are inherited from super class.
 # SORT: the classification of this node.
-# CATEGORY: the
+# CATEGORY: the tab of editor's node menu.
 
 ## inh_args:
 ## ID NAME INIT TYPE INFO
+# TYPE: datatype of this arg.
+# INIT: same as the org_args'.
+# OTHER: rest are as same as above.
 # ID in inh_args
 ID_FOR_LAYER_ARGS_INH: 1
+ID_FOR_INITIALIZER_ARGS_INH: 2
 
 ## org_args:
 ## ID NOTE NAME INIT TYPE INFO BOX
+# NOTE: description, because some args have same name.
+# INIT: initial value of this arg.
+#       In DB, <null> means must have value, None means optional.
+#       Finally, <null> will be NoneType, and None will be 'None'.
+# BOX: for some args, they have fixed values, and must choose one of them.
 
 ## box_args:
 ## ID VALUES
-# ID in box_args
+# ID and candidate values in box_args.
 ID_FOR_LAYER_ARGS_CAN_INIT: 1  # initializer
 ID_FOR_LAYER_ARGS_CAN_ACTS: 2  # activations
 ID_FOR_LAYER_ARGS_CAN_DFOR: 3  # data format
@@ -37,17 +46,19 @@ ID_FOR_LAYER_ARGS_CAN_PAD1: 5  # padding: valid, same, causal
 ID_FOR_LAYER_ARGS_CAN_PAD2: 6  # padding: valid, same
 ID_FOR_LAYER_ARGS_CAN_INTP: 7  # interpolation
 ID_FOR_LAYER_ARGS_CAN_IMPM: 8  # GRU - implementation mode
+ID_FOR_LAYER_ARGS_CAN_VSMD: 9  # VarianceScaling - mode
+ID_FOR_LAYER_ARGS_CAN_VSDI: 10 # VarianceScaling - distribution
 
 # Other details
 SPLIT_SIGN: ;
-#             Operation valid                              Saving valid
-TYPE_VALID: - str     #                                    str
-            - num     #                                    num
-            - unit-i  # initializer                        id
-            - unit-r  # regularizer                        id
-            - unit-a  # activations                        id
-            - unit-c  # constraints                        id
-            - bool    #                                    bool
-            - seq     # including list ang tuple           seq
-            - ph      # placeholder                        id
-            - layer   #                                    id
+#             Operation valid                              Saving valid               Appearance
+TYPE_VALID: - str     #                                    str                        String
+            - num     #                                    num                        Number
+            - unit-i  # initializer                        id                         Reference
+            - unit-r  # regularizer                        id                         Reference
+            - unit-a  # activations                        id                         Reference
+            - unit-c  # constraints                        id                         Reference
+            - bool    #                                    bool                       Boolean
+            - seq     # including list ang tuple           seq                        Sequence
+            - ph      # placeholder                        id                         Reference
+            - layer   #                                    id                         Reference

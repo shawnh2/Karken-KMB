@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QApplication
 from PyQt5.QtCore import Qt, QEvent, pyqtSignal
 from PyQt5.QtGui import QPainter, QMouseEvent, QCursor, QPixmap
 
-from editor.widgets.node_item import KMBNodeItem
+from editor.core import KMBNodeItem
 
 
 MOUSE_SELECT = 0
@@ -14,6 +14,7 @@ NODE_SELECTED = 3
 class KMBNodeGraphicView(QGraphicsView):
 
     scene_pos_changed = pyqtSignal(int, int)
+    selected_node_item = pyqtSignal(str)
 
     def __init__(self,
                  graphic_scene: QGraphicsScene,
@@ -152,6 +153,12 @@ class KMBNodeGraphicView(QGraphicsView):
         else:
             item = self.get_item_at_click(event)
             # last_lmb_click_scene_pos = self.mapToScene(event.pos())
+            if item is not None:
+                # if select obj, send its name.
+                self.selected_node_item.emit(item.name)
+            else:
+                # if select no obj, send empty signal to clear arg panel.
+                self.selected_node_item.emit("empty")
 
             if hasattr(item, 'node') or item is None:
                 if event.modifiers() & Qt.ShiftModifier:
@@ -209,5 +216,5 @@ class KMBNodeGraphicView(QGraphicsView):
         node.set_pos(x, y)
 
     def set_edit_node_cursor(self):
-        pix = QPixmap('editor/icon/cross.png').scaled(30, 30)
+        pix = QPixmap('lib/icon/cross.png').scaled(30, 30)
         self.setCursor(QCursor(pix))

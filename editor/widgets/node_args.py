@@ -13,10 +13,11 @@ CURSOR = DATABASE.cursor()
 
 class KMBNodesArgsMenu(QTableView):
 
-    def __init__(self, parent=None):
+    def __init__(self, menu_delegate, parent=None):
         super().__init__(parent)
 
-        self.args = None
+        self.args_model = None
+        self.menu = menu_delegate
         self.head = QHeaderView(Qt.Horizontal, self)
 
         # set the horizontal head
@@ -27,56 +28,93 @@ class KMBNodesArgsMenu(QTableView):
         # set width
         self.setFixedWidth(300)
 
-    def load_args_by_name(self, node_name):
+    @classmethod
+    def load_args_by_name(cls, node_name):
         res = CURSOR.execute('SELECT ORI_ARGS, INH_ARGS FROM '
                              f'nodes WHERE NAME="{node_name}"')
         id_string, inherit = res.fetchone()
+        return id_string, inherit
 
-        self.set_args(inherit, id_string)
+    def set_preview_args(self, node_name):
+        id_string, inherit = self.load_args_by_name(node_name)
+        self.args_model = ArgItemsModel(id_string, inherit, 'view')
+        self.setModel(self.args_model)
 
-    def set_args(self, inherit, id_string):
-        self.args = ArgItemsPreviewModel(id_string, inherit)
-        self.args.set_all_args()
-        self.setModel(self.args)
+    def set_editing_args(self, node_name):
+        id_string, inherit = self.load_args_by_name(node_name)
+        self.args_model = ArgItemsModel(id_string, inherit, 'edit')
+        self.setModel(self.args_model)
+        # add item changed listener.
+        self.args_model.itemChanged.connect(self.menu.collect_change)
 
 
-class ArgItemsPreviewModel(QStandardItemModel):
+class ArgItemsModel(QStandardItemModel):
 
-    def __init__(self, id_string: str, inherit: str):
+    def __init__(self,
+                 id_string: str,
+                 inherit: str,
+                 mode: str):
         super().__init__()
+        assert mode in ('view', 'edit')
+
         self.id_string = id_string
         self.inherit = inherit
-        self.n = 0
+        self.mode = mode
 
-        self.setColumnCount(2)
-        self.setHorizontalHeaderLabels(['Type', 'Argument name'])
+        self.n = 0
+        self.header = []
+
+        # init headers by mode
+        self.init_headers()
+        # init the arg items of menu
+        self.init_arg_items()
+
+    def init_headers(self):
+        if self.mode == 'view':
+            self.setHorizontalHeaderLabels(
+                ('Type',
+                 'Argument name')
+            )
+        else:
+            self.setHorizontalHeaderLabels(
+                ('Argument name',
+                 'Argument value')
+            )
 
     def set_original_args(self):
         split_id = split_args_id(self.id_string)
         for i, id_ in enumerate(split_id):
             res = CURSOR.execute(f'SELECT * FROM org_args WHERE ID={id_}')
-            _, _, arg_name, _, arg_type, arg_info, _ = res.fetchone()
-            # set original args to table
-            arg_name_item = NodeArgNameItem(arg_name,
-                                            mode='org', tool_tip=arg_info)
-            arg_type_item = NodeArgTypeItem(arg_type)
-            self.setItem(i + self.n, 0, arg_type_item)
-            self.setItem(i + self.n, 1, arg_name_item)
+            self.add_item(i + self.n, res.fetchone(), 'org')
 
     def set_inherit_args(self):
         res = CURSOR.execute(f'SELECT * FROM inh_args WHERE ID={self.inherit}')
         for i, arg in enumerate(res.fetchall()):
-            _, arg_name, _, arg_type, arg_info = arg
-            # set inherit args to table
-            arg_name_item = NodeArgNameItem(arg_name,
-                                            mode='inh', tool_tip=arg_info)
-            arg_type_item = NodeArgTypeItem(arg_type)
-            self.setItem(i, 0, arg_type_item)
-            self.setItem(i, 1, arg_name_item)
-            # add into counter
+            self.add_item(i, arg, 'inh')
+            # add counter
             self.n += 1
 
-    def set_all_args(self):
+    def add_item(self, idx, unpack_item, unpack_mode):
+        if unpack_mode == 'inh':
+            # id, name, init, type, info
+            _, arg_name, arg_init, arg_type, arg_info = unpack_item
+        else:  # 'org'
+            # id, note, name, init, type, info, box
+            _, _, arg_name, arg_init, arg_type, arg_info, _ = unpack_item
+
+        arg_name_item = NodeArgNameItem(arg_name,
+                                        mode=unpack_mode,
+                                        tool_tip=arg_info)
+        if self.mode == 'view':
+            arg_type_item = NodeArgTypeItem(arg_type)
+            self.setItem(idx, 0, arg_type_item)
+            self.setItem(idx, 1, arg_name_item)
+        else:  # 'edit'
+            arg_edit_item = NodeArgEditItem(arg_init, arg_name)
+            self.setItem(idx, 0, arg_name_item)
+            self.setItem(idx, 1, arg_edit_item)
+
+    def init_arg_items(self):
         if self.inherit is not None:
             self.set_inherit_args()
         if self.id_string is not None:
@@ -110,3 +148,12 @@ class NodeArgTypeItem(QStandardItem):
         self.setBackground(QColor(type_color))
 
         self.setEditable(False)
+
+
+class NodeArgEditItem(QStandardItem):
+
+    def __init__(self, *args):
+        self.initial_value, self.arg_name = args
+        super().__init__(self.initial_value)
+
+        self.setEditable(True)
