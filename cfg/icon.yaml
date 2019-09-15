@@ -1,0 +1,9 @@
+# Configures for Icon
+
+# for toolbar
+ARROW: 'lib/icon/arrow.png'
+HAND: 'lib/icon/hand.png'
+DELETE: 'lib/icon/delete.png'
+
+# for cursor
+CROSS: 'lib/icon/cross.png'

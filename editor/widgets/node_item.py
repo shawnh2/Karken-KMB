@@ -1,8 +1,7 @@
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsPixmapItem
 from PyQt5.QtGui import QPixmap
 
-
-NODE_ICON_PATH = 'lib/icon/nodesx85/{}.png'
+from cfg import NODE_ICONx85_PATH
 
 
 class KMBNodeGraphicItem(QGraphicsPixmapItem):
@@ -12,7 +11,7 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
 
         self.node = node
         self.name = name
-        self.pix = QPixmap(NODE_ICON_PATH.format(self.name))
+        self.pix = QPixmap(NODE_ICONx85_PATH.format(self.name))
         self.current_pos = None
 
         self.setPixmap(self.pix)

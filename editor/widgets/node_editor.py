@@ -1,8 +1,10 @@
 from PyQt5.QtWidgets import QWidget, QHBoxLayout
 from PyQt5.QtCore import Qt
 
-from editor.widgets import KMBNodesMenu, KMBNodeGraphicView
-from editor.core import KMBNodeScene, KMBArgsMenu
+from editor.widgets.node_menu import KMBNodesMenu
+from editor.widgets.node_view import KMBNodeGraphicView
+from editor.core.scene import KMBNodeScene
+from editor.core.args import KMBArgsMenu
 
 
 class MainNodeEditor(QWidget):

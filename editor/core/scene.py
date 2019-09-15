@@ -1,4 +1,4 @@
-from editor.widgets import KMBNodeGraphicScene
+from editor.widgets.node_scene import KMBNodeGraphicScene
 
 
 class KMBNodeScene():

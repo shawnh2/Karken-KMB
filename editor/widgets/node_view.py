@@ -2,19 +2,21 @@ from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QApplication
 from PyQt5.QtCore import Qt, QEvent, pyqtSignal
 from PyQt5.QtGui import QPainter, QMouseEvent, QCursor, QPixmap
 
-from editor.core import KMBNodeItem
+from editor.core.item import KMBNodeItem
+from cfg import icon
 
 
 MOUSE_SELECT = 0
 MOUSE_MOVE = 1
 MOUSE_EDIT = 2
 NODE_SELECTED = 3
+NODE_DELETE = 4
 
 
 class KMBNodeGraphicView(QGraphicsView):
 
-    scene_pos_changed = pyqtSignal(int, int)
-    selected_node_item = pyqtSignal(str)
+    scene_pos_changed = pyqtSignal(int, int)  # x, y coord
+    selected_node_item = pyqtSignal(str, int)  # name, id
 
     def __init__(self,
                  graphic_scene: QGraphicsScene,
@@ -65,6 +67,9 @@ class KMBNodeGraphicView(QGraphicsView):
         self.current_node_item_name = arg
         self.set_edit_node_cursor()
         self.status_bar_msg(arg + ' is selected now.')
+
+    def set_delete_mode(self):
+        self.mode = NODE_DELETE
 
     # ------------------OVERRIDES--------------------
 
@@ -155,10 +160,10 @@ class KMBNodeGraphicView(QGraphicsView):
             # last_lmb_click_scene_pos = self.mapToScene(event.pos())
             if item is not None:
                 # if select obj, send its name.
-                self.selected_node_item.emit(item.name)
+                self.selected_node_item.emit(item.name, id(item))
             else:
                 # if select no obj, send empty signal to clear arg panel.
-                self.selected_node_item.emit("empty")
+                self.selected_node_item.emit("empty", 0)
 
             if hasattr(item, 'node') or item is None:
                 if event.modifiers() & Qt.ShiftModifier:
@@ -216,5 +221,5 @@ class KMBNodeGraphicView(QGraphicsView):
         node.set_pos(x, y)
 
     def set_edit_node_cursor(self):
-        pix = QPixmap('lib/icon/cross.png').scaled(30, 30)
+        pix = QPixmap(icon['CROSS']).scaled(30, 30)
         self.setCursor(QCursor(pix))

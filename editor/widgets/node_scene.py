@@ -4,6 +4,8 @@ from PyQt5.QtWidgets import QGraphicsScene
 from PyQt5.QtGui import QColor, QPen
 from PyQt5.QtCore import QLine
 
+from cfg import color
+
 
 class KMBNodeGraphicScene(QGraphicsScene):
 
@@ -16,9 +18,9 @@ class KMBNodeGraphicScene(QGraphicsScene):
         self.grid_size = 20
         self.grid_squares = 5
 
-        self._color_background = QColor("#393939")
-        self._color_light = QColor("#2f2f2f")
-        self._color_dark = QColor("#292929")
+        self._color_background = QColor(color['SCENE_BG'])
+        self._color_light = QColor(color['SCENE_LIGHT'])
+        self._color_dark = QColor(color['SCENE_DARK'])
 
         self._pen_light = QPen(self._color_light)
         self._pen_light.setWidth(1)

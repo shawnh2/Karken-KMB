@@ -1,24 +1,24 @@
-import sqlite3
-
 from PyQt5.QtWidgets import QTableView, QHeaderView
 from PyQt5.QtGui import QStandardItemModel, QStandardItem, QColor
 from PyQt5.QtCore import Qt
 
-from lib import split_args_id, type_color_map
-
-
-DATABASE = sqlite3.connect('lib/node.db')
-CURSOR = DATABASE.cursor()
+from lib import type_color_map, DataBase4Args
+from cfg import color
 
 
 class KMBNodesArgsMenu(QTableView):
 
-    def __init__(self, menu_delegate, parent=None):
+    def __init__(self,
+                 menu_delegate,
+                 parent=None):
         super().__init__(parent)
 
-        self.args_model = None
         self.menu = menu_delegate
         self.head = QHeaderView(Qt.Horizontal, self)
+        # link to database
+        self.db_link = DataBase4Args()
+        self.null_model = QStandardItemModel()
+        self.edit_model = {}  # for collection
 
         # set the horizontal head
         self.head.setStretchLastSection(True)
@@ -28,73 +28,89 @@ class KMBNodesArgsMenu(QTableView):
         # set width
         self.setFixedWidth(300)
 
-    @classmethod
-    def load_args_by_name(cls, node_name):
-        res = CURSOR.execute('SELECT ORI_ARGS, INH_ARGS FROM '
-                             f'nodes WHERE NAME="{node_name}"')
-        id_string, inherit = res.fetchone()
-        return id_string, inherit
-
     def set_preview_args(self, node_name):
-        id_string, inherit = self.load_args_by_name(node_name)
-        self.args_model = ArgItemsModel(id_string, inherit, 'view')
-        self.setModel(self.args_model)
+        id_string, inherit = self.db_link.get_args_id(node_name)
+        preview_model = ArgItemsModel(
+            self.db_link, id_string, inherit, 'view'
+        )
+        preview_model.set_preview_model()
+        self.setModel(preview_model)
 
-    def set_editing_args(self, node_name):
-        id_string, inherit = self.load_args_by_name(node_name)
-        self.args_model = ArgItemsModel(id_string, inherit, 'edit')
-        self.setModel(self.args_model)
-        # add item changed listener.
-        self.args_model.itemChanged.connect(self.menu.collect_change)
+    def set_editing_args(self, node_name, node_id):
+        if node_name == 'empty':
+            # set an empty model.
+            self.setModel(self.null_model)
+            return
+
+        if self.edit_model.__contains__(node_id):
+            # load args that already exists.
+            model = self.edit_model[node_id]
+            self.setModel(model)
+        else:
+            # first time make new model.
+            id_string, inherit = self.db_link.get_args_id(node_name)
+            model = ArgItemsModel(
+                self.db_link, id_string, inherit, 'edit'
+            )
+            model.set_editing_model()
+            # then store it and display.
+            self.edit_model[node_id] = model
+            self.setModel(model)
+
+        model.itemChanged.connect(self.modify_model)
+
+    def modify_model(self, item):
+        item.has_changed()
+        item.setText(item.text())
 
 
 class ArgItemsModel(QStandardItemModel):
 
     def __init__(self,
+                 db_link,
                  id_string: str,
                  inherit: str,
                  mode: str):
         super().__init__()
-        assert mode in ('view', 'edit')
 
+        self.db = db_link
         self.id_string = id_string
         self.inherit = inherit
         self.mode = mode
-
         self.n = 0
-        self.header = []
 
-        # init headers by mode
-        self.init_headers()
+        assert self.mode in ('view', 'edit')
+
+    def set_preview_model(self):
+        self.setHorizontalHeaderLabels(('Type', 'Argument name'))
         # init the arg items of menu
-        self.init_arg_items()
+        self.get_args()
 
-    def init_headers(self):
-        if self.mode == 'view':
-            self.setHorizontalHeaderLabels(
-                ('Type',
-                 'Argument name')
-            )
-        else:
-            self.setHorizontalHeaderLabels(
-                ('Argument name',
-                 'Argument value')
-            )
+    def set_editing_model(self):
+        self.setHorizontalHeaderLabels(('Argument name', 'Argument value'))
+        self.get_args()
 
-    def set_original_args(self):
-        split_id = split_args_id(self.id_string)
-        for i, id_ in enumerate(split_id):
-            res = CURSOR.execute(f'SELECT * FROM org_args WHERE ID={id_}')
-            self.add_item(i + self.n, res.fetchone(), 'org')
+    def get_args(self):
+        if self.inherit is not None:
+            self.get_inherit_args()
+        if self.id_string is not None:
+            self.get_original_args()
 
-    def set_inherit_args(self):
-        res = CURSOR.execute(f'SELECT * FROM inh_args WHERE ID={self.inherit}')
-        for i, arg in enumerate(res.fetchall()):
-            self.add_item(i, arg, 'inh')
+    def get_original_args(self):
+        for i, arg in self.db.get_org_args(self.id_string):
+            self.feed_item(i + self.n, arg, 'org')
+
+    def get_inherit_args(self):
+        for i, arg in self.db.get_inh_args(self.inherit):
+            self.feed_item(i, arg, 'inh')
             # add counter
             self.n += 1
 
-    def add_item(self, idx, unpack_item, unpack_mode):
+    def feed_item(self,
+                  idx,
+                  unpack_item,
+                  unpack_mode):
+
         if unpack_mode == 'inh':
             # id, name, init, type, info
             _, arg_name, arg_init, arg_type, arg_info = unpack_item
@@ -102,26 +118,21 @@ class ArgItemsModel(QStandardItemModel):
             # id, note, name, init, type, info, box
             _, _, arg_name, arg_init, arg_type, arg_info, _ = unpack_item
 
-        arg_name_item = NodeArgNameItem(arg_name,
-                                        mode=unpack_mode,
-                                        tool_tip=arg_info)
+        arg_name_item = ArgNameItem(arg_name,
+                                    mode=unpack_mode,
+                                    tool_tip=arg_info)
+        arg_type_item = ArgTypeItem(arg_type)
         if self.mode == 'view':
-            arg_type_item = NodeArgTypeItem(arg_type)
             self.setItem(idx, 0, arg_type_item)
             self.setItem(idx, 1, arg_name_item)
-        else:  # 'edit'
-            arg_edit_item = NodeArgEditItem(arg_init, arg_name)
+        else:
+            arg_init_item = ArgEditItem(arg_init,
+                                        tool_tip=arg_type_item.raw_type_name)
             self.setItem(idx, 0, arg_name_item)
-            self.setItem(idx, 1, arg_edit_item)
-
-    def init_arg_items(self):
-        if self.inherit is not None:
-            self.set_inherit_args()
-        if self.id_string is not None:
-            self.set_original_args()
+            self.setItem(idx, 1, arg_init_item)
 
 
-class NodeArgNameItem(QStandardItem):
+class ArgNameItem(QStandardItem):
 
     def __init__(self, *args, mode=None, tool_tip=None):
         super().__init__(*args)
@@ -130,30 +141,36 @@ class NodeArgNameItem(QStandardItem):
         self.mode = mode
 
         if self.mode == 'inh':
-            self.setBackground(QColor('#BFEFFF'))
+            self.setBackground(QColor(color['INH_ARG']))
         else:
-            self.setBackground(QColor('#FFE4B5'))
+            self.setBackground(QColor(color['ORG_ARG']))
 
         self.setEditable(False)
         self.setToolTip(tool_tip)
 
 
-class NodeArgTypeItem(QStandardItem):
+class ArgTypeItem(QStandardItem):
 
     def __init__(self, args):
-        type_string = args
-        type_color, raw_type_name = type_color_map(type_string)
+        self.type_string = args
+        self.type_color, self.raw_type_name = \
+            type_color_map(self.type_string)
 
-        super().__init__(raw_type_name)
-        self.setBackground(QColor(type_color))
+        super().__init__(self.raw_type_name)
+        self.setBackground(QColor(self.type_color))
 
         self.setEditable(False)
 
 
-class NodeArgEditItem(QStandardItem):
+class ArgEditItem(QStandardItem):
 
-    def __init__(self, *args):
-        self.initial_value, self.arg_name = args
-        super().__init__(self.initial_value)
+    def __init__(self, *args, tool_tip=None):
+        super().__init__(*args)
+        self.is_changed = False
 
         self.setEditable(True)
+        self.setToolTip(tool_tip)
+
+    def has_changed(self):
+        self.is_changed = True
+        self.setBackground(QColor(color['CHA_ARG']))

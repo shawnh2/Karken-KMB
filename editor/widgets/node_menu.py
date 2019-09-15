@@ -5,11 +5,11 @@ from PyQt5.QtWidgets import (QVBoxLayout, QToolButton, QGroupBox, QToolBox,
 from PyQt5.QtCore import QSize, Qt, pyqtSignal
 from PyQt5.QtGui import QIcon
 
+from cfg import NODE_ICONx500_PATH
+
 
 DATABASE = sqlite3.connect('lib/node.db')
 CURSOR = DATABASE.cursor()
-
-NODE_ICON_PATH = 'lib/icon/nodesx500/{}.png'
 
 
 class KMBNodesMenu(QTabWidget):
@@ -43,7 +43,7 @@ class KMBNodesMenu(QTabWidget):
                 # init tool button
                 tool_button = QToolButton(self)
                 tool_button.setToolTip(io)
-                tool_icon_path = NODE_ICON_PATH.format(nm.lower())
+                tool_icon_path = NODE_ICONx500_PATH.format(nm.lower())
                 self.valid_tool_button(tool_button, nm,
                                        tool_icon_path)
                 # add clicked event handler
