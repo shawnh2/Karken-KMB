@@ -1,2 +1,2 @@
-*.py linguist-languague=python
-*.yaml linguist-language=yaml
+*.py linguist-languague=Python
+*.yaml linguist-language=YAML
