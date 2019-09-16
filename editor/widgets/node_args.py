@@ -36,32 +36,35 @@ class KMBNodesArgsMenu(QTableView):
         preview_model.set_preview_model()
         self.setModel(preview_model)
 
-    def set_editing_args(self, node_name, node_id):
-        if node_name == 'empty':
+    def set_editing_args(self, node_id):
+        if node_id == 0:
             # set an empty model.
             self.setModel(self.null_model)
             return
-
-        if self.edit_model.__contains__(node_id):
-            # load args that already exists.
+        # load args model that already exists.
+        try:
             model = self.edit_model[node_id]
             self.setModel(model)
-        else:
-            # first time make new model.
-            id_string, inherit = self.db_link.get_args_id(node_name)
-            model = ArgItemsModel(
-                self.db_link, id_string, inherit, 'edit'
-            )
-            model.set_editing_model()
-            # then store it and display.
-            self.edit_model[node_id] = model
-            self.setModel(model)
+            model.itemChanged.connect(self.modify_item)
+        except KeyError:
+            self.setModel(self.null_model)
 
-        model.itemChanged.connect(self.modify_model)
-
-    def modify_model(self, item):
+    def modify_item(self, item):
         item.has_changed()
         item.setText(item.text())
+
+    def commit_node(self, node_name, node_id):
+        # first time make new model.
+        id_string, inherit = self.db_link.get_args_id(node_name)
+        model = ArgItemsModel(
+            self.db_link, id_string, inherit, 'edit'
+        )
+        model.set_editing_model()
+        # then store it but don't display.
+        self.edit_model[node_id] = model
+
+    def delete_node(self, node_id):
+        self.edit_model.__delitem__(node_id)
 
 
 class ArgItemsModel(QStandardItemModel):

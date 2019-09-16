@@ -32,11 +32,19 @@ class MainNodeEditor(QWidget):
         self.nodes_menu.clicked_tool_button_item.connect(
             self.args_menu.panel.set_preview_args
         )
-        # add the token node to mouse.
+        # set editing mode, now can add nodes.
         self.nodes_menu.clicked_tool_button_item.connect(
             self.nodes_view.set_editing_mode
+        )
+        # add new node and store it.
+        self.nodes_view.add_new_node_item.connect(
+            self.args_menu.panel.commit_node
         )
         # load selected node's args.
         self.nodes_view.selected_node_item.connect(
             self.args_menu.panel.set_editing_args
+        )
+        # ready to delete selected node.
+        self.nodes_view.selected_delete_node.connect(
+            self.args_menu.panel.delete_node
         )

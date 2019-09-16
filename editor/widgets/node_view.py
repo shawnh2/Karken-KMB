@@ -16,7 +16,9 @@ NODE_DELETE = 4
 class KMBNodeGraphicView(QGraphicsView):
 
     scene_pos_changed = pyqtSignal(int, int)  # x, y coord
-    selected_node_item = pyqtSignal(str, int)  # name, id
+    add_new_node_item = pyqtSignal(str, int)  # name, id
+    selected_node_item = pyqtSignal(int)  # id or state
+    selected_delete_node = pyqtSignal(int)
 
     def __init__(self,
                  graphic_scene: QGraphicsScene,
@@ -24,7 +26,7 @@ class KMBNodeGraphicView(QGraphicsView):
                  parent=None):
         super().__init__(parent)
 
-        self.scene = graphic_scene
+        self.gr_scene = graphic_scene
         self.status_bar_msg = status_bar_msg
         self.mode = MOUSE_SELECT
         self.last_scene_mouse_pos = None
@@ -37,7 +39,7 @@ class KMBNodeGraphicView(QGraphicsView):
         self.zoom_clamp = True
 
         self.init_ui()
-        self.setScene(self.scene)
+        self.setScene(self.gr_scene)
 
     def init_ui(self):
         self.setRenderHints(QPainter.Antialiasing |
@@ -70,6 +72,7 @@ class KMBNodeGraphicView(QGraphicsView):
 
     def set_delete_mode(self):
         self.mode = NODE_DELETE
+        self.setCursor(Qt.CrossCursor)
 
     # ------------------OVERRIDES--------------------
 
@@ -119,7 +122,7 @@ class KMBNodeGraphicView(QGraphicsView):
         if self.zoom > self.zoom_range[1]:
             self.zoom, clamped = self.zoom_range[1], True
 
-        # set the scene scale
+        # set the gr_scene scale
         if not clamped or self.zoom_clamp is False:
             self.scale(zoom_factor, zoom_factor)
 
@@ -155,15 +158,13 @@ class KMBNodeGraphicView(QGraphicsView):
         if self.mode == MOUSE_EDIT:
             self.add_selected_node_item()
 
+        elif self.mode == NODE_DELETE:
+            item = self.get_item_at_click(event)
+            self.del_selected_node_item(item)
+
         else:
             item = self.get_item_at_click(event)
-            # last_lmb_click_scene_pos = self.mapToScene(event.pos())
-            if item is not None:
-                # if select obj, send its name.
-                self.selected_node_item.emit(item.name, id(item))
-            else:
-                # if select no obj, send empty signal to clear arg panel.
-                self.selected_node_item.emit("empty", 0)
+            self.set_selected_node_item(item)
 
             if hasattr(item, 'node') or item is None:
                 if event.modifiers() & Qt.ShiftModifier:
@@ -214,11 +215,29 @@ class KMBNodeGraphicView(QGraphicsView):
         return obj
 
     def add_selected_node_item(self):
+        # add new node
         x, y = int(self.last_scene_mouse_pos.x()),\
                int(self.last_scene_mouse_pos.y())
-        node = KMBNodeItem(self.scene,
+        node = KMBNodeItem(self.gr_scene,
                            self.current_node_item_name)
+        self.add_new_node_item.emit(node.gr_name, id(node.gr_node))
         node.set_pos(x, y)
+
+    def set_selected_node_item(self, item):
+        # get args of node and edit it
+        if item is not None:
+            # if select obj, send its name.
+            self.selected_node_item.emit(id(item))
+        else:
+            # if select no obj, send empty signal to clear arg panel.
+            self.selected_node_item.emit(0)
+
+    def del_selected_node_item(self, item):
+        # del selected node
+        if item is not None:
+            self.selected_delete_node.emit(id(item))
+            # after deleting stored model, then node graphic.
+            self.gr_scene.removeItem(item)
 
     def set_edit_node_cursor(self):
         pix = QPixmap(icon['CROSS']).scaled(30, 30)
