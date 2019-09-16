@@ -68,7 +68,7 @@ class KMBNodeGraphicView(QGraphicsView):
         self.mode = MOUSE_EDIT
         self.current_node_item_name = arg
         self.set_edit_node_cursor()
-        self.status_bar_msg(arg + ' is selected now.')
+        self.status_bar_msg(f'Select: {arg} item.')
 
     def set_delete_mode(self):
         self.mode = NODE_DELETE
@@ -221,6 +221,7 @@ class KMBNodeGraphicView(QGraphicsView):
         node = KMBNodeItem(self.gr_scene,
                            self.current_node_item_name)
         self.add_new_node_item.emit(node.gr_name, id(node.gr_node))
+        self.status_bar_msg(f'Add: {self.current_node_item_name} node.')
         node.set_pos(x, y)
 
     def set_selected_node_item(self, item):
@@ -228,6 +229,7 @@ class KMBNodeGraphicView(QGraphicsView):
         if item is not None:
             # if select obj, send its name.
             self.selected_node_item.emit(id(item))
+            self.status_bar_msg(f'Select: {item.name} node.')
         else:
             # if select no obj, send empty signal to clear arg panel.
             self.selected_node_item.emit(0)
@@ -237,6 +239,7 @@ class KMBNodeGraphicView(QGraphicsView):
         if item is not None:
             self.selected_delete_node.emit(id(item))
             # after deleting stored model, then node graphic.
+            self.status_bar_msg(f'Delete: {item.name} node.')
             self.gr_scene.removeItem(item)
 
     def set_edit_node_cursor(self):

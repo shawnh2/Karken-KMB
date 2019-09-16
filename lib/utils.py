@@ -43,5 +43,7 @@ def type_color_map(datatype: str):
         return '#CDC9C9', 'Boolean'
     elif datatype == 'num;seq':
         return '#FF83FA', 'Num/Seq'
+    elif datatype == 'mut':
+        return '#FFFFFF', 'Mutable'
     else:
         return '#000000', 'Unknown'

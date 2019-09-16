@@ -25,7 +25,6 @@ TNAME_ARGS_CANDIDATE: box_args
 # OTHER: rest are as same as above.
 # ID in inh_args
 ID_FOR_LAYER_ARGS_INH: 1
-ID_FOR_INITIALIZER_ARGS_INH: 2
 
 ## org_args:
 ## ID NOTE NAME INIT TYPE INFO BOX
