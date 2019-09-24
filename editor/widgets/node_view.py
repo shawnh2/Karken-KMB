@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QApplication
 from PyQt5.QtCore import Qt, QEvent, pyqtSignal
 from PyQt5.QtGui import QPainter, QMouseEvent, QCursor, QPixmap
 
-from editor.core.item import KMBNodeItem
+from editor.core.wrap_item import KMBNodeItem
 from cfg import icon
 
 

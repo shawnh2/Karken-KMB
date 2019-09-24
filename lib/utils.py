@@ -1,3 +1,4 @@
+from cfg import color
 
 def split_args_id(id_string: str) -> list:
     """
@@ -27,23 +28,23 @@ def type_color_map(datatype: str):
     """
 
     if datatype == 'str':
-        return '#00BFFF', 'String'
+        return color['DTC_str'], 'String'
     elif ('unit-i' in datatype or
           'unit-a' in datatype or
           'unit-c' in datatype or
           'unit-r' in datatype or
           datatype == 'layer' or
           datatype == 'ph'):
-        return '#54FF9F', 'Reference'
+        return color['DTC_ref'], 'Reference'
     elif datatype == 'num':
-        return '#FF7256', 'Number'
+        return color['DTC_num'], 'Number'
     elif datatype == 'seq':
-        return '#FFB6C1', 'Sequence'
+        return color['DTC_seq'], 'Sequence'
     elif datatype == 'bool':
-        return '#CDC9C9', 'Boolean'
+        return color['DTC_bool'], 'Boolean'
     elif datatype == 'num;seq':
-        return '#FF83FA', 'Num/Seq'
+        return color['DTC_numseq'], 'Num/Seq'
     elif datatype == 'mut':
-        return '#FFFFFF', 'Mutable'
+        return color['DTC_mut'], 'Mutable'
     else:
-        return '#000000', 'Unknown'
+        return color['DTC_unknown'], 'Unknown'

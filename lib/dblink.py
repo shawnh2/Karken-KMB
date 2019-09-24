@@ -29,3 +29,9 @@ class DataBase4Args:
                 f'SELECT * FROM org_args WHERE ID={id_}'
             )
             yield i, res.fetchone()
+
+    def get_box_args(self, box_id: int):
+        res = self.CURSOR.execute(
+            f'SELECT "VALUES" FROM box_args WHERE ID={box_id}'
+        )
+        return res.fetchone()[0]

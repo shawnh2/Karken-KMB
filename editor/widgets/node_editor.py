@@ -3,8 +3,8 @@ from PyQt5.QtCore import Qt
 
 from editor.widgets.node_menu import KMBNodesMenu
 from editor.widgets.node_view import KMBNodeGraphicView
-from editor.core.scene import KMBNodeScene
-from editor.core.args import KMBArgsMenu
+from editor.core.wrap_scene import KMBNodeScene
+from editor.core.wrap_args import KMBArgsMenu
 
 
 class MainNodeEditor(QWidget):

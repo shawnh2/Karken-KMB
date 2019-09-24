@@ -1,3 +1,0 @@
-*.py linguist-language=Python
-*.yaml linguist-language=YAML
-*.db linguist-language=SQL
