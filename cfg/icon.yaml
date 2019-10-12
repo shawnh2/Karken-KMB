@@ -1,5 +1,8 @@
 # Configures for Icon
 
+# for main window
+KMBICON: 'lib/icon/kmb@x1024.png'
+
 # for toolbar
 ARROW: 'lib/icon/arrow.png'
 HAND: 'lib/icon/hand.png'
@@ -7,3 +10,6 @@ DELETE: 'lib/icon/delete.png'
 
 # for cursor
 CROSS: 'lib/icon/cross.png'
+
+# for default combo box item
+COMBO: 'lib/icon/default.png'

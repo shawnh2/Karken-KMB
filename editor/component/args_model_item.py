@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QComboBox
-from PyQt5.QtGui import QStandardItem, QColor
+from PyQt5.QtGui import QStandardItem, QColor, QIcon
 
-from cfg import color
+from cfg import color, icon
 from lib import type_color_map
 
 
@@ -49,9 +49,11 @@ class ArgEditItem(QStandardItem):
 
 class ArgComboBox(QComboBox):
 
-    def __init__(self, box_args: list, parent=None):
+    def __init__(self, box_args: list, default: str, parent=None):
         super().__init__(parent)
 
         self.addItems(box_args)
+        self.setCurrentText(default)
+        self.setItemIcon(box_args.index(default), QIcon(icon["COMBO"]))
         self.setMaxVisibleItems(7)
         self.setInsertPolicy(QComboBox.InsertAtBottom)

@@ -34,6 +34,7 @@ class KMBMainWindow(QMainWindow):
     def init_ui(self):
         self.setCentralWidget(self.node_editor)
         self.setWindowTitle('Karken: KMB')
+        self.setWindowIcon(QIcon(icon['KMBICON']))
         self.setGeometry(400, 200, 1330, 750)
         self.show()
 

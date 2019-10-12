@@ -1,9 +1,9 @@
 # Configures for Colormap
 
 # for args
-INH_ARG: '#BFEFFF'  # BG for inherit args
-ORG_ARG: '#FFE4B5'  # BG for original args
-ARG_CHANGED: '#FF6666'  # BG for changed args
+INH_ARG: '#CCFFFF'  # BG for inherit args
+ORG_ARG: '#FFFFCC'  # BG for original args
+ARG_CHANGED: '#FFCC99'  # BG for changed args
 
 # for scene
 SCENE_BG: '#393939'
@@ -11,11 +11,11 @@ SCENE_LIGHT: '#2f2f2f'
 SCENE_DARK: '#292929'
 
 # for DataType-Color map
-DTC_str: '#00BFFF'
-DTC_ref: '#54FF9F'
-DTC_num: '#FF7256'
-DTC_seq: '#FFB6C1'
+DTC_str: '#6699CC'
+DTC_ref: '#CCFF99'
+DTC_num: '#FF6666'
+DTC_seq: '#FFCCCC'
 DTC_mut: '#FFFFFF'
-DTC_bool: '#CDC9C9'
+DTC_bool: '#CCCCCC'
 DTC_numseq: '#FF83FA'
 DTC_unknown: '#000000'

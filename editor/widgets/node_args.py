@@ -1,9 +1,10 @@
-from PyQt5.QtWidgets import QTableView, QHeaderView
+from PyQt5.QtWidgets import QTableView, QHeaderView, QCheckBox
 from PyQt5.QtGui import QStandardItemModel
-from PyQt5.QtCore import Qt, QModelIndex
+from PyQt5.QtCore import Qt
 
 from lib import DataBase4Args
 from editor.component.args_model import ArgsPreviewModel, ArgsEditableModel
+from editor.component.args_model_item import ArgComboBox
 
 
 class KMBNodesArgsMenu(QTableView):
@@ -18,7 +19,8 @@ class KMBNodesArgsMenu(QTableView):
         # link to database
         self.db_link = DataBase4Args()
         self.null_model = QStandardItemModel()
-        self.edit_model = {}  # for collection
+        # for collection
+        self.edit_model = {}
 
         # set the horizontal head
         self.head.setStretchLastSection(True)
@@ -44,25 +46,66 @@ class KMBNodesArgsMenu(QTableView):
             model = self.edit_model[node_id]
             self.setModel(model)
             # try to set combo box args
-            # and must do it after setting model
-            # nor the model will cover it again
             if model.combo_args:
-                for row, col, combo in model.combo_args:
-                    index = self.model().index(row, col)
-                    self.setIndexWidget(index, combo)
+                self.add_combobox_cell(model)
+            # try to set check button args
+            if model.check_args:
+                self.add_checkbox_cell(model)
             model.itemChanged.connect(self.modify_item)
         except KeyError:
             self.setModel(self.null_model)
 
+    def add_combobox_cell(self, model):
+        # clean the widgets id, every time click node,
+        # it will generate new ids.
+        model.combo_widgets_id.clear()
+        for row, col, arg_init, args_list, arg_set in model.combo_args:
+            index = self.model().index(row, col)
+            combo = ArgComboBox(args_list, arg_init)
+            # set current new value
+            if arg_set != "placeholder":
+                combo.setCurrentText(arg_set)
+            model.combo_widgets_id.append(id(combo))
+            self.setIndexWidget(index, combo)
+            combo.currentTextChanged.connect(lambda v: self.modify_args(v, combo, model))
+
+    def add_checkbox_cell(self, model):
+        model.check_widgets_id.clear()
+        for row, col, arg_init in model.check_args:
+            index = self.model().index(row, col)
+            check = QCheckBox(arg_init)
+            # initialize the checkbox
+            if arg_init == "True":
+                check.setChecked(True)
+            else:
+                check.setChecked(False)
+            model.check_widgets_id.append(id(check))
+            self.setIndexWidget(index, check)
+            check.clicked.connect(lambda s: self.modify_state(s, model))
+
     def modify_item(self, item):
         item.has_changed()
         item.setText(item.text())
+
+    def modify_args(self, value, combo, model):
+        # set the model's placeholder in combo_args
+        if model.combo_widgets_id.__contains__(id(combo.sender())):
+            idx = model.combo_widgets_id.index(id(combo.sender()))
+            model.reassign_value(idx, value)
+        else:
+            model.reassign_value(-1, value)
+
+    def modify_state(self, state, model):
+        idx = model.check_widgets_id.index(id(self.sender()))
+        model.reassign_state(idx, str(state))
+        self.sender().setText(str(state))
 
     def commit_node(self, node_name, node_id):
         # after adding node in canvas
         # first time make new model.
         id_string, inherit = self.db_link.get_args_id(node_name)
         model = ArgsEditableModel(self.db_link, id_string, inherit)
+        model.name = node_name
         model.get_args()
         # then store it but don't display.
         self.edit_model[node_id] = model

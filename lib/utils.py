@@ -1,5 +1,6 @@
 from cfg import color
 
+
 def split_args_id(id_string: str) -> list:
     """
     Split a string that includes id.
@@ -19,7 +20,7 @@ def split_args_id(id_string: str) -> list:
     return res
 
 
-def type_color_map(datatype: str):
+def type_color_map(datatype: str) -> tuple:
     """
     In arguments menu, using color to represent datatype.
 
@@ -48,3 +49,18 @@ def type_color_map(datatype: str):
         return color['DTC_mut'], 'Mutable'
     else:
         return color['DTC_unknown'], 'Unknown'
+
+
+def reorder_args_box(head, heap: list) -> list:
+    """
+    Set the heap list first value to become head value.
+
+    :param head: the first value want to become.
+    :param heap: where store all the value.
+    :return: a head value first heap (list).
+    """
+
+    assert head in heap
+    head_idx = heap.index(head)
+    heap[0], heap[head_idx] = heap[head_idx], heap[0]
+    return heap
