@@ -1,16 +1,23 @@
-from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QApplication
+from PyQt5.QtWidgets import QGraphicsView, QApplication
 from PyQt5.QtCore import Qt, QEvent, pyqtSignal
 from PyQt5.QtGui import QPainter, QMouseEvent, QCursor, QPixmap
 
-from editor.core.wrap_item import KMBNodeItem
-from cfg import icon
+from editor.graphic.node_edge import KMBGraphicEdge
+from editor.graphic.node_item import KMBNodeGraphicItem
+from editor.wrapper.wrap_item import KMBNodeItem
+from editor.wrapper.warp_edge import KMBEdge
+from cfg import icon, DEBUG
 
 
 MOUSE_SELECT = 0
 MOUSE_MOVE = 1
 MOUSE_EDIT = 2
+
 NODE_SELECTED = 3
 NODE_DELETE = 4
+
+NODE_CONNECT = 5
+EDGE_DRAG = 6
 
 
 class KMBNodeGraphicView(QGraphicsView):
@@ -21,7 +28,7 @@ class KMBNodeGraphicView(QGraphicsView):
     selected_delete_node = pyqtSignal(int)
 
     def __init__(self,
-                 graphic_scene: QGraphicsScene,
+                 graphic_scene,
                  status_bar_msg,
                  parent=None):
         super().__init__(parent)
@@ -59,20 +66,35 @@ class KMBNodeGraphicView(QGraphicsView):
         self.mode = MOUSE_SELECT
         self.setDragMode(QGraphicsView.RubberBandDrag)
         self.setCursor(Qt.ArrowCursor)
+        if DEBUG:
+            print("Now is <select> mode")
 
     def set_movable_mode(self):
         self.mode = MOUSE_MOVE
         self.setDragMode(QGraphicsView.ScrollHandDrag)
+        if DEBUG:
+            print("Now is <move> mode")
 
     def set_editing_mode(self, arg):
         self.mode = MOUSE_EDIT
         self.current_node_item_name = arg
         self.set_edit_node_cursor()
         self.status_bar_msg(f'Select: {arg} item.')
+        if DEBUG:
+            print("Now is <edit> mode")
 
     def set_delete_mode(self):
         self.mode = NODE_DELETE
+        del_icon = QPixmap(icon['TRASH']).scaled(32, 32)
+        self.setCursor(QCursor(del_icon))
+        if DEBUG:
+            print("Now is <delete> mode")
+
+    def set_line_s_mode(self):
+        self.mode = NODE_CONNECT
         self.setCursor(Qt.CrossCursor)
+        if DEBUG:
+            print("Now is <connect-S-line> mode")
 
     # ------------------OVERRIDES--------------------
 
@@ -97,6 +119,11 @@ class KMBNodeGraphicView(QGraphicsView):
             super().mouseMoveEvent(event)
 
     def mouseMoveEvent(self, event):
+        if self.mode == EDGE_DRAG:
+            pos = self.mapToScene(event.pos())
+            self.drag_edge.gr_edge.set_dst(pos.x(), pos.y())
+            self.drag_edge.gr_edge.update()
+
         # emit pos changed signal
         self.last_scene_mouse_pos = self.mapToScene(event.pos())
         self.scene_pos_changed.emit(
@@ -155,18 +182,25 @@ class KMBNodeGraphicView(QGraphicsView):
             self.set_movable_mode()
 
     def left_mouse_button_pressed(self, event):
+        item = self.get_item_at_click(event)
         if self.mode == MOUSE_EDIT:
             self.add_selected_node_item()
 
         elif self.mode == NODE_DELETE:
-            item = self.get_item_at_click(event)
             self.del_selected_node_item(item)
 
+        elif self.mode == NODE_CONNECT:
+            if item is not None:
+                self.mode = EDGE_DRAG
+                self.edge_drag_start(item)
+
+        elif self.mode == EDGE_DRAG:
+            self.edge_drag_end(item)
+
         else:
-            item = self.get_item_at_click(event)
             self.set_selected_node_item(item)
 
-            if hasattr(item, 'node') or item is None:
+            if hasattr(item, 'node') or item is None or isinstance(item, KMBGraphicEdge):
                 if event.modifiers() & Qt.ShiftModifier:
                     event.ignore()
                     fake_event = QMouseEvent(QEvent.MouseButtonPress, event.localPos(), event.screenPos(),
@@ -187,29 +221,36 @@ class KMBNodeGraphicView(QGraphicsView):
 
     def left_mouse_button_released(self, event):
         item = self.get_item_at_click(event)
+        if self.mode == EDGE_DRAG:
+            if item is not None:
+                self.mode = NODE_CONNECT
+                self.edge_drag_end(item)
 
-        if hasattr(item, "node") or item is None:
-            if event.modifiers() & Qt.ShiftModifier:
-                event.ignore()
-                fake_event = QMouseEvent(event.type(), event.localPos(), event.screenPos(),
-                                         Qt.LeftButton, Qt.NoButton,
-                                         event.modifiers() | Qt.ControlModifier)
-                super().mouseReleaseEvent(fake_event)
-                return
-
-        super().mouseReleaseEvent(event)
+        else:
+            if hasattr(item, "node") or item is None or isinstance(item, KMBGraphicEdge):
+                if event.modifiers() & Qt.ShiftModifier:
+                    event.ignore()
+                    fake_event = QMouseEvent(event.type(), event.localPos(), event.screenPos(),
+                                             Qt.LeftButton, Qt.NoButton,
+                                             event.modifiers() | Qt.ControlModifier)
+                    super().mouseReleaseEvent(fake_event)
+                    return
+            super().mouseReleaseEvent(event)
 
     def right_mouse_button_pressed(self, event):
-        pass
+        self.set_select_mode()
 
     def right_mouse_button_released(self, event):
         # it will cancel all the mode and back to select mode.
+        if self.mode == EDGE_DRAG:
+            self.drag_edge.remove()
+            self.drag_edge = None
         self.set_select_mode()
 
     # ------------------UTILS--------------------
 
     def get_item_at_click(self, event):
-        """ Return the object that clicked on. """
+        """ Return the object that clicked on. Could be None or GraphicNodeItem"""
         pos = event.pos()
         obj = self.itemAt(pos)
         return obj
@@ -226,7 +267,7 @@ class KMBNodeGraphicView(QGraphicsView):
 
     def set_selected_node_item(self, item):
         # get args of node and edit it
-        if item is not None:
+        if item is not None and isinstance(item, KMBNodeGraphicItem):
             # if select obj, send its name.
             self.selected_node_item.emit(id(item))
             self.status_bar_msg(f'Select: {item.name} node.')
@@ -245,3 +286,23 @@ class KMBNodeGraphicView(QGraphicsView):
     def set_edit_node_cursor(self):
         pix = QPixmap(icon['CROSS']).scaled(30, 30)
         self.setCursor(QCursor(pix))
+
+    def edge_drag_start(self, item):
+        # pass the wrapper of gr_scene and gr_node
+        self.drag_start_item = item
+        self.drag_edge = KMBEdge(self.gr_scene.scene, item.node, None)
+        if DEBUG:
+            print(f"start dragging edge => {self.drag_edge} at {item}")
+
+    def edge_drag_end(self, item):
+        self.mode = NODE_CONNECT
+
+        if DEBUG:
+            print(f" stop dragging edge => {self.drag_edge} at {item}")
+        # it's outline(dash line), so remove it and add real one
+        self.drag_edge.remove()
+        self.drag_edge = None
+
+        new_edge = KMBEdge(self.gr_scene.scene, self.drag_start_item.node, item.node)
+        if DEBUG:
+            print(f"connect {self.drag_start_item} to {item} with edge => {new_edge}")

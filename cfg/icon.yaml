@@ -1,15 +1,21 @@
 # Configures for Icon
 
 # for main window
-KMBICON: 'lib/icon/kmb@x1024.png'
+WINICON: 'lib/icon/kmb/kmb@winicon.png'
+# for splash screen
+SCREEN: 'lib/icon/kmb/kmb@launchscreen.png'
 
 # for toolbar
-ARROW: 'lib/icon/arrow.png'
-HAND: 'lib/icon/hand.png'
-DELETE: 'lib/icon/delete.png'
+ARROW: 'lib/icon/tools/arrow.png'
+HAND: 'lib/icon/tools/hand.png'
+DELETE: 'lib/icon/tools/delete.png'
+
+SLINE: 'lib/icon/tools/sline.png'
+CLINE: 'lib/icon/tools/cline.png'
 
 # for cursor
-CROSS: 'lib/icon/cross.png'
+CROSS: 'lib/icon/cursor/cross.png'
+TRASH: 'lib/icon/cursor/trash.png'
 
 # for default combo box item
-COMBO: 'lib/icon/default.png'
+COMBO: 'lib/icon/other/default.png'

@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QTableView, QHeaderView, QCheckBox
 from PyQt5.QtGui import QStandardItemModel
 from PyQt5.QtCore import Qt
 
+from cfg import DEBUG
 from lib import DataBase4Args
 from editor.component.args_model import ArgsPreviewModel, ArgsEditableModel
 from editor.component.args_model_item import ArgComboBox
@@ -28,7 +29,7 @@ class KMBNodesArgsMenu(QTableView):
         # hide the vertical head
         self.verticalHeader().setHidden(True)
         # set width
-        self.setFixedWidth(300)
+        self.setMinimumWidth(320)
 
     def set_preview_args(self, node_name):
         id_string, inherit = self.db_link.get_args_id(node_name)
@@ -45,6 +46,8 @@ class KMBNodesArgsMenu(QTableView):
         try:
             model = self.edit_model[node_id]
             self.setModel(model)
+            if DEBUG:
+                print(f"Get and set exist model => {model}")
             # try to set combo box args
             if model.combo_args:
                 self.add_combobox_cell(model)
@@ -86,6 +89,8 @@ class KMBNodesArgsMenu(QTableView):
     def modify_item(self, item):
         item.has_changed()
         item.setText(item.text())
+        if DEBUG:
+            print(f"Argument item has been changed => {item} with '{item.text()}'")
 
     def modify_args(self, value, combo, model):
         # set the model's placeholder in combo_args
@@ -94,11 +99,15 @@ class KMBNodesArgsMenu(QTableView):
             model.reassign_value(idx, value)
         else:
             model.reassign_value(-1, value)
+        if DEBUG:
+            print(f"Argument combobox value changed to => {value}")
 
     def modify_state(self, state, model):
         idx = model.check_widgets_id.index(id(self.sender()))
         model.reassign_state(idx, str(state))
         self.sender().setText(str(state))
+        if DEBUG:
+            print(f"Argument checkbox value changed to => {state}")
 
     def commit_node(self, node_name, node_id):
         # after adding node in canvas
@@ -107,8 +116,13 @@ class KMBNodesArgsMenu(QTableView):
         model = ArgsEditableModel(self.db_link, id_string, inherit)
         model.name = node_name
         model.get_args()
-        # then store it but don't display.
+        # then store it but don't display it.
         self.edit_model[node_id] = model
+        if DEBUG:
+            print(f"Node has been committed => id:{node_id}, name: {node_name}")
 
     def delete_node(self, node_id):
         self.edit_model.__delitem__(node_id)
+        self.setModel(self.null_model)
+        if DEBUG:
+            print(f"Node has been removed => id:{node_id}")

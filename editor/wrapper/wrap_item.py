@@ -1,5 +1,5 @@
-from editor.widgets.node_item import KMBNodeGraphicItem
-from editor.core.serializable import Serializable
+from editor.graphic.node_item import KMBNodeGraphicItem
+from editor.wrapper.serializable import Serializable
 
 
 class KMBNodeItem(Serializable):
@@ -12,8 +12,16 @@ class KMBNodeItem(Serializable):
 
         self.gr_scene.addItem(self.gr_node)
 
+        self.edges = []
+
     def set_pos(self, x, y):
         self.gr_node.set_pos(x, y)
+
+    def add_edge(self, edge):
+        self.edges.append(edge)
+
+    def remove_edge(self, edge):
+        self.edges.remove(edge)
 
     def serialize(self):
         pass

@@ -1,7 +1,6 @@
 import sqlite3
 
-from PyQt5.QtWidgets import (QVBoxLayout, QToolButton, QGroupBox, QToolBox,
-                             QTabWidget)
+from PyQt5.QtWidgets import QVBoxLayout, QToolButton, QGroupBox, QToolBox, QTabWidget
 from PyQt5.QtCore import QSize, Qt, pyqtSignal
 from PyQt5.QtGui import QIcon
 
@@ -25,7 +24,7 @@ class KMBNodesMenu(QTabWidget):
         self.set_toolbox()
         self.addTab(self.layer_tool, "Layers")
         self.addTab(self.other_tool, "Other")
-        self.setFixedWidth(250)
+        self.setMinimumWidth(270)
 
     def set_toolbox(self):
         nodes = {}

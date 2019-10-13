@@ -13,3 +13,12 @@ NODE_ICONx85_PATH = 'lib/icon/nodesx85/{}.png'
 NODE_ICONx500_PATH = 'lib/icon/nodesx500/{}.png'
 with open('cfg/icon.yaml', 'r') as icf:
     icon = yaml.safe_load(icf)
+
+DIRS = {
+    "lt": 1,  # left top
+    "lb": 2,  # left bottom
+    "rt": 3,  # right top
+    "rb": 4   # right bottom
+}
+
+DEBUG = True

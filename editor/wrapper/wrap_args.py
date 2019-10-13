@@ -1,5 +1,5 @@
 from editor.widgets.node_args import KMBNodesArgsMenu
-from editor.core.serializable import Serializable
+from editor.wrapper.serializable import Serializable
 
 
 class KMBArgsMenu(Serializable):
