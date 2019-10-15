@@ -12,16 +12,15 @@ class KMBNodeItem(Serializable):
 
         self.gr_scene.addItem(self.gr_node)
 
-        self.edges = []
+    def __repr__(self):
+        return f"<NodeItem {hex(id(self))}>"
 
     def set_pos(self, x, y):
         self.gr_node.set_pos(x, y)
 
-    def add_edge(self, edge):
-        self.edges.append(edge)
-
-    def remove_edge(self, edge):
-        self.edges.remove(edge)
+    def update_connect_edges(self):
+        for edge in self.gr_scene.scene.edges:
+            edge.update_positions()
 
     def serialize(self):
         pass

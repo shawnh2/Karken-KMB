@@ -46,8 +46,6 @@ class KMBNodesArgsMenu(QTableView):
         try:
             model = self.edit_model[node_id]
             self.setModel(model)
-            if DEBUG:
-                print(f"Get and set exist model => {model}")
             # try to set combo box args
             if model.combo_args:
                 self.add_combobox_cell(model)
@@ -118,11 +116,7 @@ class KMBNodesArgsMenu(QTableView):
         model.get_args()
         # then store it but don't display it.
         self.edit_model[node_id] = model
-        if DEBUG:
-            print(f"Node has been committed => id:{node_id}, name: {node_name}")
 
     def delete_node(self, node_id):
         self.edit_model.__delitem__(node_id)
         self.setModel(self.null_model)
-        if DEBUG:
-            print(f"Node has been removed => id:{node_id}")

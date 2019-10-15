@@ -2,10 +2,11 @@ from PyQt5.QtWidgets import QGraphicsView, QApplication
 from PyQt5.QtCore import Qt, QEvent, pyqtSignal
 from PyQt5.QtGui import QPainter, QMouseEvent, QCursor, QPixmap
 
-from editor.graphic.node_edge import KMBGraphicEdge
 from editor.graphic.node_item import KMBNodeGraphicItem
+from editor.graphic.node_edge import KMBGraphicEdge
 from editor.wrapper.wrap_item import KMBNodeItem
 from editor.wrapper.warp_edge import KMBEdge
+from editor.component.edge_type import KMBGraphicEdgeDirect
 from cfg import icon, DEBUG
 
 
@@ -24,7 +25,7 @@ class KMBNodeGraphicView(QGraphicsView):
 
     scene_pos_changed = pyqtSignal(int, int)  # x, y coord
     add_new_node_item = pyqtSignal(str, int)  # name, id
-    selected_node_item = pyqtSignal(int)  # id or state
+    selected_node_item = pyqtSignal(int)      # id or state
     selected_delete_node = pyqtSignal(int)
 
     def __init__(self,
@@ -194,13 +195,10 @@ class KMBNodeGraphicView(QGraphicsView):
                 self.mode = EDGE_DRAG
                 self.edge_drag_start(item)
 
-        elif self.mode == EDGE_DRAG:
-            self.edge_drag_end(item)
-
         else:
             self.set_selected_node_item(item)
 
-            if hasattr(item, 'node') or item is None or isinstance(item, KMBGraphicEdge):
+            if hasattr(item, 'node') or item is None or isinstance(item, KMBGraphicEdgeDirect):
                 if event.modifiers() & Qt.ShiftModifier:
                     event.ignore()
                     fake_event = QMouseEvent(QEvent.MouseButtonPress, event.localPos(), event.screenPos(),
@@ -222,12 +220,20 @@ class KMBNodeGraphicView(QGraphicsView):
     def left_mouse_button_released(self, event):
         item = self.get_item_at_click(event)
         if self.mode == EDGE_DRAG:
-            if item is not None:
-                self.mode = NODE_CONNECT
+            self.mode = NODE_CONNECT
+            if item is not None and\
+               item is not self.drag_start_item and\
+               not issubclass(item.__class__, KMBGraphicEdge):  # nor it will get an error sometimes
                 self.edge_drag_end(item)
+            else:
+                # if it's nothing then drop this edge
+                if DEBUG:
+                    print(f"[dropped] => {self.drag_edge} cause no connection happened.")
+                self.drag_edge.remove()
+                self.drag_edge = None
 
         else:
-            if hasattr(item, "node") or item is None or isinstance(item, KMBGraphicEdge):
+            if hasattr(item, "node") or item is None or isinstance(item, KMBGraphicEdgeDirect):
                 if event.modifiers() & Qt.ShiftModifier:
                     event.ignore()
                     fake_event = QMouseEvent(event.type(), event.localPos(), event.screenPos(),
@@ -238,14 +244,15 @@ class KMBNodeGraphicView(QGraphicsView):
             super().mouseReleaseEvent(event)
 
     def right_mouse_button_pressed(self, event):
-        self.set_select_mode()
-
-    def right_mouse_button_released(self, event):
         # it will cancel all the mode and back to select mode.
         if self.mode == EDGE_DRAG:
             self.drag_edge.remove()
             self.drag_edge = None
         self.set_select_mode()
+
+    def right_mouse_button_released(self, event):
+        # self.set_select_mode()
+        pass
 
     # ------------------UTILS--------------------
 
@@ -253,6 +260,8 @@ class KMBNodeGraphicView(QGraphicsView):
         """ Return the object that clicked on. Could be None or GraphicNodeItem"""
         pos = event.pos()
         obj = self.itemAt(pos)
+        if DEBUG and obj is not None:
+            print(f"[CLICK] at {obj}")
         return obj
 
     def add_selected_node_item(self):
@@ -262,6 +271,7 @@ class KMBNodeGraphicView(QGraphicsView):
         node = KMBNodeItem(self.gr_scene,
                            self.current_node_item_name)
         self.add_new_node_item.emit(node.gr_name, id(node.gr_node))
+        self.gr_scene.scene.add_node(node)
         self.status_bar_msg(f'Add: {self.current_node_item_name} node.')
         node.set_pos(x, y)
 
@@ -278,10 +288,16 @@ class KMBNodeGraphicView(QGraphicsView):
     def del_selected_node_item(self, item):
         # del selected node
         if item is not None:
-            self.selected_delete_node.emit(id(item))
-            # after deleting stored model, then node graphic.
-            self.status_bar_msg(f'Delete: {item.name} node.')
-            self.gr_scene.removeItem(item)
+            if isinstance(item, KMBNodeGraphicItem):
+                self.selected_delete_node.emit(id(item))
+                # after deleting stored model, then node graphic.
+                self.status_bar_msg(f'Delete: {item.name} node.')
+                self.gr_scene.removeItem(item)
+                self.gr_scene.scene.remove_node(item.node)
+            elif issubclass(item.__class__, KMBGraphicEdge):
+                self.status_bar_msg("Delete: one edge.")
+                self.gr_scene.removeItem(item)
+                self.gr_scene.scene.remove_edge(item.edge)
 
     def set_edit_node_cursor(self):
         pix = QPixmap(icon['CROSS']).scaled(30, 30)
@@ -292,17 +308,21 @@ class KMBNodeGraphicView(QGraphicsView):
         self.drag_start_item = item
         self.drag_edge = KMBEdge(self.gr_scene.scene, item.node, None)
         if DEBUG:
-            print(f"start dragging edge => {self.drag_edge} at {item}")
+            print(f"[start dragging edge] => {self.drag_edge} at {item}")
 
     def edge_drag_end(self, item):
         self.mode = NODE_CONNECT
-
         if DEBUG:
-            print(f" stop dragging edge => {self.drag_edge} at {item}")
+            print(f"[stop dragging edge] => {self.drag_edge} at {item}")
+
+        new_edge = KMBEdge(self.gr_scene.scene, self.drag_start_item.node, item.node)
+        if not new_edge.store():
+            self.gr_scene.removeItem(new_edge.gr_edge)
+            if DEBUG:
+                print(f"[dropped] => cause appear same edge {self.drag_edge}")
+        else:
+            if DEBUG:
+                print(f"[connect] {self.drag_start_item} to {item} with edge => {new_edge}")
         # it's outline(dash line), so remove it and add real one
         self.drag_edge.remove()
         self.drag_edge = None
-
-        new_edge = KMBEdge(self.gr_scene.scene, self.drag_start_item.node, item.node)
-        if DEBUG:
-            print(f"connect {self.drag_start_item} to {item} with edge => {new_edge}")

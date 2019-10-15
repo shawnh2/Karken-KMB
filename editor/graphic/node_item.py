@@ -22,8 +22,21 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         self.setFlag(QGraphicsItem.ItemIsMovable)
 
     def __str__(self):
-        return f"<KMBNodeGrItem at {hex(id(self))}>"
+        return f"<NodeGrItem {hex(id(self))}>"
+
+    def __repr__(self):
+        return f"<NodeGrItem {hex(id(self))}>"
 
     def set_pos(self, x, y):
         dis = self.width / 2
         self.setPos(x - dis, y - dis)
+
+    def mouseMoveEvent(self, event):
+        super().mouseMoveEvent(event)
+        # update selected node and its edge
+        for node in self.scene().scene.nodes:
+            if node.gr_node.isSelected():
+                node.update_connect_edges()
+
+    def mouseReleaseEvent(self, event):
+        super().mouseReleaseEvent(event)

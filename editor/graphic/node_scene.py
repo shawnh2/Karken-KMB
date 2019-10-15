@@ -12,7 +12,7 @@ class KMBNodeGraphicScene(QGraphicsScene):
     def __init__(self, scene, parent=None):
         super().__init__(parent)
 
-        self.scene = scene
+        self.scene = scene  # the wrapper of itself
 
         # settings
         self.grid_size = 20

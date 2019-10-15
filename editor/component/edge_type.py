@@ -14,6 +14,9 @@ class KMBGraphicEdgeDirect(KMBGraphicEdge):
         path.lineTo(self.pos_dst[0], self.pos_dst[1])
         return path
 
+    def __str__(self):
+        return f"<DirectLine {hex(id(self))}>"
+
 
 class KMBGraphicEdgeBezier(KMBGraphicEdge):
 
@@ -29,8 +32,8 @@ class KMBGraphicEdgeBezier(KMBGraphicEdge):
         cpy_s = 0
         cpy_d = 0
 
-        if self.edge.start_socket is not None:
-            sspos = self.edge.start_socket.position
+        if self.edge.start_item is not None:
+            sspos = 1#self.edge.start_item.position
 
             if (s[0] > d[0] and sspos in (DIRS["rt"], DIRS["rb"])) or\
                (s[0] < d[0] and sspos in (DIRS["lb"], DIRS["lt"])):
@@ -46,3 +49,6 @@ class KMBGraphicEdgeBezier(KMBGraphicEdge):
         path = QPainterPath(QPointF(self.pos_src[0], self.pos_src[1]))
         path.cubicTo(s[0] + cpx_s, s[1] + cpy_s, d[0] + cpx_d, d[1] + cpy_d, self.pos_dst[0], self.pos_dst[1])
         return path
+
+    def __str__(self):
+        return f"<CurveLine {hex(id(self))}>"
