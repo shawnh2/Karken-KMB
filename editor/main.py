@@ -17,11 +17,20 @@ class KMBMainWindow(QMainWindow):
         self.toolbar = self.addToolBar('Toolbar')
 
         # register actions in toolbar
+        # ------
+        self.action_new = QAction(QIcon(icon['NEW']), '', self)
+        self.action_open = QAction(QIcon(icon['OPEN']), '', self)
+        self.action_save = QAction(QIcon(icon['SAVE']), '', self)
+        self.action_export = QAction(QIcon(icon['EXPORT']), '', self)
+        # ------
         self.action_select = QAction(QIcon(icon['ARROW']), '', self)
         self.action_hand = QAction(QIcon(icon['HAND']), '', self)
+        # ------
         self.action_delete = QAction(QIcon(icon['DELETE']), '', self)
-        self.action_line_s = QAction(QIcon(icon['SLINE']), '', self)
-        self.action_line_c = QAction(QIcon(icon['CLINE']), '', self)
+        self.action_edge_direct = QAction(QIcon(icon['SLINE']), '', self)
+        self.action_edge_curve = QAction(QIcon(icon['CLINE']), '', self)
+        # ------
+        self.action_about = QAction(QIcon(icon['ABOUT']), '', self)
         self.set_toolbar_tooltip()
         self.set_toolbar_actions()
         self.set_toolbar_trigger()
@@ -54,24 +63,35 @@ class KMBMainWindow(QMainWindow):
 
     def set_toolbar_tooltip(self):
         # set action tooltips
-        self.action_select.setToolTip("Select")
-        self.action_hand.setToolTip("Move")
+        self.action_new.setToolTip("Create(Ctrl+N)")
+        self.action_open.setToolTip("Open(Ctrl+O)")
+        self.action_save.setToolTip("Save(Ctrl+S)")
+        self.action_export.setToolTip("Export(Ctrl+E)")
+        self.action_select.setToolTip("Select(V)")
+        self.action_hand.setToolTip("Move(M)")
         self.action_delete.setToolTip("Delete")
-        self.action_line_s.setToolTip("Connect (Straight)")
-        self.action_line_c.setToolTip("Connect (Curve)")
+        self.action_edge_direct.setToolTip("Connect Direct(D)")
+        self.action_edge_curve.setToolTip("Connect Curve(C)")
+        self.action_about.setToolTip("About")
 
     def set_toolbar_actions(self):
         # file operation
+        self.toolbar.addAction(self.action_new)
+        self.toolbar.addAction(self.action_open)
+        self.toolbar.addAction(self.action_save)
+        self.toolbar.addAction(self.action_export)
         self.toolbar.addSeparator()
         # tool operation
         self.toolbar.addAction(self.action_select)
         self.toolbar.addAction(self.action_hand)
         self.toolbar.addSeparator()
         # line operation
-        self.toolbar.addAction(self.action_line_s)
-        self.toolbar.addAction(self.action_line_c)
+        self.toolbar.addAction(self.action_edge_direct)
+        self.toolbar.addAction(self.action_edge_curve)
         self.toolbar.addAction(self.action_delete)
         self.toolbar.addSeparator()
+        # others
+        self.toolbar.addAction(self.action_about)
 
     def set_toolbar_trigger(self):
         # add triggered function
@@ -86,10 +106,12 @@ class KMBMainWindow(QMainWindow):
             self.node_editor.nodes_view.set_delete_mode
         )
 
-        self.action_line_s.triggered.connect(
-            self.node_editor.nodes_view.set_line_s_mode
+        self.action_edge_direct.triggered.connect(
+            self.node_editor.nodes_view.set_edge_direct_mode
         )
-        self.action_line_c.triggered.connect(print)
+        self.action_edge_curve.triggered.connect(
+            self.node_editor.nodes_view.set_edge_curve_mode
+        )
 
     def update_xy_pos(self, x: int, y: int):
         pos = f'POS:(x={x: 5}, y={y: 5})'

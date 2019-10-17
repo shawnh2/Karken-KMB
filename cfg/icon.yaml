@@ -6,12 +6,19 @@ WINICON: 'lib/icon/kmb/kmb@winicon.png'
 SCREEN: 'lib/icon/kmb/kmb@launchscreen.png'
 
 # for toolbar
+NEW: 'lib/icon/tools/new.png'
+OPEN: 'lib/icon/tools/open.png'
+SAVE: 'lib/icon/tools/save.png'
+EXPORT: 'lib/icon/tools/export.png'
+
 ARROW: 'lib/icon/tools/arrow.png'
 HAND: 'lib/icon/tools/hand.png'
 DELETE: 'lib/icon/tools/delete.png'
 
 SLINE: 'lib/icon/tools/sline.png'
 CLINE: 'lib/icon/tools/cline.png'
+
+ABOUT: 'lib/icon/tools/about.png'
 
 # for cursor
 CROSS: 'lib/icon/cursor/cross.png'

@@ -10,6 +10,10 @@ SCENE_BG: '#393939'
 SCENE_LIGHT: '#2f2f2f'
 SCENE_DARK: '#292929'
 
+# for edge
+EDGE: '#000000'
+EDGE_SEL: '#FF0033'
+
 # for DataType-Color map
 DTC_str: '#6699CC'
 DTC_ref: '#CCFF99'

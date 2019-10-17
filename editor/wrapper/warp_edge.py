@@ -1,17 +1,27 @@
 from editor.component.edge_type import KMBGraphicEdgeDirect, KMBGraphicEdgeBezier
 from editor.wrapper.serializable import Serializable
+from cfg import EDGE_CURVES, EDGE_DIRECT
 
 
 class KMBEdge(Serializable):
 
-    def __init__(self, scene, start_item, end_item=None, edge_type=1):
+    def __init__(self, scene, start_item, end_item, edge_type):
         super().__init__()
         self.scene = scene  # the wrapper of gr-scene
 
         self.start_item = start_item
         self.end_item = end_item
         self.edge_type = edge_type
-        self.set_edge_type()
+
+        if self.edge_type == EDGE_DIRECT:
+            self.gr_edge = KMBGraphicEdgeDirect(self)
+        elif self.edge_type == EDGE_CURVES:
+            self.gr_edge = KMBGraphicEdgeBezier(self)
+        # add edge on graphic scene
+        self.scene.graphic_scene.addItem(self.gr_edge)
+
+        if self.start_item is not None:
+            self.update_positions()
 
     def __str__(self):
         return f"<Edge {hex(id(self))}>"
@@ -26,15 +36,6 @@ class KMBEdge(Serializable):
             # and return the state
             return True
         return False
-
-    def set_edge_type(self):
-        self.gr_edge = KMBGraphicEdgeDirect(self)
-        #self.gr_edge = KMBGraphicEdgeBezier(self)
-        # add edge on graphic scene
-        self.scene.graphic_scene.addItem(self.gr_edge)
-
-        if self.start_item is not None:
-            self.update_positions()
 
     def update_positions(self):
         patch = self.start_item.gr_node.width / 2

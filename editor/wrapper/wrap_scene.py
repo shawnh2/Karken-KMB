@@ -27,30 +27,32 @@ class KMBNodeScene(Serializable):
     def add_edge(self, edge):
         self.edges.append(edge)
         if DEBUG:
-            print("[E_ADD_%d]" % self.edges.__len__(), self.edges)
+            print("*[E_ADD_%d]" % len(self.edges), self.edges)
 
     def remove_edge(self, edge):
         self.edges.remove(edge)
         if DEBUG:
-            print("[E_DEL_%d]" % self.edges.__len__(), self.edges)
+            print("*[E_DEL_%d]" % len(self.edges), self.edges)
 
     def add_node(self, node):
         self.nodes.append(node)
         if DEBUG:
-            print("[N_ADD_%d]" % self.nodes.__len__(), self.nodes)
+            print("*[N_ADD_%d]" % len(self.nodes), self.nodes)
 
     def remove_node(self, node):
         self.nodes.remove(node)
         self._remove_relative_edges(node)
         if DEBUG:
-            print("[N_DEL_%d]" % self.nodes.__len__(), self.nodes)
+            print("*[N_DEL_%d]" % len(self.nodes), self.nodes)
 
     def _remove_relative_edges(self, node):
         # removing node also remove edge that connected to it.
-        for edge in self.edges:
-            if edge.start_item == node or edge.end_item == node:
-                self.remove_edge(edge)
+        edges = self.edges.copy()
+        # cannot iter self.edges directly that's ...
+        for edge in edges:
+            if node == edge.start_item or node == edge.end_item:
                 self.graphic_scene.removeItem(edge.gr_edge)
+                self.remove_edge(edge)  # ... because of this
 
     def serialize(self):
         pass

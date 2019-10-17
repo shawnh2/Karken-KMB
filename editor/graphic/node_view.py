@@ -7,7 +7,7 @@ from editor.graphic.node_edge import KMBGraphicEdge
 from editor.wrapper.wrap_item import KMBNodeItem
 from editor.wrapper.warp_edge import KMBEdge
 from editor.component.edge_type import KMBGraphicEdgeDirect
-from cfg import icon, DEBUG
+from cfg import icon, DEBUG, EDGE_CURVES, EDGE_DIRECT
 
 
 MOUSE_SELECT = 0
@@ -37,6 +37,7 @@ class KMBNodeGraphicView(QGraphicsView):
         self.gr_scene = graphic_scene
         self.status_bar_msg = status_bar_msg
         self.mode = MOUSE_SELECT
+        self.edge_type = None
         self.last_scene_mouse_pos = None
         self.current_node_item_name = None
 
@@ -91,11 +92,19 @@ class KMBNodeGraphicView(QGraphicsView):
         if DEBUG:
             print("Now is <delete> mode")
 
-    def set_line_s_mode(self):
+    def set_edge_direct_mode(self):
         self.mode = NODE_CONNECT
+        self.edge_type = EDGE_DIRECT
         self.setCursor(Qt.CrossCursor)
         if DEBUG:
-            print("Now is <connect-S-line> mode")
+            print("Now is <connect-direct> mode")
+
+    def set_edge_curve_mode(self):
+        self.mode = NODE_CONNECT
+        self.edge_type = EDGE_CURVES
+        self.setCursor(Qt.CrossCursor)
+        if DEBUG:
+            print("Now is <connect-curve> mode")
 
     # ------------------OVERRIDES--------------------
 
@@ -155,7 +164,22 @@ class KMBNodeGraphicView(QGraphicsView):
             self.scale(zoom_factor, zoom_factor)
 
     def keyPressEvent(self, event):
-        pass
+        """
+        key V: select
+        key M: move
+        key D: direct
+        key C: curve
+        """
+        if event.key() == Qt.Key_V:
+            self.set_select_mode()
+        elif event.key() == Qt.Key_M:
+            self.set_movable_mode()
+        elif event.key() == Qt.Key_D:
+            self.set_edge_direct_mode()
+        elif event.key() == Qt.Key_C:
+            self.set_edge_curve_mode()
+        else:
+            super().keyPressEvent(event)
 
     # ------------------EVENT--------------------
 
@@ -306,7 +330,7 @@ class KMBNodeGraphicView(QGraphicsView):
     def edge_drag_start(self, item):
         # pass the wrapper of gr_scene and gr_node
         self.drag_start_item = item
-        self.drag_edge = KMBEdge(self.gr_scene.scene, item.node, None)
+        self.drag_edge = KMBEdge(self.gr_scene.scene, item.node, None, self.edge_type)
         if DEBUG:
             print(f"[start dragging edge] => {self.drag_edge} at {item}")
 
@@ -315,7 +339,7 @@ class KMBNodeGraphicView(QGraphicsView):
         if DEBUG:
             print(f"[stop dragging edge] => {self.drag_edge} at {item}")
 
-        new_edge = KMBEdge(self.gr_scene.scene, self.drag_start_item.node, item.node)
+        new_edge = KMBEdge(self.gr_scene.scene, self.drag_start_item.node, item.node, self.edge_type)
         if not new_edge.store():
             self.gr_scene.removeItem(new_edge.gr_edge)
             if DEBUG:
