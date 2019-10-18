@@ -8,7 +8,7 @@ class KMBEdge(Serializable):
     def __init__(self, scene, start_item, end_item, edge_type):
         super().__init__()
         self.scene = scene  # the wrapper of gr-scene
-
+        # start/end item also is the wrapper of gr-node
         self.start_item = start_item
         self.end_item = end_item
         self.edge_type = edge_type

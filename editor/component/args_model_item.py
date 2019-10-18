@@ -13,8 +13,10 @@ class ArgNameItem(QStandardItem):
 
         if mode == 'inh':
             self.setBackground(QColor(color['INH_ARG']))
-        else:
+        elif mode == 'org':
             self.setBackground(QColor(color['ORG_ARG']))
+        else:
+            self.setBackground(QColor(color['CUS_ARG']))
 
         self.setEditable(False)
         self.setToolTip(tooltip)
@@ -38,6 +40,7 @@ class ArgEditItem(QStandardItem):
     def __init__(self, tooltip, *args):
         super().__init__(*args)
         self.is_changed = False
+        self.tag = 0
 
         self.setEditable(True)
         self.setToolTip(tooltip)
@@ -45,6 +48,15 @@ class ArgEditItem(QStandardItem):
     def has_changed(self):
         self.is_changed = True
         self.setBackground(QColor(color['ARG_CHANGED']))
+
+class ArgMarkItem(QStandardItem):
+    """ The container of item which is other widget. """
+
+    def __init__(self, tag, *args):
+        super().__init__(*args)
+        self.tag = tag
+        self.setEditable(False)
+        self.setEnabled(False)
 
 
 class ArgComboBox(QComboBox):

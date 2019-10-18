@@ -13,8 +13,11 @@ EXPORT: 'lib/icon/tools/export.png'
 
 ARROW: 'lib/icon/tools/arrow.png'
 HAND: 'lib/icon/tools/hand.png'
-DELETE: 'lib/icon/tools/delete.png'
+UNDO: 'lib/icon/tools/undo.png'
+REDO: 'lib/icon/tools/redo.png'
 
+DELETE: 'lib/icon/tools/delete.png'
+NOTE: 'lib/icon/tools/note.png'
 SLINE: 'lib/icon/tools/sline.png'
 CLINE: 'lib/icon/tools/cline.png'
 

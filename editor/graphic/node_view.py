@@ -252,7 +252,7 @@ class KMBNodeGraphicView(QGraphicsView):
             else:
                 # if it's nothing then drop this edge
                 if DEBUG:
-                    print(f"[dropped] => {self.drag_edge} cause no connection happened.")
+                    print(f"[dropped] => {self.drag_edge} cause nothing happened.")
                 self.drag_edge.remove()
                 self.drag_edge = None
 
@@ -330,7 +330,9 @@ class KMBNodeGraphicView(QGraphicsView):
     def edge_drag_start(self, item):
         # pass the wrapper of gr_scene and gr_node
         self.drag_start_item = item
-        self.drag_edge = KMBEdge(self.gr_scene.scene, item.node, None, self.edge_type)
+        self.drag_edge = KMBEdge(self.gr_scene.scene,
+                                 item.node,
+                                 None, self.edge_type)
         if DEBUG:
             print(f"[start dragging edge] => {self.drag_edge} at {item}")
 
@@ -339,14 +341,17 @@ class KMBNodeGraphicView(QGraphicsView):
         if DEBUG:
             print(f"[stop dragging edge] => {self.drag_edge} at {item}")
 
-        new_edge = KMBEdge(self.gr_scene.scene, self.drag_start_item.node, item.node, self.edge_type)
+        new_edge = KMBEdge(self.gr_scene.scene,
+                           self.drag_start_item.node,
+                           item.node,
+                           self.edge_type)
         if not new_edge.store():
             self.gr_scene.removeItem(new_edge.gr_edge)
             if DEBUG:
-                print(f"[dropped] => cause appear same edge {self.drag_edge}")
+                print(f"[dropped] => {self.drag_edge} cause invalid connection.")
         else:
             if DEBUG:
-                print(f"[connect] {self.drag_start_item} to {item} with edge => {new_edge}")
+                print(f"[connect] {self.drag_start_item} ~ {item} => {new_edge}")
         # it's outline(dash line), so remove it and add real one
         self.drag_edge.remove()
         self.drag_edge = None

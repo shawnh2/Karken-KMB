@@ -23,7 +23,11 @@ class KMBNodeItem(Serializable):
             edge.update_positions()
 
     def serialize(self):
-        pass
+        return {
+            "tag": "layer",
+            "id": id(self.gr_node),
+            "class": self.gr_name,
+        }
 
     def deserialize(self):
         pass

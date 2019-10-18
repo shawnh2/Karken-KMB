@@ -20,7 +20,7 @@ class KMBNodesArgsMenu(QTableView):
         # link to database
         self.db_link = DataBase4Args()
         self.null_model = QStandardItemModel()
-        # for collection
+        # for collection the ArgsEditableModel
         self.edit_model = {}
 
         # set the horizontal head
@@ -33,7 +33,11 @@ class KMBNodesArgsMenu(QTableView):
 
     def set_preview_args(self, node_name):
         id_string, inherit = self.db_link.get_args_id(node_name)
-        preview_model = ArgsPreviewModel(self.db_link, id_string, inherit)
+        preview_model = ArgsPreviewModel(
+            db_link=self.db_link,
+            node_name=node_name,
+            node_id=id_string,
+            inherit=inherit)
         preview_model.get_args()
         self.setModel(preview_model)
 
@@ -111,9 +115,14 @@ class KMBNodesArgsMenu(QTableView):
         # after adding node in canvas
         # first time make new model.
         id_string, inherit = self.db_link.get_args_id(node_name)
-        model = ArgsEditableModel(self.db_link, id_string, inherit)
+        model = ArgsEditableModel(
+            db_link=self.db_link,
+            node_name=node_name,
+            node_id=id_string,
+            inherit=inherit
+        )
         model.name = node_name
-        model.get_args()
+        model.get_args(add_custom_args=True)
         # then store it but don't display it.
         self.edit_model[node_id] = model
 

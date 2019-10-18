@@ -1,18 +1,21 @@
 from PyQt5.QtGui import QStandardItemModel
 
-from editor.component.args_model_item import ArgNameItem, ArgTypeItem, ArgEditItem
+from editor.component.args_model_item import (ArgNameItem, ArgTypeItem,
+                                              ArgEditItem, ArgMarkItem)
 
 
 class ArgsSuperModel(QStandardItemModel):
 
     def __init__(self,
                  db_link,
-                 id_string: str,
+                 node_name: str,
+                 node_id_string: str,
                  inherit: str):
         super().__init__()
 
         self.db = db_link
-        self.id_string = id_string
+        self.node_name = node_name
+        self.id_string = node_id_string
         self.inherit = inherit
         self.n = 0
 
@@ -30,10 +33,20 @@ class ArgsSuperModel(QStandardItemModel):
         for i, arg in self.db.get_org_args(self.id_string):
             self.feed_original_item(i + self.n, arg)
 
-    def get_args(self):
+    def _get_custom_args(self):
+        name = ArgNameItem('var',
+                           'The name of this variable.',
+                           'var_name')
+        value = ArgEditItem("String", self.node_name.lower())
+        self.set_col_items(self.n, name, value)
+        self.n += 1
+
+    def get_args(self, add_custom_args=False):
         # call this method to get all the args
         if self.inherit:
             self._get_inherit_args()
+        if add_custom_args:
+            self._get_custom_args()
         if self.id_string:
             self._get_original_args()
 
@@ -52,9 +65,10 @@ class ArgsPreviewModel(ArgsSuperModel):
 
     def __init__(self,
                  db_link,
-                 id_string: str,
+                 node_name: str,
+                 node_id: str,
                  inherit: str):
-        super().__init__(db_link, id_string, inherit)
+        super().__init__(db_link, node_name, node_id, inherit)
         # set header labels for this model
         self.set_header_labels("Type", "Argument Name")
 
@@ -77,9 +91,10 @@ class ArgsEditableModel(ArgsSuperModel):
 
     def __init__(self,
                  db_link,
-                 id_string: str,
+                 node_name: str,
+                 node_id: str,
                  inherit: str):
-        super().__init__(db_link, id_string, inherit)
+        super().__init__(db_link, node_name, node_id, inherit)
         # args: combobox style cell
         self.combo_args = []
         self.combo_widgets_id = []
@@ -103,8 +118,9 @@ class ArgsEditableModel(ArgsSuperModel):
         arg_type_item = ArgTypeItem(arg_type)
         arg_name_item = ArgNameItem('inh', arg_info, arg_name)
         if arg_type == "bool":
+            arg_mark_item = ArgMarkItem(1)  # tag: 1 is for check box
             self.check_args.append([idx, 1, arg_init])
-            self.set_col_items(idx, arg_name_item)
+            self.set_col_items(idx, arg_name_item, arg_mark_item)
         else:
             arg_init_item = ArgEditItem(arg_type_item.raw_type_name, arg_init)
             self.set_col_items(idx, arg_name_item, arg_init_item)
@@ -119,11 +135,13 @@ class ArgsEditableModel(ArgsSuperModel):
             arg_box_list = self.db.get_box_args(int(arg_box)).split(';')
             self.combo_args.append([idx, 1, arg_init, arg_box_list, "placeholder"])
             # placeholder is where to store the current value
-            self.set_col_items(idx, arg_name_item)
+            arg_mark_item = ArgMarkItem(2)  # tag: 2 is for combo box
+            self.set_col_items(idx, arg_name_item, arg_mark_item)
         elif arg_type == "bool":
             # setup the check button for bool type
+            arg_mark_item = ArgMarkItem(1)  # tag: 1 is for check box
             self.check_args.append([idx, 1, arg_init])
-            self.set_col_items(idx, arg_name_item)
+            self.set_col_items(idx, arg_name_item, arg_mark_item)
         else:
             arg_init_item = ArgEditItem(arg_type_item.raw_type_name, arg_init)
             self.set_col_items(idx, arg_name_item, arg_init_item)

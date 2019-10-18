@@ -1,5 +1,8 @@
 import yaml
 
+__version__ = '1.0.0'
+__author__ = 'ShawnHu'
+
 # Loading mod configure.
 with open('cfg/mod.yaml', 'r') as mf:
     mod = yaml.safe_load(mf)

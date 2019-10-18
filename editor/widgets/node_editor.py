@@ -48,3 +48,7 @@ class MainNodeEditor(QWidget):
         self.nodes_view.selected_delete_node.connect(
             self.args_menu.panel.delete_node
         )
+
+    def serialize(self):
+        self.node_scene.serialize()
+        self.args_menu.serialize()
