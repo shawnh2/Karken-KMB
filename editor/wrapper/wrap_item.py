@@ -4,10 +4,11 @@ from editor.wrapper.serializable import Serializable
 
 class KMBNodeItem(Serializable):
 
-    def __init__(self, scene, node_name):
+    def __init__(self, scene, node_name, node_type):
         super().__init__()
         self.gr_scene = scene
         self.gr_name = node_name
+        self.gr_type = node_type
         self.gr_node = KMBNodeGraphicItem(self, self.gr_name)
 
         self.gr_scene.addItem(self.gr_node)

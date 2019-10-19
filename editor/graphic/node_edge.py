@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QGraphicsPathItem, QGraphicsItem
 from PyQt5.QtGui import QColor, QPen, QBrush
 from PyQt5.QtCore import Qt
 
-from cfg import EDGE_WIDTH, color
+from cfg import EDGE_WIDTH, color, EDGE_DIRECT
 
 
 class KMBGraphicEdge(QGraphicsPathItem):
@@ -14,24 +14,30 @@ class KMBGraphicEdge(QGraphicsPathItem):
         super().__init__(parent)
 
         self.edge = edge  # the wrapper of itself
+        self.type = EDGE_DIRECT  # default
         self.pos_src = [0, 0]
         self.pos_dst = [0, 0]
 
-        self._color = QColor(color['EDGE'])
+        self._color_io = QColor(color['EDGE_IO'])
+        self._color_ref = QColor(color['EDGE_REF'])
         self._color_selected = QColor(color['EDGE_SEL'])
 
-        self._pen = QPen(self._color)
-        self._pen.setWidthF(EDGE_WIDTH)
+        self._pen_io = QPen(self._color_io)
+        self._pen_io.setWidthF(EDGE_WIDTH)
+        self._pen_ref = QPen(self._color_ref)
+        self._pen_ref.setWidthF(EDGE_WIDTH)
 
         self._pen_selected = QPen(self._color_selected)
         self._pen_selected.setWidthF(EDGE_WIDTH)
 
-        self._pen_dragging = QPen(self._color)
+        self._pen_dragging = QPen(self._color_io)
         self._pen_dragging.setStyle(Qt.DashDotLine)
         self._pen_dragging.setWidthF(EDGE_WIDTH)
 
+        self._mark_pen = QPen(Qt.green)
+        self._mark_pen.setWidthF(EDGE_WIDTH)
         self._mark_brush = QBrush()
-        self._mark_brush.setColor(Qt.black)
+        self._mark_brush.setColor(Qt.green)
         self._mark_brush.setStyle(Qt.SolidPattern)
 
         self.setFlag(QGraphicsItem.ItemIsSelectable)
@@ -59,18 +65,26 @@ class KMBGraphicEdge(QGraphicsPathItem):
         path = self.path()
         if self.edge.end_item is None:
             painter.setPen(self._pen_dragging)
+            painter.drawPath(path)
         else:
-            painter.setPen(self._pen if not self.isSelected() else self._pen_selected)
-            # paint a output mark on the edge
-            x1, y1 = self.pos_src
-            x2, y2 = self.pos_dst
-            w = 7   # marker radius
-            l = 55  # marker length
-            k = math.atan2(y2 - y1, x2 - x1)
-            new_x = x2 - l * math.cos(k) - EDGE_WIDTH
-            new_y = y2 - l * math.sin(k) - EDGE_WIDTH
-            painter.setBrush(self._mark_brush)
-            painter.drawEllipse(new_x, new_y, w, w)
-
-        painter.setBrush(Qt.NoBrush)
-        painter.drawPath(path)
+            # draw direct I/O line with output mark
+            if self.type == EDGE_DIRECT:
+                # paint a output mark on the edge
+                x1, y1 = self.pos_src
+                x2, y2 = self.pos_dst
+                w = 6   # marker radius
+                l = 55  # marker length
+                k = math.atan2(y2 - y1, x2 - x1)
+                new_x = x2 - l * math.cos(k) - EDGE_WIDTH
+                new_y = y2 - l * math.sin(k) - EDGE_WIDTH
+                # draw path line first
+                painter.setPen(self._pen_io if not self.isSelected() else self._pen_selected)
+                painter.drawPath(path)
+                # draw output marker last
+                painter.setPen(self._mark_pen)
+                painter.setBrush(self._mark_brush)
+                painter.drawEllipse(new_x, new_y, w, w)
+            # draw ref curve line with different pen
+            else:
+                painter.setPen(self._pen_ref if not self.isSelected() else self._pen_selected)
+                painter.drawPath(path)

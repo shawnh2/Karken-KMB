@@ -1,6 +1,7 @@
 from editor.graphic.node_scene import KMBNodeGraphicScene
 from editor.wrapper.serializable import Serializable
-from cfg import DEBUG
+from cfg import DEBUG, EDGE_DIRECT, EDGE_CURVES
+from lib import Counter
 
 
 class KMBNodeScene(Serializable):
@@ -10,6 +11,7 @@ class KMBNodeScene(Serializable):
 
         self.edges = []  # saving wrapper edges
         self.nodes = []  # saving wrapper nodes
+        self.nodes_counter = Counter()  # count the nodes
 
         self.scene_width = 16000
         self.scene_height = 16000
@@ -17,18 +19,25 @@ class KMBNodeScene(Serializable):
         self.graphic_scene.set_graphic_scene(self.scene_width,
                                              self.scene_height)
 
-    def check_edge(self, edge):
+    def check_edge(self, edge, edge_type):
         """ Check edge valid. """
-        # check the same edge in previous edges
-        for e in self.edges:
-            if e.start_item == edge.start_item and\
-               e.end_item is edge.end_item:
+        if edge_type == EDGE_DIRECT:
+            # check the same edge in previous edges
+            for e in self.edges:
+                if e.start_item == edge.start_item and\
+                   e.end_item is edge.end_item:
+                    return False
+            # check input edge if it's Input or Model
+            if edge.end_item.gr_name == "Input" or\
+               edge.start_item.gr_name == "Model":
                 return False
-        # check input edge if it's Input or Model
-        if edge.end_item.gr_name == "Input" or\
-           edge.start_item.gr_name == "Model":
-            return False
-        return True
+            return True
+        elif edge_type == EDGE_CURVES:
+            # ref curve only begins from 'common' or 'other' tab page
+            # and end up with 'layers' tab.
+            if edge.start_item.gr_type == "Layers":
+                return False
+            return True
 
     def add_edge(self, edge):
         self.edges.append(edge)
@@ -42,6 +51,7 @@ class KMBNodeScene(Serializable):
 
     def add_node(self, node):
         self.nodes.append(node)
+        self.nodes_counter.update(node)
         if DEBUG:
             print("*[N_ADD_%d]" % len(self.nodes), self.nodes)
 
@@ -50,6 +60,9 @@ class KMBNodeScene(Serializable):
         self._remove_relative_edges(node)
         if DEBUG:
             print("*[N_DEL_%d]" % len(self.nodes), self.nodes)
+
+    def get_count(self, node):
+        return self.nodes_counter.get(node)
 
     def _remove_relative_edges(self, node):
         # removing node also remove edge that connected to it.

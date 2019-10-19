@@ -24,7 +24,7 @@ EDGE_DRAG = 6
 class KMBNodeGraphicView(QGraphicsView):
 
     scene_pos_changed = pyqtSignal(int, int)  # x, y coord
-    add_new_node_item = pyqtSignal(str, str)  # name, id
+    add_new_node_item = pyqtSignal(str, str, int)  # name, id, count
     selected_node_item = pyqtSignal(str)      # id or state
     selected_delete_node = pyqtSignal(str)
 
@@ -40,6 +40,7 @@ class KMBNodeGraphicView(QGraphicsView):
         self.edge_type = None
         self.last_scene_mouse_pos = None
         self.current_node_item_name = None
+        self.current_node_item_type = None
 
         self.zoom_in_factor = 1.25
         self.zoom = 10
@@ -77,11 +78,12 @@ class KMBNodeGraphicView(QGraphicsView):
         if DEBUG:
             print("Now is <move> mode")
 
-    def set_editing_mode(self, arg):
+    def set_editing_mode(self, node_name, node_type):
         self.mode = MOUSE_EDIT
-        self.current_node_item_name = arg
+        self.current_node_item_name = node_name
+        self.current_node_item_type = node_type
         self.set_edit_node_cursor()
-        self.status_bar_msg(f'Select: {arg} item.')
+        self.status_bar_msg(f'Select: {node_name} item in {node_type}.')
         if DEBUG:
             print("Now is <edit> mode")
 
@@ -293,9 +295,12 @@ class KMBNodeGraphicView(QGraphicsView):
         x, y = int(self.last_scene_mouse_pos.x()),\
                int(self.last_scene_mouse_pos.y())
         node = KMBNodeItem(self.gr_scene,
-                           self.current_node_item_name)
-        self.add_new_node_item.emit(node.gr_name, str(id(node.gr_node)))
+                           self.current_node_item_name,
+                           self.current_node_item_type)
         self.gr_scene.scene.add_node(node)
+        count = self.gr_scene.scene.get_count(node)
+        print(count)
+        self.add_new_node_item.emit(node.gr_name, str(id(node.gr_node)), count)
         self.status_bar_msg(f'Add: {self.current_node_item_name} node.')
         node.set_pos(x, y)
 

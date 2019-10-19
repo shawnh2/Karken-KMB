@@ -31,7 +31,7 @@ class KMBEdge(Serializable):
 
     def store(self):
         """ Check state of storing into scene's edges. """
-        if self.scene.check_edge(self):
+        if self.scene.check_edge(self, self.edge_type):
             self.scene.add_edge(self)
             # and return the state
             return True

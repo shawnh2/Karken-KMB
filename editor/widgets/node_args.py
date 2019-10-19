@@ -2,7 +2,6 @@ from PyQt5.QtWidgets import QTableView, QHeaderView, QCheckBox
 from PyQt5.QtGui import QStandardItemModel
 from PyQt5.QtCore import Qt
 
-from cfg import DEBUG
 from lib import DataBase4Args
 from editor.component.args_model import ArgsPreviewModel, ArgsEditableModel
 from editor.component.args_model_item import ArgComboBox
@@ -15,7 +14,7 @@ class KMBNodesArgsMenu(QTableView):
                  parent=None):
         super().__init__(parent)
 
-        self.menu = menu_delegate
+        self.menu = menu_delegate  # self wrapper
         self.head = QHeaderView(Qt.Horizontal, self)
         # link to database
         self.db_link = DataBase4Args()
@@ -105,7 +104,7 @@ class KMBNodesArgsMenu(QTableView):
         model.reassign_state(idx, str(state))
         self.sender().setText(str(state))
 
-    def commit_node(self, node_name, node_id: str):
+    def commit_node(self, node_name, node_id: str, count: int):
         # after adding node in canvas
         # first time make new model.
         id_string, inherit = self.db_link.get_args_id(node_name)
@@ -116,7 +115,7 @@ class KMBNodesArgsMenu(QTableView):
             inherit=inherit
         )
         model.name = node_name
-        model.get_args(add_custom_args=True)
+        model.get_args(add_custom_args=True, count=count)
         # then store it but don't display it.
         self.edit_model[node_id] = model
 

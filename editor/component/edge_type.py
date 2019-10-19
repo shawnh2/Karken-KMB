@@ -4,11 +4,13 @@ from PyQt5.QtGui import QPainterPath
 from PyQt5.QtCore import QPointF
 
 from editor.graphic.node_edge import KMBGraphicEdge
+from cfg import EDGE_DIRECT, EDGE_CURVES
 
 
 class KMBGraphicEdgeDirect(KMBGraphicEdge):
 
     def calc_path(self):
+        self.type = EDGE_DIRECT
         path = QPainterPath(QPointF(self.pos_src[0], self.pos_src[1]))
         path.lineTo(self.pos_dst[0], self.pos_dst[1])
         return path
@@ -22,6 +24,7 @@ class KMBGraphicEdgeBezier(KMBGraphicEdge):
     EDGE_CP_ROUNDNESS = 100
 
     def calc_path(self):
+        self.type = EDGE_CURVES
         s = self.pos_src
         d = self.pos_dst
         dist = (d[0] - s[0]) * 0.5

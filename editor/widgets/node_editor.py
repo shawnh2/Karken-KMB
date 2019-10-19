@@ -29,11 +29,11 @@ class MainNodeEditor(QWidget):
         self.layout.addWidget(self.args_menu.panel, alignment=Qt.AlignRight)
 
         # preview node's args.
-        self.nodes_menu.clicked_tool_button_item.connect(
+        self.nodes_menu.clicked_node_button_item.connect(
             self.args_menu.panel.set_preview_args
         )
         # set editing mode, now can add nodes.
-        self.nodes_menu.clicked_tool_button_item.connect(
+        self.nodes_menu.clicked_node_button_item.connect(
             self.nodes_view.set_editing_mode
         )
         # add new node and store it.

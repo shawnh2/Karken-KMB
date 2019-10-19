@@ -33,20 +33,23 @@ class ArgsSuperModel(QStandardItemModel):
         for i, arg in self.db.get_org_args(self.id_string):
             self.feed_original_item(i + self.n, arg)
 
-    def _get_custom_args(self):
+    def _get_custom_args(self, count):
         name = ArgNameItem('var',
                            'The name of this variable.',
                            'var_name')
-        value = ArgEditItem("String", self.node_name.lower())
+        init_value = self.node_name.lower()
+        value = ArgEditItem("String",
+                            init_value if count == 0
+                            else init_value + '_' + str(count))
         self.set_col_items(self.n, name, value)
         self.n += 1
 
-    def get_args(self, add_custom_args=False):
+    def get_args(self, add_custom_args=False, count=0):
         # call this method to get all the args
         if self.inherit:
             self._get_inherit_args()
         if add_custom_args:
-            self._get_custom_args()
+            self._get_custom_args(count)
         if self.id_string:
             self._get_original_args()
 

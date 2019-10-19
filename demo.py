@@ -6,6 +6,7 @@ from PyQt5.QtGui import QPixmap
 
 from cfg import icon
 from editor.main import KMBMainWindow
+from editor.widgets.about import AboutWidget
 
 cgitb.enable(format("text"))
 
@@ -23,6 +24,9 @@ if __name__ == '__main__':
     size = (desktop.width() * 0.8,
             desktop.height() * 0.75)
     win = KMBMainWindow(size)
+    # setup about panel.
+    about = AboutWidget()
+    win.action_about.triggered.connect(about.show)
     # stay one more second then close.
     splash.finish(win)
     sys.exit(app.exec_())

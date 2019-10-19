@@ -71,33 +71,35 @@ class KMBMainWindow(QMainWindow):
 
     def set_toolbar_tooltip(self):
         # set action tooltips
-        self.action_new.setToolTip("Create(Ctrl+N)")
+        self.action_new.setToolTip("Create (Ctrl+N)")
         self.action_new.setEnabled(False)
-        self.action_open.setToolTip("Open(Ctrl+O)")
+        self.action_open.setToolTip("Open (Ctrl+O)")
         self.action_open.setEnabled(False)
-        self.action_save.setToolTip("Save(Ctrl+S)")
-        self.action_export.setToolTip("Export(Ctrl+E)")
+        self.action_save.setToolTip("Save (Ctrl+S)")
+        self.action_export.setToolTip("Export (Ctrl+E)")
         self.action_export.setEnabled(False)
-        self.action_select.setToolTip("Select(V)")
-        self.action_hand.setToolTip("Move(M)")
-        self.action_undo.setToolTip("Undo(Ctrl+Z)")
+        self.action_select.setToolTip("Select (V)")
+        self.action_hand.setToolTip("Move (M)")
+        self.action_undo.setToolTip("Undo (Ctrl+Z)")
         self.action_undo.setEnabled(False)
-        self.action_redo.setToolTip("Redo(Alt+Z)")
+        self.action_redo.setToolTip("Redo (Alt+Z)")
         self.action_redo.setEnabled(False)
         self.action_delete.setToolTip("Delete")
-        self.action_edge_direct.setToolTip("Connect I/O Direct(D)")
-        self.action_edge_curve.setToolTip("Connect Curve(C)")
-        self.action_edge_curve.setEnabled(False)
-        self.action_note.setToolTip("Note(T)")
+        self.action_edge_direct.setToolTip("Connect I/O Direct (D)")
+        self.action_edge_direct.setStatusTip("Connect different layers with one direct edge.")
+        self.action_edge_curve.setToolTip("Connect Ref Curve (C)")
+        self.action_edge_curve.setStatusTip("Connect one layer's argument with "
+                                            "one other node (like PlaceHolder etc.).")
+        self.action_note.setToolTip("Note (T)")
         self.action_note.setEnabled(False)
         self.action_about.setToolTip("About")
-        self.action_about.setEnabled(False)
 
     def set_toolbar_actions(self):
         # file operation
         self.toolbar.addAction(self.action_new)
         self.toolbar.addAction(self.action_open)
         self.toolbar.addAction(self.action_save)
+        self.action_save.setShortcut('Ctrl+S')
         self.toolbar.addAction(self.action_export)
         self.toolbar.addSeparator()
         # tool operation
@@ -141,10 +143,6 @@ class KMBMainWindow(QMainWindow):
         self.action_delete.triggered.connect(
             self.node_editor.nodes_view.set_delete_mode
         )
-        # ------
-
-    def keyPressEvent(self, event):
-        pass
 
     # --------------------------------------
     #              OPERATIONS
