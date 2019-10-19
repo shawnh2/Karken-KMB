@@ -143,6 +143,9 @@ class KMBMainWindow(QMainWindow):
         )
         # ------
 
+    def keyPressEvent(self, event):
+        pass
+
     # --------------------------------------
     #              OPERATIONS
     # --------------------------------------

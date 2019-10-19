@@ -41,8 +41,8 @@ class KMBNodesArgsMenu(QTableView):
         preview_model.get_args()
         self.setModel(preview_model)
 
-    def set_editing_args(self, node_id):
-        if node_id == 0:
+    def set_editing_args(self, node_id: str):
+        if node_id == 'null':
             # set an empty model.
             self.setModel(self.null_model)
             return
@@ -64,7 +64,7 @@ class KMBNodesArgsMenu(QTableView):
         # clean the widgets id, every time click node,
         # it will generate new ids.
         model.combo_widgets_id.clear()
-        for row, col, arg_init, args_list, arg_set in model.combo_args:
+        for row, col, arg_init, args_list, arg_set, _ in model.combo_args:
             index = self.model().index(row, col)
             combo = ArgComboBox(args_list, arg_init)
             # set current new value
@@ -76,7 +76,7 @@ class KMBNodesArgsMenu(QTableView):
 
     def add_checkbox_cell(self, model):
         model.check_widgets_id.clear()
-        for row, col, arg_init in model.check_args:
+        for row, col, arg_init, _ in model.check_args:
             index = self.model().index(row, col)
             check = QCheckBox(arg_init)
             # initialize the checkbox
@@ -91,8 +91,6 @@ class KMBNodesArgsMenu(QTableView):
     def modify_item(self, item):
         item.has_changed()
         item.setText(item.text())
-        if DEBUG:
-            print(f"Argument item has been changed => {item} with '{item.text()}'")
 
     def modify_args(self, value, combo, model):
         # set the model's placeholder in combo_args
@@ -101,17 +99,13 @@ class KMBNodesArgsMenu(QTableView):
             model.reassign_value(idx, value)
         else:
             model.reassign_value(-1, value)
-        if DEBUG:
-            print(f"Argument combobox value changed to => {value}")
 
     def modify_state(self, state, model):
         idx = model.check_widgets_id.index(id(self.sender()))
         model.reassign_state(idx, str(state))
         self.sender().setText(str(state))
-        if DEBUG:
-            print(f"Argument checkbox value changed to => {state}")
 
-    def commit_node(self, node_name, node_id):
+    def commit_node(self, node_name, node_id: str):
         # after adding node in canvas
         # first time make new model.
         id_string, inherit = self.db_link.get_args_id(node_name)
@@ -126,6 +120,6 @@ class KMBNodesArgsMenu(QTableView):
         # then store it but don't display it.
         self.edit_model[node_id] = model
 
-    def delete_node(self, node_id):
+    def delete_node(self, node_id: str):
         self.edit_model.__delitem__(node_id)
         self.setModel(self.null_model)

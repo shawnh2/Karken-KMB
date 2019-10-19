@@ -25,8 +25,13 @@ class KMBNodeItem(Serializable):
     def serialize(self):
         return {
             "tag": "layer",
-            "id": id(self.gr_node),
+            "id": str(id(self.gr_node)),
             "class": self.gr_name,
+            "mode": 'IO',
+            "input": [],
+            "output": [],
+            "var": None,  # None: assign it later
+            "args": None
         }
 
     def deserialize(self):

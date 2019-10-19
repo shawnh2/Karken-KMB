@@ -61,9 +61,18 @@ class KMBNodeScene(Serializable):
                 self.remove_edge(edge)  # ... because of this
 
     def serialize(self):
+        # serialize node and edge here
+        # fill with node's <input> and <output> tags
+        nodes = {}
         for node in self.nodes:
-            node = node.serialize()
-            print(node)
+            n = node.serialize()
+            nodes[n["id"]] = n
+        # organize edge's relationship here
+        for edge in self.edges:
+            edge_from, edge_to = edge.serialize()
+            nodes[edge_from]['output'].append(edge_to)
+            nodes[edge_to]['input'].append(edge_from)
+        return nodes
 
     def deserialize(self):
         pass

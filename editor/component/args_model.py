@@ -108,9 +108,11 @@ class ArgsEditableModel(ArgsSuperModel):
 
     def reassign_value(self, idx, value: str):
         self.combo_args[idx][4] = value
+        self.combo_args[idx][5] = True
 
     def reassign_state(self, idx, state: str):
         self.check_args[idx][2] = state
+        self.check_args[idx][3] = ~self.check_args[idx][3]  # reverse the has-changed sign
 
     def feed_inherit_item(self, idx, unpack_item):
         # id, name, init, type, info
@@ -119,7 +121,7 @@ class ArgsEditableModel(ArgsSuperModel):
         arg_name_item = ArgNameItem('inh', arg_info, arg_name)
         if arg_type == "bool":
             arg_mark_item = ArgMarkItem(1)  # tag: 1 is for check box
-            self.check_args.append([idx, 1, arg_init])
+            self.check_args.append([idx, 1, arg_init, False])
             self.set_col_items(idx, arg_name_item, arg_mark_item)
         else:
             arg_init_item = ArgEditItem(arg_type_item.raw_type_name, arg_init)
@@ -133,14 +135,14 @@ class ArgsEditableModel(ArgsSuperModel):
         if arg_box:
             # setup the combo box for box args
             arg_box_list = self.db.get_box_args(int(arg_box)).split(';')
-            self.combo_args.append([idx, 1, arg_init, arg_box_list, "placeholder"])
+            self.combo_args.append([idx, 1, arg_init, arg_box_list, "placeholder", False])
             # placeholder is where to store the current value
             arg_mark_item = ArgMarkItem(2)  # tag: 2 is for combo box
             self.set_col_items(idx, arg_name_item, arg_mark_item)
         elif arg_type == "bool":
             # setup the check button for bool type
             arg_mark_item = ArgMarkItem(1)  # tag: 1 is for check box
-            self.check_args.append([idx, 1, arg_init])
+            self.check_args.append([idx, 1, arg_init, False])
             self.set_col_items(idx, arg_name_item, arg_mark_item)
         else:
             arg_init_item = ArgEditItem(arg_type_item.raw_type_name, arg_init)

@@ -50,5 +50,17 @@ class MainNodeEditor(QWidget):
         )
 
     def serialize(self):
-        self.node_scene.serialize()
-        self.args_menu.serialize()
+        # organize the nodes here
+        # fill with node's <var> and <args> tag
+        nodes = self.node_scene.serialize()
+        args, vars = self.args_menu.serialize()
+        for node_id in nodes.keys():
+            nodes[node_id]['var'] = vars.get(node_id)
+            nodes[node_id]['args'] = args.get(node_id)
+
+        for k, v in nodes.items():
+            print(k, v)
+        return nodes
+
+    def deserialize(self):
+        pass

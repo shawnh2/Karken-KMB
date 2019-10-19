@@ -24,9 +24,9 @@ EDGE_DRAG = 6
 class KMBNodeGraphicView(QGraphicsView):
 
     scene_pos_changed = pyqtSignal(int, int)  # x, y coord
-    add_new_node_item = pyqtSignal(str, int)  # name, id
-    selected_node_item = pyqtSignal(int)      # id or state
-    selected_delete_node = pyqtSignal(int)
+    add_new_node_item = pyqtSignal(str, str)  # name, id
+    selected_node_item = pyqtSignal(str)      # id or state
+    selected_delete_node = pyqtSignal(str)
 
     def __init__(self,
                  graphic_scene,
@@ -294,7 +294,7 @@ class KMBNodeGraphicView(QGraphicsView):
                int(self.last_scene_mouse_pos.y())
         node = KMBNodeItem(self.gr_scene,
                            self.current_node_item_name)
-        self.add_new_node_item.emit(node.gr_name, id(node.gr_node))
+        self.add_new_node_item.emit(node.gr_name, str(id(node.gr_node)))
         self.gr_scene.scene.add_node(node)
         self.status_bar_msg(f'Add: {self.current_node_item_name} node.')
         node.set_pos(x, y)
@@ -303,17 +303,17 @@ class KMBNodeGraphicView(QGraphicsView):
         # get args of node and edit it
         if item is not None and isinstance(item, KMBNodeGraphicItem):
             # if select obj, send its name.
-            self.selected_node_item.emit(id(item))
+            self.selected_node_item.emit(str(id(item)))
             self.status_bar_msg(f'Select: {item.name} node.')
         else:
             # if select no obj, send empty signal to clear arg panel.
-            self.selected_node_item.emit(0)
+            self.selected_node_item.emit('null')
 
     def del_selected_node_item(self, item):
         # del selected node
         if item is not None:
             if isinstance(item, KMBNodeGraphicItem):
-                self.selected_delete_node.emit(id(item))
+                self.selected_delete_node.emit(str(id(item)))
                 # after deleting stored model, then node graphic.
                 self.status_bar_msg(f'Delete: {item.name} node.')
                 self.gr_scene.removeItem(item)
