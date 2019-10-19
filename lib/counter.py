@@ -1,22 +1,16 @@
-""" The counter that count the number of node. """
-
+""" The counter for counting the node number in scene. """
 
 class Counter:
 
     def __init__(self):
         self._count = {}
 
-    def update(self, obj):
-        key = self._serial(obj)
-        if self._count.__contains__(key):
-            self._count[key] += 1
+    def update(self, obj: str):
+        if self._count.__contains__(obj):
+            self._count[obj] += 1
         else:
-            self._count[key] = 0
+            # start counting from 1
+            self._count[obj] = 1
 
-    def get(self, obj):
-        key = self._serial(obj)
-        return self._count.get(key)
-
-    @classmethod
-    def _serial(cls, obj):
-        return str(id(obj))
+    def get(self, obj: str):
+        return self._count.get(obj)

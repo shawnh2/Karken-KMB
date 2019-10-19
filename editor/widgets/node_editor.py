@@ -15,19 +15,23 @@ class MainNodeEditor(QWidget):
         # init UI
         self.nodes_menu = KMBNodesMenu(self)
         self.args_menu = KMBArgsMenu(self)
-        self.node_scene = KMBNodeScene()
-        self.nodes_view = KMBNodeGraphicView(self.node_scene.graphic_scene,
+        self.nodes_scene = KMBNodeScene()
+        self.nodes_view = KMBNodeGraphicView(self.nodes_scene.graphic_scene,
                                              parent.statusBar().showMessage,
                                              self)
-
         self.layout = QHBoxLayout()
-        self.layout.setContentsMargins(2, 2, 2, 2)
-        self.setLayout(self.layout)
+        # setup
+        self.setup_layout()
+        self.setup_connections()
 
+    def setup_layout(self):
+        self.layout.setContentsMargins(2, 2, 2, 2)
         self.layout.addWidget(self.nodes_menu, alignment=Qt.AlignLeft)
         self.layout.addWidget(self.nodes_view)
         self.layout.addWidget(self.args_menu.panel, alignment=Qt.AlignRight)
+        self.setLayout(self.layout)
 
+    def setup_connections(self):
         # preview node's args.
         self.nodes_menu.clicked_node_button_item.connect(
             self.args_menu.panel.set_preview_args
@@ -52,7 +56,7 @@ class MainNodeEditor(QWidget):
     def serialize(self):
         # organize the nodes here
         # fill with node's <var> and <args> tag
-        nodes = self.node_scene.serialize()
+        nodes = self.nodes_scene.serialize()
         args, vars = self.args_menu.serialize()
         for node_id in nodes.keys():
             nodes[node_id]['var'] = vars.get(node_id)

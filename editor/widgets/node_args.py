@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QTableView, QHeaderView, QCheckBox
-from PyQt5.QtGui import QStandardItemModel
+from PyQt5.QtWidgets import QTableView, QHeaderView, QCheckBox, QMenu, QAction
+from PyQt5.QtGui import QStandardItemModel, QCursor
 from PyQt5.QtCore import Qt
 
 from lib import DataBase4Args
@@ -30,6 +30,12 @@ class KMBNodesArgsMenu(QTableView):
         # set width
         self.setMinimumWidth(320)
 
+        # setup right menu
+        # right menu shows the ref that connected with.
+        self.right_menu = QMenu(self)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.set_right_menu)
+
     def set_preview_args(self, node_name):
         id_string, inherit = self.db_link.get_args_id(node_name)
         preview_model = ArgsPreviewModel(
@@ -58,6 +64,9 @@ class KMBNodesArgsMenu(QTableView):
             model.itemChanged.connect(self.modify_item)
         except KeyError:
             self.setModel(self.null_model)
+
+    def set_right_menu(self, pos):
+        print(pos, pos.x(), pos.y())
 
     def add_combobox_cell(self, model):
         # clean the widgets id, every time click node,

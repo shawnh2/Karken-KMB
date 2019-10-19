@@ -23,9 +23,12 @@ EDGE_DRAG = 6
 
 class KMBNodeGraphicView(QGraphicsView):
 
-    scene_pos_changed = pyqtSignal(int, int)  # x, y coord
+    # show the changing position in status bar.
+    scene_pos_changed = pyqtSignal(int, int)       # x, y coord
+    # the necessary signal to add a new node in scene.
     add_new_node_item = pyqtSignal(str, str, int)  # name, id, count
-    selected_node_item = pyqtSignal(str)      # id or state
+    # pass the id of selected node item to edit.
+    selected_node_item = pyqtSignal(str)           # id or state
     selected_delete_node = pyqtSignal(str)
 
     def __init__(self,
@@ -50,6 +53,8 @@ class KMBNodeGraphicView(QGraphicsView):
 
         self.init_ui()
         self.setScene(self.gr_scene)
+
+    # ------------------INIT--------------------
 
     def init_ui(self):
         self.setRenderHints(QPainter.Antialiasing |
@@ -145,7 +150,7 @@ class KMBNodeGraphicView(QGraphicsView):
 
         super().mouseMoveEvent(event)
 
-    def wheelEvent(self, event):
+    def nwheelEvent(self, event):
         zoom_out_factor = 1 / self.zoom_in_factor
 
         if event.angleDelta().y() > 0:
@@ -297,10 +302,12 @@ class KMBNodeGraphicView(QGraphicsView):
         node = KMBNodeItem(self.gr_scene,
                            self.current_node_item_name,
                            self.current_node_item_type)
+        # add into scene and get count of nodes.
         self.gr_scene.scene.add_node(node)
-        count = self.gr_scene.scene.get_count(node)
-        print(count)
-        self.add_new_node_item.emit(node.gr_name, str(id(node.gr_node)), count)
+        count = self.gr_scene.scene.get_node_count(node)
+        self.add_new_node_item.emit(node.gr_name,
+                                    str(id(node.gr_node)),
+                                    count)
         self.status_bar_msg(f'Add: {self.current_node_item_name} node.')
         node.set_pos(x, y)
 
@@ -342,7 +349,6 @@ class KMBNodeGraphicView(QGraphicsView):
             print(f"[start dragging edge] => {self.drag_edge} at {item}")
 
     def edge_drag_end(self, item):
-        self.mode = NODE_CONNECT
         if DEBUG:
             print(f"[stop dragging edge] => {self.drag_edge} at {item}")
 
@@ -350,6 +356,7 @@ class KMBNodeGraphicView(QGraphicsView):
                            self.drag_start_item.node,
                            item.node,
                            self.edge_type)
+        # saving for the new edge.
         if not new_edge.store():
             self.gr_scene.removeItem(new_edge.gr_edge)
             if DEBUG:
@@ -357,6 +364,6 @@ class KMBNodeGraphicView(QGraphicsView):
         else:
             if DEBUG:
                 print(f"[connect] {self.drag_start_item} ~ {item} => {new_edge}")
-        # it's outline(dash line), so remove it and add real one
+        # it's outline(dash line), so remove it and add real one.
         self.drag_edge.remove()
         self.drag_edge = None

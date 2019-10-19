@@ -51,7 +51,7 @@ class KMBNodeScene(Serializable):
 
     def add_node(self, node):
         self.nodes.append(node)
-        self.nodes_counter.update(node)
+        self.nodes_counter.update(node.gr_name)
         if DEBUG:
             print("*[N_ADD_%d]" % len(self.nodes), self.nodes)
 
@@ -61,8 +61,8 @@ class KMBNodeScene(Serializable):
         if DEBUG:
             print("*[N_DEL_%d]" % len(self.nodes), self.nodes)
 
-    def get_count(self, node):
-        return self.nodes_counter.get(node)
+    def get_node_count(self, node):
+        return self.nodes_counter.get(node.gr_name)
 
     def _remove_relative_edges(self, node):
         # removing node also remove edge that connected to it.

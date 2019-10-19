@@ -39,12 +39,12 @@ class ArgsSuperModel(QStandardItemModel):
                            'var_name')
         init_value = self.node_name.lower()
         value = ArgEditItem("String",
-                            init_value if count == 0
+                            init_value if count == 1
                             else init_value + '_' + str(count))
         self.set_col_items(self.n, name, value)
         self.n += 1
 
-    def get_args(self, add_custom_args=False, count=0):
+    def get_args(self, add_custom_args=False, count=1):
         # call this method to get all the args
         if self.inherit:
             self._get_inherit_args()
