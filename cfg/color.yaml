@@ -13,7 +13,7 @@ SCENE_DARK: '#292929'
 
 # for edge
 EDGE_IO: '#000000'
-EDGE_REF: '#00479d'
+EDGE_REF: '#29c4ff'
 EDGE_SEL: '#FF0033'
 
 # for DataType-Color map

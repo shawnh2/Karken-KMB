@@ -17,6 +17,10 @@ NODE_ICONx500_PATH = 'lib/icon/nodesx500/{}.png'
 with open('cfg/icon.yaml', 'r') as icf:
     icon = yaml.safe_load(icf)
 
+# Loading tips configure.
+with open('cfg/tips.yaml', 'r') as tf:
+    tips = yaml.safe_load(tf)
+
 # Loading configure for graphic path: edge.
 EDGE_WIDTH = 3.0
 EDGE_DIRECT = 1

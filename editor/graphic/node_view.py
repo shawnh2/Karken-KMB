@@ -29,7 +29,9 @@ class KMBNodeGraphicView(QGraphicsView):
     add_new_node_item = pyqtSignal(str, str, int)  # name, id, count
     # pass the id of selected node item to edit.
     selected_node_item = pyqtSignal(str)           # id or state
-    selected_delete_node = pyqtSignal(str)
+    selected_delete_node = pyqtSignal(str)         # id
+    # pop up the right menu of clicked node.
+    pop_up_right_menu = pyqtSignal(str)            # id
 
     def __init__(self,
                  graphic_scene,
@@ -52,11 +54,11 @@ class KMBNodeGraphicView(QGraphicsView):
         self.zoom_clamp = True
 
         self.init_ui()
-        self.setScene(self.gr_scene)
 
     # ------------------INIT--------------------
 
     def init_ui(self):
+        self.setScene(self.gr_scene)
         self.setRenderHints(QPainter.Antialiasing |
                             QPainter.HighQualityAntialiasing |
                             QPainter.TextAntialiasing |
@@ -67,6 +69,8 @@ class KMBNodeGraphicView(QGraphicsView):
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
         # default drag mode
         self.setDragMode(QGraphicsView.RubberBandDrag)
+        # custom right menu
+        self.setContextMenuPolicy(Qt.DefaultContextMenu)
 
     # ------------------MODE--------------------
 
@@ -150,7 +154,7 @@ class KMBNodeGraphicView(QGraphicsView):
 
         super().mouseMoveEvent(event)
 
-    def nwheelEvent(self, event):
+    def wheelEvent(self, event):
         zoom_out_factor = 1 / self.zoom_in_factor
 
         if event.angleDelta().y() > 0:
@@ -187,6 +191,14 @@ class KMBNodeGraphicView(QGraphicsView):
             self.set_edge_curve_mode()
         else:
             super().keyPressEvent(event)
+
+    def contextMenuEvent(self, event):
+        # get the item that right clicked on
+        item = self.get_item_at_click(event)
+        if isinstance(item, KMBNodeGraphicItem):
+            self.pop_up_right_menu.emit(str(id(item)))
+            # get item self right menu to display
+            item.contextMenuEvent(event)
 
     # ------------------EVENT--------------------
 
@@ -254,8 +266,8 @@ class KMBNodeGraphicView(QGraphicsView):
             self.mode = NODE_CONNECT
             if item is not None and\
                item is not self.drag_start_item and\
-               not issubclass(item.__class__, KMBGraphicEdge):  # nor it will get an error sometimes
-                self.edge_drag_end(item)
+               not issubclass(item.__class__, KMBGraphicEdge):
+                self.edge_drag_end(item, event)
             else:
                 # if it's nothing then drop this edge
                 if DEBUG:
@@ -288,7 +300,7 @@ class KMBNodeGraphicView(QGraphicsView):
     # ------------------UTILS--------------------
 
     def get_item_at_click(self, event):
-        """ Return the object that clicked on. Could be None or GraphicNodeItem"""
+        """ Return the object that clicked on. """
         pos = event.pos()
         obj = self.itemAt(pos)
         if DEBUG and obj is not None:
@@ -348,7 +360,7 @@ class KMBNodeGraphicView(QGraphicsView):
         if DEBUG:
             print(f"[start dragging edge] => {self.drag_edge} at {item}")
 
-    def edge_drag_end(self, item):
+    def edge_drag_end(self, item, event):
         if DEBUG:
             print(f"[stop dragging edge] => {self.drag_edge} at {item}")
 
@@ -356,14 +368,18 @@ class KMBNodeGraphicView(QGraphicsView):
                            self.drag_start_item.node,
                            item.node,
                            self.edge_type)
+        # remove the dragging dash edge.
+        self.drag_edge.remove()
+        self.drag_edge = None
         # saving for the new edge.
-        if not new_edge.store():
+        if not new_edge.store():  # fail to add new edge.
             self.gr_scene.removeItem(new_edge.gr_edge)
             if DEBUG:
                 print(f"[dropped] => {self.drag_edge} cause invalid connection.")
-        else:
+        else:  # add new edge successfully.
             if DEBUG:
                 print(f"[connect] {self.drag_start_item} ~ {item} => {new_edge}")
-        # it's outline(dash line), so remove it and add real one.
-        self.drag_edge.remove()
-        self.drag_edge = None
+            # only ref edge is able to pop up right menu of the end item,
+            # so now you're able to pick up which arg it ref to.
+            if self.edge_type == EDGE_CURVES:
+                self.contextMenuEvent(event)

@@ -1,3 +1,5 @@
+import ctypes
+
 from PyQt5.QtWidgets import QWidget, QHBoxLayout
 from PyQt5.QtCore import Qt
 
@@ -22,7 +24,9 @@ class MainNodeEditor(QWidget):
         self.layout = QHBoxLayout()
         # setup
         self.setup_layout()
-        self.setup_connections()
+        self.setup_slots()
+
+    # ----------SETUP----------
 
     def setup_layout(self):
         self.layout.setContentsMargins(2, 2, 2, 2)
@@ -31,7 +35,7 @@ class MainNodeEditor(QWidget):
         self.layout.addWidget(self.args_menu.panel, alignment=Qt.AlignRight)
         self.setLayout(self.layout)
 
-    def setup_connections(self):
+    def setup_slots(self):
         # preview node's args.
         self.nodes_menu.clicked_node_button_item.connect(
             self.args_menu.panel.set_preview_args
@@ -52,6 +56,20 @@ class MainNodeEditor(QWidget):
         self.nodes_view.selected_delete_node.connect(
             self.args_menu.panel.delete_node
         )
+        # ready to pop up the right menu of node.
+        self.nodes_view.pop_up_right_menu.connect(
+            self.send_args_to_node
+        )
+
+    # ----------FUNCTIONS----------
+
+    def send_args_to_node(self, node_id: str):
+        fetched_model = self.args_menu.fetch(node_id)
+        # get the node by id (a very unsafe way)
+        gr_node = ctypes.cast(int(node_id), ctypes.py_object).value
+        # pass the args to node,
+        # now is able to show them on right menu.
+        gr_node.feed_args(fetched_model)
 
     def serialize(self):
         # organize the nodes here

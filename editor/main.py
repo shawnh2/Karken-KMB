@@ -3,7 +3,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 
 from editor.widgets.node_editor import MainNodeEditor
-from cfg import icon
+from cfg import icon, tips
 
 
 class KMBMainWindow(QMainWindow):
@@ -78,21 +78,26 @@ class KMBMainWindow(QMainWindow):
         self.action_save.setToolTip("Save (Ctrl+S)")
         self.action_export.setToolTip("Export (Ctrl+E)")
         self.action_export.setEnabled(False)
+        # ------
         self.action_select.setToolTip("Select (V)")
         self.action_hand.setToolTip("Move (M)")
         self.action_undo.setToolTip("Undo (Ctrl+Z)")
         self.action_undo.setEnabled(False)
         self.action_redo.setToolTip("Redo (Alt+Z)")
         self.action_redo.setEnabled(False)
-        self.action_delete.setToolTip("Delete")
-        self.action_edge_direct.setToolTip("Connect I/O Direct (D)")
-        self.action_edge_direct.setStatusTip("Connect different layers with one direct edge.")
-        self.action_edge_curve.setToolTip("Connect Ref Curve (C)")
-        self.action_edge_curve.setStatusTip("Connect one layer's argument with "
-                                            "one other node (like PlaceHolder etc.).")
+        # ------
+        self.action_edge_direct.setToolTip("Connect: I/O Direct (D)")
+        self.action_edge_direct.setStatusTip(tips['ST_EDGE_DIRECT'])
+        self.action_edge_curve.setToolTip("Connect: Ref Curve (C)")
+        self.action_edge_curve.setStatusTip(tips['ST_EDGE_CURVES'])
         self.action_note.setToolTip("Note (T)")
+        self.action_note.setStatusTip(tips['ST_NOTE'])
         self.action_note.setEnabled(False)
+        self.action_delete.setToolTip("Delete")
+        self.action_delete.setStatusTip(tips['ST_DEL'])
+        # ------
         self.action_about.setToolTip("About")
+        self.action_about.setStatusTip(tips['ST_ABOUT'])
 
     def set_toolbar_actions(self):
         # file operation
@@ -108,7 +113,7 @@ class KMBMainWindow(QMainWindow):
         self.toolbar.addAction(self.action_select)
         self.toolbar.addAction(self.action_hand)
         self.toolbar.addSeparator()
-        # line operation
+        # edge operation
         self.toolbar.addAction(self.action_edge_direct)
         self.toolbar.addAction(self.action_edge_curve)
         self.toolbar.addAction(self.action_note)

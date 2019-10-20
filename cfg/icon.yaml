@@ -29,3 +29,5 @@ TRASH: 'lib/icon/cursor/trash.png'
 
 # for default combo box item
 COMBO: 'lib/icon/other/default.png'
+# for suggested item in node's right menu
+SUGGEST: 'lib/icon/other/suggested.png'

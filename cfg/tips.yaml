@@ -1,0 +1,11 @@
+# Tips (status tips or tool tips)
+
+# Status Tips
+ST_EDGE_DIRECT: "Connect two different layers with one direct edge."
+ST_EDGE_CURVES: "Create reference relationship between layer with other node (like PlaceHolder etc.)."
+ST_NOTE: "Take a note to help you understand something."
+ST_DEL: "Delete the node item or edge that you clicked on."
+
+ST_ABOUT: "See more information about this software."
+
+# Tool Tips

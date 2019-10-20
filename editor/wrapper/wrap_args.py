@@ -10,6 +10,11 @@ class KMBArgsMenu(Serializable):
         super().__init__()
         self.panel = KMBNodesArgsMenu(self, parent)
 
+    def fetch(self, key):
+        # fetch args model by key: node id
+        # result could be model or 'null'
+        return self.panel.fetch_node(key)
+
     def serialize(self):
         # <args> element that lives in <layer>
         args_dict = OrderedDict()

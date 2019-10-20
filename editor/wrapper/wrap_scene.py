@@ -22,15 +22,17 @@ class KMBNodeScene(Serializable):
     def check_edge(self, edge, edge_type):
         """ Check edge valid. """
         if edge_type == EDGE_DIRECT:
-            # check the same edge in previous edges
-            for e in self.edges:
-                if e.start_item == edge.start_item and\
-                   e.end_item is edge.end_item:
-                    return False
             # check input edge if it's Input or Model
             if edge.end_item.gr_name == "Input" or\
-               edge.start_item.gr_name == "Model":
+               edge.end_item.gr_name == "PlaceHolder" or\
+               edge.start_item.gr_name == "Model" or\
+               edge.start_item.gr_name == "PlaceHolder":
                 return False
+            # check the same edge in previous edges
+            for e in self.edges:
+                if e.start_item == edge.start_item and \
+                   e.end_item is edge.end_item:
+                    return False
             return True
         elif edge_type == EDGE_CURVES:
             # ref curve only begins from 'common' or 'other' tab page

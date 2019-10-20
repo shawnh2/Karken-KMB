@@ -37,13 +37,14 @@ class ArgTypeItem(QStandardItem):
 
 class ArgEditItem(QStandardItem):
 
-    def __init__(self, tooltip, *args):
+    def __init__(self, dtype, *args):
         super().__init__(*args)
         self.is_changed = False
+        self.dtype = dtype
         self.tag = 0
 
         self.setEditable(True)
-        self.setToolTip(tooltip)
+        self.setToolTip(dtype)
 
     def has_changed(self):
         self.is_changed = True
@@ -55,6 +56,7 @@ class ArgMarkItem(QStandardItem):
     def __init__(self, tag, *args):
         super().__init__(*args)
         self.tag = tag
+        self.dtype = 'Reference'
         self.setEditable(False)
         self.setEnabled(False)
 
