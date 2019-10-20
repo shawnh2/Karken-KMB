@@ -32,7 +32,7 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         self.setPos(x - dis, y - dis)
 
     def feed_args(self, model):
-        self.args_model = model
+        self.arg_model = model
 
     def mouseMoveEvent(self, event):
         super().mouseMoveEvent(event)
@@ -46,9 +46,10 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
 
     def contextMenuEvent(self, event):
         right_menu = QMenu()
-        suggested = QIcon(icon['SUGGEST'])
+        token = QIcon(icon['TOKEN'])
+        free = QIcon(icon['FREE'])
         # add sign at head
-        sign = QAction(suggested, 'available')
+        sign = QAction('Reference Table')
         sign.setEnabled(False)
         right_menu.addAction(sign)
         right_menu.addSeparator()
@@ -57,13 +58,15 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         idx = 0
         actions = []
         while True:
-            arg_name = self.args_model.item(idx, 0)
+            arg_name = self.arg_model.item(idx, 0)
             if arg_name is None:
                 break
-            arg_value = self.args_model.item(idx, 1)
+            arg_value = self.arg_model.item(idx, 1)
             if arg_value.dtype == 'Reference':
-                actions.append(QAction(suggested, arg_name.text()))
-            #actions.append(QAction(arg_name.text()))
+                action = QAction(free, arg_name.text())
+                action.setObjectName(arg_name.text())
+                action.triggered.connect(self.node.gr_scene.right_menu_listener)
+                actions.append(action)
             # move on to next
             idx += 1
         right_menu.addActions(actions)

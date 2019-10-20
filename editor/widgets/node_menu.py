@@ -27,6 +27,7 @@ class KMBNodesMenu(QTabWidget):
         self.addTab(self.common_nodes, "Common")
         self.addTab(self.other_nodes, "Other")
         self.setMinimumWidth(270)
+        self.setMaximumWidth(470)
 
     def set_toolbox(self):
         nodes = {}

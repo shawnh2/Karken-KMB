@@ -52,7 +52,7 @@ class KMBMainWindow(QMainWindow):
 
     def init_ui(self, screen_size):
         width, height = screen_size
-        self.setCentralWidget(self.node_editor)
+        self.setCentralWidget(self.node_editor.splitter)
         self.setWindowTitle('Karken: KMB')
         self.setWindowIcon(QIcon(icon['WINICON']))
         self.setMinimumHeight(height)
@@ -98,6 +98,7 @@ class KMBMainWindow(QMainWindow):
         # ------
         self.action_about.setToolTip("About")
         self.action_about.setStatusTip(tips['ST_ABOUT'])
+        self.action_about.setEnabled(False)
 
     def set_toolbar_actions(self):
         # file operation

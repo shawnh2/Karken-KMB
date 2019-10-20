@@ -6,9 +6,9 @@ from lib import Counter
 
 class KMBNodeScene(Serializable):
 
-    def __init__(self):
+    def __init__(self, parent):
         super().__init__()
-
+        self.parent = parent  # main editor widget
         self.edges = []  # saving wrapper edges
         self.nodes = []  # saving wrapper nodes
         self.nodes_counter = Counter()  # count the nodes
@@ -28,18 +28,19 @@ class KMBNodeScene(Serializable):
                edge.start_item.gr_name == "Model" or\
                edge.start_item.gr_name == "PlaceHolder":
                 return False
-            # check the same edge in previous edges
-            for e in self.edges:
-                if e.start_item == edge.start_item and \
-                   e.end_item is edge.end_item:
-                    return False
-            return True
         elif edge_type == EDGE_CURVES:
             # ref curve only begins from 'common' or 'other' tab page
             # and end up with 'layers' tab.
             if edge.start_item.gr_type == "Layers":
                 return False
-            return True
+            if edge.end_item.gr_type != "Layers":
+                return False
+        # check the same edge in previous edges
+        for e in self.edges:
+            if e.start_item == edge.start_item and \
+               e.end_item is edge.end_item:
+                return False
+        return True
 
     def add_edge(self, edge):
         self.edges.append(edge)

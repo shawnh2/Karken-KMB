@@ -32,6 +32,11 @@ class KMBNodeGraphicScene(QGraphicsScene):
     def set_graphic_scene(self, width, height):
         self.setSceneRect(-width // 2, -height // 2, width, height)
 
+    def right_menu_listener(self):
+        # couldn't get sender() in QGraphicsPixmapItem,
+        # so add it here, emit the signal here also.
+        print(self.sender().objectName())
+
     def drawBackground(self, painter, rect):
         super().drawBackground(painter, rect)
 

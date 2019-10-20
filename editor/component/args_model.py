@@ -123,7 +123,7 @@ class ArgsEditableModel(ArgsSuperModel):
         arg_type_item = ArgTypeItem(arg_type)
         arg_name_item = ArgNameItem('inh', arg_info, arg_name)
         if arg_type == "bool":
-            arg_mark_item = ArgMarkItem(1)  # tag: 1 is for check box
+            arg_mark_item = ArgMarkItem(1, arg_type)  # tag: 1 is for check box
             self.check_args.append([idx, 1, arg_init, False])
             self.set_col_items(idx, arg_name_item, arg_mark_item)
         else:
@@ -140,11 +140,11 @@ class ArgsEditableModel(ArgsSuperModel):
             arg_box_list = self.db.get_box_args(int(arg_box)).split(';')
             self.combo_args.append([idx, 1, arg_init, arg_box_list, "placeholder", False])
             # placeholder is where to store the current value
-            arg_mark_item = ArgMarkItem(2)  # tag: 2 is for combo box
+            arg_mark_item = ArgMarkItem(2, arg_type)  # tag: 2 is for combo box
             self.set_col_items(idx, arg_name_item, arg_mark_item)
         elif arg_type == "bool":
             # setup the check button for bool type
-            arg_mark_item = ArgMarkItem(1)  # tag: 1 is for check box
+            arg_mark_item = ArgMarkItem(1, arg_type)  # tag: 1 is for check box
             self.check_args.append([idx, 1, arg_init, False])
             self.set_col_items(idx, arg_name_item, arg_mark_item)
         else:

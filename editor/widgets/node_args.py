@@ -1,10 +1,10 @@
-from PyQt5.QtWidgets import QTableView, QHeaderView, QCheckBox
+from PyQt5.QtWidgets import QTableView, QHeaderView
 from PyQt5.QtGui import QStandardItemModel
 from PyQt5.QtCore import Qt
 
 from lib import DataBase4Args
 from editor.component.args_model import ArgsPreviewModel, ArgsEditableModel
-from editor.component.args_model_item import ArgComboBox
+from editor.component.args_model_item import ArgComboBox, ArgCheckBox
 
 
 class KMBNodesArgsMenu(QTableView):
@@ -29,6 +29,7 @@ class KMBNodesArgsMenu(QTableView):
         self.verticalHeader().setHidden(True)
         # set width
         self.setMinimumWidth(320)
+        self.setMaximumWidth(500)
 
     def set_preview_args(self, node_name):
         id_string, inherit = self.db_link.get_args_id(node_name)
@@ -77,12 +78,7 @@ class KMBNodesArgsMenu(QTableView):
         model.check_widgets_id.clear()
         for row, col, arg_init, _ in model.check_args:
             index = self.model().index(row, col)
-            check = QCheckBox(arg_init)
-            # initialize the checkbox
-            if arg_init == "True":
-                check.setChecked(True)
-            else:
-                check.setChecked(False)
+            check = ArgCheckBox('Boolean', arg_init)
             model.check_widgets_id.append(id(check))
             self.setIndexWidget(index, check)
             check.clicked.connect(lambda s: self.modify_state(s, model))

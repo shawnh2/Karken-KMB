@@ -1,6 +1,6 @@
 import ctypes
 
-from PyQt5.QtWidgets import QWidget, QHBoxLayout
+from PyQt5.QtWidgets import QWidget, QSplitter
 from PyQt5.QtCore import Qt
 
 from editor.widgets.node_menu import KMBNodesMenu
@@ -17,11 +17,11 @@ class MainNodeEditor(QWidget):
         # init UI
         self.nodes_menu = KMBNodesMenu(self)
         self.args_menu = KMBArgsMenu(self)
-        self.nodes_scene = KMBNodeScene()
+        self.nodes_scene = KMBNodeScene(self)
         self.nodes_view = KMBNodeGraphicView(self.nodes_scene.graphic_scene,
                                              parent.statusBar().showMessage,
                                              self)
-        self.layout = QHBoxLayout()
+        self.splitter = QSplitter(self)
         # setup
         self.setup_layout()
         self.setup_slots()
@@ -29,11 +29,10 @@ class MainNodeEditor(QWidget):
     # ----------SETUP----------
 
     def setup_layout(self):
-        self.layout.setContentsMargins(2, 2, 2, 2)
-        self.layout.addWidget(self.nodes_menu, alignment=Qt.AlignLeft)
-        self.layout.addWidget(self.nodes_view)
-        self.layout.addWidget(self.args_menu.panel, alignment=Qt.AlignRight)
-        self.setLayout(self.layout)
+        self.splitter.addWidget(self.nodes_menu)
+        self.splitter.addWidget(self.nodes_view)
+        self.splitter.addWidget(self.args_menu.panel)
+        self.splitter.setOrientation(Qt.Horizontal)
 
     def setup_slots(self):
         # preview node's args.
