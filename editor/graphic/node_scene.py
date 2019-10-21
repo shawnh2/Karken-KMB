@@ -2,16 +2,18 @@ import math
 
 from PyQt5.QtWidgets import QGraphicsScene
 from PyQt5.QtGui import QColor, QPen
-from PyQt5.QtCore import QLine
+from PyQt5.QtCore import QLine, pyqtSignal
 
 from cfg import color
 
 
 class KMBNodeGraphicScene(QGraphicsScene):
 
+    # right menu signal, when picked up an arg item
+    picked_one_arg_to_ref = pyqtSignal(str, int, str)  # dst id, idx, src id
+
     def __init__(self, scene, parent=None):
         super().__init__(parent)
-
         self.scene = scene  # the wrapper of itself
 
         # settings
@@ -33,9 +35,13 @@ class KMBNodeGraphicScene(QGraphicsScene):
         self.setSceneRect(-width // 2, -height // 2, width, height)
 
     def right_menu_listener(self):
-        # couldn't get sender() in QGraphicsPixmapItem,
+        # couldn't call sender() in QGraphicsPixmapItem,
         # so add it here, emit the signal here also.
-        print(self.sender().objectName())
+        # see objectName as a data media which
+        # store node_id and arg item idx.
+        receive = self.sender().objectName()
+        dst_node_id, arg_idx, src_node_id = receive.split('-')
+        self.picked_one_arg_to_ref.emit(dst_node_id, int(arg_idx), src_node_id)
 
     def drawBackground(self, painter, rect):
         super().drawBackground(painter, rect)

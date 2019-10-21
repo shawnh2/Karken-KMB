@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QTableView, QHeaderView
 from PyQt5.QtGui import QStandardItemModel
 from PyQt5.QtCore import Qt
 
+from cfg import DEBUG
 from lib import DataBase4Args
 from editor.component.args_model import ArgsPreviewModel, ArgsEditableModel
 from editor.component.args_model_item import ArgComboBox, ArgCheckBox
@@ -10,17 +11,18 @@ from editor.component.args_model_item import ArgComboBox, ArgCheckBox
 class KMBNodesArgsMenu(QTableView):
 
     def __init__(self,
-                 menu_delegate,
+                 menu,
                  parent=None):
         super().__init__(parent)
 
-        self.menu = menu_delegate  # self wrapper
+        self.menu = menu  # self wrapper
         self.head = QHeaderView(Qt.Horizontal, self)
         # link to database
         self.db_link = DataBase4Args()
         self.null_model = QStandardItemModel()
         # for collection the ArgsEditableModel
         self.edit_model = {}
+        self.current_model = None
 
         # set the horizontal head
         self.head.setStretchLastSection(True)
@@ -48,57 +50,66 @@ class KMBNodesArgsMenu(QTableView):
             return
         # load args model that already exists.
         try:
-            model = self.edit_model[node_id]
-            self.setModel(model)
+            self.current_model = self.edit_model[node_id]
+            self.setModel(self.current_model)
             # try to set combo box args
-            if model.combo_args:
-                self.add_combobox_cell(model)
+            if self.current_model.combo_args:
+                self.add_combobox_cell()
             # try to set check button args
-            if model.check_args:
-                self.add_checkbox_cell(model)
-            model.itemChanged.connect(self.modify_item)
+            if self.current_model.check_args:
+                self.add_checkbox_cell()
+            self.current_model.itemChanged.connect(self.modify_item)
         except KeyError:
             self.setModel(self.null_model)
 
-    def add_combobox_cell(self, model):
-        # clean the widgets id, every time click node,
-        # it will generate new ids.
-        model.combo_widgets_id.clear()
-        for row, col, arg_init, args_list, arg_set, _ in model.combo_args:
-            index = self.model().index(row, col)
-            combo = ArgComboBox(args_list, arg_init)
-            # set current new value
-            if arg_set != "placeholder":
-                combo.setCurrentText(arg_set)
-            model.combo_widgets_id.append(id(combo))
+    def add_combobox_cell(self):
+        for row, arg_init, args_list in self.current_model.combo_args:
+            index = self.model().index(row, 1)
+            # there's a editable item behind it
+            item = self.current_model.item(row, 1)
+            # this item store the current value
+            combo = ArgComboBox(args_list, arg_init, at=row)
+            combo.setCurrentText(item.text())
             self.setIndexWidget(index, combo)
-            combo.currentTextChanged.connect(lambda v: self.modify_args(v, combo, model))
+            combo.currentTextChanged.connect(self.modify_args)
 
-    def add_checkbox_cell(self, model):
-        model.check_widgets_id.clear()
-        for row, col, arg_init, _ in model.check_args:
-            index = self.model().index(row, col)
-            check = ArgCheckBox('Boolean', arg_init)
-            model.check_widgets_id.append(id(check))
+    def add_checkbox_cell(self):
+        for row in self.current_model.check_args:
+            index = self.model().index(row, 1)
+            item = self.current_model.item(row, 1)
+            check = ArgCheckBox(item.text(), at=row)
             self.setIndexWidget(index, check)
-            check.clicked.connect(lambda s: self.modify_state(s, model))
+            check.clicked.connect(self.modify_state)
 
     def modify_item(self, item):
+        # has override the text() and setText() methods,
+        # so is unnecessary to change it again.
         item.has_changed()
-        item.setText(item.text())
 
-    def modify_args(self, value, combo, model):
-        # set the model's placeholder in combo_args
-        if model.combo_widgets_id.__contains__(id(combo.sender())):
-            idx = model.combo_widgets_id.index(id(combo.sender()))
-            model.reassign_value(idx, value)
-        else:
-            model.reassign_value(-1, value)
+    def modify_args(self, value):
+        self.current_model.reassign_value(self.sender().at, value)
 
-    def modify_state(self, state, model):
-        idx = model.check_widgets_id.index(id(self.sender()))
-        model.reassign_state(idx, str(state))
+    def modify_state(self, state):
+        self.current_model.reassign_state(self.sender().at, str(state))
         self.sender().setText(str(state))
+
+    def modify_ref(self, dst_node_id, idx, src_node_id):
+        # TODO: set ref var name while change
+        # modify for the arg which has a ref
+        dst_model = self.edit_model.get(dst_node_id)
+        # drop the invalid src node id
+        if src_node_id != 'null':
+            src_model = self.edit_model.get(src_node_id)
+            item_value = dst_model.item(idx, 1)
+            # set the item to ref's var name
+            item_value.setText(src_model.var_name)
+            item_value.has_referenced()
+            if DEBUG:
+                item_name = dst_model.item(idx, 0).text()
+                print(f'[REF] create <{dst_model.node_name}>{dst_model.var_name}.{item_name} '
+                      f'~ <{src_model.node_name}>{src_model.var_name}')
+        else:
+            pass
 
     def commit_node(self, node_name, node_id: str, count: int):
         # after adding node in canvas

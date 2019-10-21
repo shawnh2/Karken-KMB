@@ -59,16 +59,20 @@ class MainNodeEditor(QWidget):
         self.nodes_view.pop_up_right_menu.connect(
             self.send_args_to_node
         )
+        # after picking up an arg item from right menu
+        self.nodes_scene.graphic_scene.picked_one_arg_to_ref.connect(
+            self.args_menu.panel.modify_ref
+        )
 
     # ----------FUNCTIONS----------
 
-    def send_args_to_node(self, node_id: str):
-        fetched_model = self.args_menu.fetch(node_id)
+    def send_args_to_node(self, dst_node_id: str, src_node_id: str):
+        fetched_dst_model = self.args_menu.fetch(dst_node_id)
         # get the node by id (a very unsafe way)
-        gr_node = ctypes.cast(int(node_id), ctypes.py_object).value
+        dst_gr_node = ctypes.cast(int(dst_node_id), ctypes.py_object).value
         # pass the args to node,
         # now is able to show them on right menu.
-        gr_node.feed_args(fetched_model)
+        dst_gr_node.feed_args(fetched_dst_model, src_node_id)
 
     def serialize(self):
         # organize the nodes here

@@ -13,16 +13,18 @@ cgitb.enable(format("text"))
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    # get screen size
+    desktop = QApplication.desktop().screenGeometry()
+    width = desktop.width()
+    height = desktop.height()
     # setting up welcome screen.
-    screen = QPixmap(icon["SCREEN"]).scaled(640, 640)
+    screen = QPixmap(icon["SCREEN"]).scaled(height * 0.5, height * 0.5)
     splash = QSplashScreen(screen)
     splash.show()
     # handle the main process event.
     qApp.processEvents()
     # setting up main window.
-    desktop = QApplication.desktop().screenGeometry()
-    size = (desktop.width() * 0.8,
-            desktop.height() * 0.75)
+    size = (width * 0.8, height * 0.75)
     win = KMBMainWindow(size)
     # setup about panel.
     #about = AboutWidget()

@@ -30,8 +30,9 @@ class KMBNodeGraphicView(QGraphicsView):
     # pass the id of selected node item to edit.
     selected_node_item = pyqtSignal(str)           # id or state
     selected_delete_node = pyqtSignal(str)         # id
-    # pop up the right menu of clicked node.
-    pop_up_right_menu = pyqtSignal(str)            # id
+    # pop up the right menu of clicked node,
+    # also emit the src node id along with.
+    pop_up_right_menu = pyqtSignal(str, str)       # dst id, src id
 
     def __init__(self,
                  graphic_scene,
@@ -196,7 +197,7 @@ class KMBNodeGraphicView(QGraphicsView):
         # get the item that right clicked on
         item = self.get_item_at_click(event)
         if isinstance(item, KMBNodeGraphicItem):
-            self.pop_up_right_menu.emit(str(id(item)))
+            #self.pop_up_right_menu.emit(item.id_str, 'null')
             # get item self right menu to display
             item.contextMenuEvent(event)
 
@@ -318,7 +319,7 @@ class KMBNodeGraphicView(QGraphicsView):
         self.gr_scene.scene.add_node(node)
         count = self.gr_scene.scene.get_node_count(node)
         self.add_new_node_item.emit(node.gr_name,
-                                    str(id(node.gr_node)),
+                                    node.gr_node.id_str,
                                     count)
         self.status_bar_msg(f'Add: {self.current_node_item_name} node.')
         node.set_pos(x, y)
@@ -327,7 +328,7 @@ class KMBNodeGraphicView(QGraphicsView):
         # get args of node and edit it
         if item is not None and isinstance(item, KMBNodeGraphicItem):
             # if select obj, send its name.
-            self.selected_node_item.emit(str(id(item)))
+            self.selected_node_item.emit(item.id_str)
             self.status_bar_msg(f'Select: {item.name} node.')
         else:
             # if select no obj, send empty signal to clear arg panel.
@@ -337,7 +338,7 @@ class KMBNodeGraphicView(QGraphicsView):
         # del selected node
         if item is not None:
             if isinstance(item, KMBNodeGraphicItem):
-                self.selected_delete_node.emit(str(id(item)))
+                self.selected_delete_node.emit(item.id_str)
                 # after deleting stored model, then node graphic.
                 self.status_bar_msg(f'Delete: {item.name} node.')
                 self.gr_scene.removeItem(item)
@@ -382,4 +383,6 @@ class KMBNodeGraphicView(QGraphicsView):
             # only ref edge is able to pop up right menu of the end item,
             # so now you're able to pick up which arg it ref to.
             if self.edge_type == EDGE_CURVES:
+                self.pop_up_right_menu.emit(item.id_str,
+                                            self.drag_start_item.id_str)
                 self.contextMenuEvent(event)

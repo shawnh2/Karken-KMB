@@ -8,7 +8,6 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
 
     def __init__(self, node, name, parent=None):
         super().__init__(parent)
-
         self.node = node  # the wrapper of itself
         self.name = name
         self.pix = QPixmap(NODE_ICONx85_PATH.format(self.name))
@@ -16,6 +15,11 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
 
         self.width = 85
         self.height = 85
+        self.id_str = str(id(self))
+
+        self.right_menu = QMenu()
+        self.rm_token = QIcon(icon['TOKEN'])
+        self.rm_free = QIcon(icon['FREE'])
 
         self.setPixmap(self.pix)
         self.setFlag(QGraphicsItem.ItemIsSelectable)
@@ -31,8 +35,14 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         dis = self.width / 2
         self.setPos(x - dis, y - dis)
 
-    def feed_args(self, model):
-        self.arg_model = model
+    def feed_args(self, dst_model, src_node_id):
+        # if don't have src_node_id, it'll be 'null'.
+        self._arg_model = dst_model
+        self._src_node_id = src_node_id
+
+    def feed_ref(self, ref):
+        # the input ref item
+        self._ref_item = ref
 
     def mouseMoveEvent(self, event):
         super().mouseMoveEvent(event)
@@ -45,30 +55,35 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         super().mouseReleaseEvent(event)
 
     def contextMenuEvent(self, event):
-        right_menu = QMenu()
-        token = QIcon(icon['TOKEN'])
-        free = QIcon(icon['FREE'])
         # add sign at head
         sign = QAction('Reference Table')
         sign.setEnabled(False)
-        right_menu.addAction(sign)
-        right_menu.addSeparator()
+        self.right_menu.addAction(sign)
+        self.right_menu.addSeparator()
         # getting the args of its own and
         # highlight the Reference (suggested) one.
         idx = 0
-        actions = []
+        inh_actions = []  # actions for inherit args
+        org_actions = []  # actions for original args
         while True:
-            arg_name = self.arg_model.item(idx, 0)
+            arg_name = self._arg_model.item(idx, 0)
             if arg_name is None:
                 break
-            arg_value = self.arg_model.item(idx, 1)
+            arg_value = self._arg_model.item(idx, 1)
             if arg_value.dtype == 'Reference':
-                action = QAction(free, arg_name.text())
-                action.setObjectName(arg_name.text())
+                action = QAction(self.rm_free, arg_name.text())
+                # set its id and the idx of this arg, also src id
+                action.setObjectName(f'{self.id_str}-{idx}-{self._src_node_id}')
                 action.triggered.connect(self.node.gr_scene.right_menu_listener)
-                actions.append(action)
+                # collect action
+                if idx <= self._arg_model.io_separator:
+                    inh_actions.append(action)
+                else:
+                    org_actions.append(action)
             # move on to next
             idx += 1
-        right_menu.addActions(actions)
+        self.right_menu.addActions(inh_actions)
+        self.right_menu.addSeparator()
+        self.right_menu.addActions(org_actions)
         # show right menu
-        right_menu.exec(QCursor.pos())
+        self.right_menu.exec(QCursor.pos())

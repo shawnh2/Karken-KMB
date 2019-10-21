@@ -34,6 +34,8 @@ class KMBEdge(Serializable):
         if self.scene.check_edge(self, self.edge_type):
             self.scene.add_edge(self)
             # and return the state
+            if self.edge_type == EDGE_CURVES:
+                self.end_item.gr_node.feed_ref(self.start_item)
             return True
         return False
 

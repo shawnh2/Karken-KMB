@@ -5,6 +5,7 @@ INH_ARG: '#CCFFFF'  # BG for inherit args
 ORG_ARG: '#FFFFCC'  # BG for original args
 CUS_ARG: '#FFCCCC'  # BG for custom args, like: var name
 ARG_CHANGED: '#FFCC99'  # BG for changed args
+ARG_REFED: '#99cc66'  # BG for referenced args
 
 # for scene
 SCENE_BG: '#393939'

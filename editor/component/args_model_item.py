@@ -38,35 +38,50 @@ class ArgTypeItem(QStandardItem):
 
 class ArgEditItem(QStandardItem):
 
-    def __init__(self, dtype, *args):
-        super().__init__(*args)
+    def __init__(self, value, dtype, tag=0, store_bg=False):
+        self._value = value
+        self._store_bg = store_bg
+        if self._store_bg:
+            super().__init__()
+        else:
+            super().__init__(self._value)
         self.is_changed = False
+        self.is_referenced = False
         self.dtype = dtype
-        self.tag = 0
+        # default tag is 0.
+        # when self is token by other widget,
+        # 1 means checkbox, 2 means combobox.
+        self.tag = tag
 
         self.setEditable(True)
         self.setToolTip(dtype)
 
     def has_changed(self):
         self.is_changed = True
-        self.setBackground(QColor(color['ARG_CHANGED']))
+        # only set changed color for normal edit item
+        if self.tag == 0:
+            self.setBackground(QColor(color['ARG_CHANGED']))
 
+    def has_referenced(self):
+        self.is_referenced = True
+        if self.tag == 0:
+            self.setBackground(QColor(color['ARG_REFED']))
 
-class ArgMarkItem(QStandardItem):
-    """ The container of item which is other widget. """
+    def text(self):
+        return self._value
 
-    def __init__(self, tag, dtype, *args):
-        super().__init__(*args)
-        self.tag = tag
-        self.dtype = type_color_map(dtype)[1]
-        self.setEditable(False)
-        self.setEnabled(False)
+    def setText(self, p_str):
+        if self._store_bg:
+            self._value = p_str
+        else:
+            super().setText(p_str)
 
 
 class ArgComboBox(QComboBox):
 
-    def __init__(self, box_args: list, default: str, parent=None):
+    def __init__(self, box_args: list, default: str, at: int, parent=None):
         super().__init__(parent)
+        self.at = at  # index at model
 
         self.addItems(box_args)
         self.setCurrentText(default)
@@ -77,9 +92,9 @@ class ArgComboBox(QComboBox):
 
 class ArgCheckBox(QCheckBox):
 
-    def __init__(self, dtype, arg_init):
+    def __init__(self, arg_init, at: int):
         super().__init__(arg_init)
-        self.dtype = dtype
+        self.at = at  # index at model
         if arg_init == "True":
             self.setChecked(True)
         else:

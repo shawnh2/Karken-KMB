@@ -1,7 +1,6 @@
 from PyQt5.QtGui import QStandardItemModel
 
-from editor.component.args_model_item import (ArgNameItem, ArgTypeItem,
-                                              ArgEditItem, ArgMarkItem)
+from editor.component.args_model_item import ArgNameItem, ArgTypeItem, ArgEditItem
 
 
 class ArgsSuperModel(QStandardItemModel):
@@ -18,6 +17,8 @@ class ArgsSuperModel(QStandardItemModel):
         self.id_string = node_id_string
         self.inherit = inherit
         self.n = 0
+        self.io_separator = 0  # where inherit and original args separated.
+        self.var_name_idx = 0  # record idx where is arg: var_name
 
     def set_header_labels(self, header1: str, header2: str):
         # only two headers available
@@ -28,6 +29,7 @@ class ArgsSuperModel(QStandardItemModel):
             self.feed_inherit_item(i, arg)
             # add counter
             self.n += 1
+        self.io_separator = self.n
 
     def _get_original_args(self):
         for i, arg in self.db.get_org_args(self.id_string):
@@ -38,10 +40,11 @@ class ArgsSuperModel(QStandardItemModel):
                            'The name of this variable.',
                            'var_name')
         init_value = self.node_name.lower()
-        value = ArgEditItem("String",
-                            init_value if count == 1
-                            else init_value + '_' + str(count))
+        value = ArgEditItem(init_value if count == 1
+                            else init_value + '_' + str(count),
+                            "String")
         self.set_col_items(self.n, name, value)
+        self.var_name_idx = self.n
         self.n += 1
 
     def get_args(self, add_custom_args=False, count=1):
@@ -100,22 +103,26 @@ class ArgsEditableModel(ArgsSuperModel):
         super().__init__(db_link, node_name, node_id, inherit)
         # args: combobox style cell
         self.combo_args = []
-        self.combo_widgets_id = []
         # args: check button style cell
         self.check_args = []
-        self.check_widgets_id = []
         # where store the name of this node
         self.name = ""
         # set header labels for this model
         self.set_header_labels("Name", "Argument Value")
 
+    @property
+    def var_name(self):
+        return self.item(self.var_name_idx, 1).text()
+
     def reassign_value(self, idx, value: str):
-        self.combo_args[idx][4] = value
-        self.combo_args[idx][5] = True
+        arg_item = self.item(idx, 1)
+        arg_item.setText(value)
+        arg_item.has_changed()
 
     def reassign_state(self, idx, state: str):
-        self.check_args[idx][2] = state
-        self.check_args[idx][3] = ~self.check_args[idx][3]  # reverse the has-changed sign
+        arg_item = self.item(idx, 1)
+        arg_item.setText(state)
+        arg_item.is_changed = ~arg_item.is_changed
 
     def feed_inherit_item(self, idx, unpack_item):
         # id, name, init, type, info
@@ -123,11 +130,13 @@ class ArgsEditableModel(ArgsSuperModel):
         arg_type_item = ArgTypeItem(arg_type)
         arg_name_item = ArgNameItem('inh', arg_info, arg_name)
         if arg_type == "bool":
-            arg_mark_item = ArgMarkItem(1, arg_type)  # tag: 1 is for check box
-            self.check_args.append([idx, 1, arg_init, False])
+            arg_mark_item = ArgEditItem(arg_init,
+                                        arg_type_item.raw_type_name,
+                                        tag=1, store_bg=True)
+            self.check_args.append(idx)
             self.set_col_items(idx, arg_name_item, arg_mark_item)
         else:
-            arg_init_item = ArgEditItem(arg_type_item.raw_type_name, arg_init)
+            arg_init_item = ArgEditItem(arg_init, arg_type_item.raw_type_name)
             self.set_col_items(idx, arg_name_item, arg_init_item)
 
     def feed_original_item(self, idx, unpack_item):
@@ -138,15 +147,19 @@ class ArgsEditableModel(ArgsSuperModel):
         if arg_box:
             # setup the combo box for box args
             arg_box_list = self.db.get_box_args(int(arg_box)).split(';')
-            self.combo_args.append([idx, 1, arg_init, arg_box_list, "placeholder", False])
+            self.combo_args.append([idx, arg_init, arg_box_list])
             # placeholder is where to store the current value
-            arg_mark_item = ArgMarkItem(2, arg_type)  # tag: 2 is for combo box
+            arg_mark_item = ArgEditItem(arg_init,
+                                        arg_type_item.raw_type_name,
+                                        tag=2, store_bg=True)
             self.set_col_items(idx, arg_name_item, arg_mark_item)
         elif arg_type == "bool":
             # setup the check button for bool type
-            arg_mark_item = ArgMarkItem(1, arg_type)  # tag: 1 is for check box
-            self.check_args.append([idx, 1, arg_init, False])
+            arg_mark_item = ArgEditItem(arg_init,
+                                        arg_type_item.raw_type_name,
+                                        tag=1, store_bg=True)
+            self.check_args.append(idx)
             self.set_col_items(idx, arg_name_item, arg_mark_item)
         else:
-            arg_init_item = ArgEditItem(arg_type_item.raw_type_name, arg_init)
+            arg_init_item = ArgEditItem(arg_init, arg_type_item.raw_type_name)
             self.set_col_items(idx, arg_name_item, arg_init_item)
