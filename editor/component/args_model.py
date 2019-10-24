@@ -66,6 +66,17 @@ class ArgsSuperModel(QStandardItemModel):
         for i, item in enumerate(items):
             self.setItem(col_idx, i, item)
 
+    def items(self):
+        """ Generator: yield items in model. """
+        idx = 0
+        while True:
+            arg_name = self.item(idx, 0)
+            if arg_name is None:
+                break
+            arg_value = self.item(idx, 1)
+            yield idx, arg_name, arg_value
+            idx += 1
+
 
 class ArgsPreviewModel(ArgsSuperModel):
 

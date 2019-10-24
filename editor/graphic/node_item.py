@@ -20,6 +20,7 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         self.right_menu = QMenu()
         self.rm_token = QIcon(icon['TOKEN'])
         self.rm_free = QIcon(icon['FREE'])
+        self._ref_item = None
 
         self.setPixmap(self.pix)
         self.setFlag(QGraphicsItem.ItemIsSelectable)
@@ -35,14 +36,15 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         dis = self.width / 2
         self.setPos(x - dis, y - dis)
 
-    def feed_args(self, dst_model, src_node_id):
-        # if don't have src_node_id, it'll be 'null'.
+    def feed_args(self, dst_model):
         self._arg_model = dst_model
-        self._src_node_id = src_node_id
 
-    def feed_ref(self, ref):
-        # the input ref item
-        self._ref_item = ref
+    def feed_ref(self, ref_item):
+        # the ref edge (wrapper): start item
+        self._ref_item = ref_item
+
+    def clean_ref(self):
+        self._ref_item = None
 
     def mouseMoveEvent(self, event):
         super().mouseMoveEvent(event)
@@ -54,36 +56,48 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
 
-    def contextMenuEvent(self, event):
-        # add sign at head
-        sign = QAction('Reference Table')
-        sign.setEnabled(False)
-        self.right_menu.addAction(sign)
-        self.right_menu.addSeparator()
-        # getting the args of its own and
-        # highlight the Reference (suggested) one.
-        idx = 0
+    def get_context_menu(self):
         inh_actions = []  # actions for inherit args
         org_actions = []  # actions for original args
-        while True:
-            arg_name = self._arg_model.item(idx, 0)
-            if arg_name is None:
-                break
-            arg_value = self._arg_model.item(idx, 1)
+        for idx, arg_name, arg_value in self._arg_model.items():
             if arg_value.dtype == 'Reference':
-                action = QAction(self.rm_free, arg_name.text())
-                # set its id and the idx of this arg, also src id
-                action.setObjectName(f'{self.id_str}-{idx}-{self._src_node_id}')
-                action.triggered.connect(self.node.gr_scene.right_menu_listener)
+                # set different state mark
+                if arg_value.is_referenced:
+                    action = QAction(self.rm_token,
+                                     arg_name.text() + ' ~ ' + arg_value.get_var_name())
+                    action.setDisabled(True)
+                else:
+                    action = QAction(self.rm_free, arg_name.text())
+                # only after dragging ref curve to an item,
+                # will get attribute: '_ref_item', so setup some signals.
+                if self._ref_item is not None:
+                    # set its id and the idx of this arg, also src id.
+                    action.setObjectName(f'{self.id_str}-{idx}-{self._ref_item.gr_node.id_str}')
+                    action.triggered.connect(self.node.gr_scene.right_menu_listener)
                 # collect action
                 if idx <= self._arg_model.io_separator:
                     inh_actions.append(action)
                 else:
                     org_actions.append(action)
-            # move on to next
-            idx += 1
+        return inh_actions, org_actions
+
+    def contextMenuEvent(self, event):
+        if self._ref_item is not None:
+            # it means this right menu is called after ref edge.
+            # add custom sign at head
+            sign = QAction(f'{self._ref_item.gr_name}-')
+        else:
+            sign = QAction('Reference Table')
+        sign.setEnabled(False)
+        self.right_menu.addAction(sign)
+        self.right_menu.addSeparator()
+        # getting the args of its own and
+        # highlight the Reference (suggested) one.
+        inh_actions, org_actions = self.get_context_menu()
         self.right_menu.addActions(inh_actions)
         self.right_menu.addSeparator()
         self.right_menu.addActions(org_actions)
         # show right menu
         self.right_menu.exec(QCursor.pos())
+        # clean ref after using
+        self.clean_ref()

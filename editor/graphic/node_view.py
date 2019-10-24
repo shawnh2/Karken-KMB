@@ -23,6 +23,8 @@ EDGE_DRAG = 6
 
 class KMBNodeGraphicView(QGraphicsView):
 
+    # ------------------SIGNALS--------------------
+
     # show the changing position in status bar.
     scene_pos_changed = pyqtSignal(int, int)       # x, y coord
     # the necessary signal to add a new node in scene.
@@ -32,7 +34,9 @@ class KMBNodeGraphicView(QGraphicsView):
     selected_delete_node = pyqtSignal(str)         # id
     # pop up the right menu of clicked node,
     # also emit the src node id along with.
-    pop_up_right_menu = pyqtSignal(str, str)       # dst id, src id
+    pop_up_right_menu = pyqtSignal(str)            # dst id
+
+    # ------------------INIT--------------------
 
     def __init__(self,
                  graphic_scene,
@@ -44,6 +48,7 @@ class KMBNodeGraphicView(QGraphicsView):
         self.status_bar_msg = status_bar_msg
         self.mode = MOUSE_SELECT
         self.edge_type = None
+        self.has_chosen_from_rm = False
         self.last_scene_mouse_pos = None
         self.current_node_item_name = None
         self.current_node_item_type = None
@@ -55,8 +60,6 @@ class KMBNodeGraphicView(QGraphicsView):
         self.zoom_clamp = True
 
         self.init_ui()
-
-    # ------------------INIT--------------------
 
     def init_ui(self):
         self.setScene(self.gr_scene)
@@ -197,7 +200,7 @@ class KMBNodeGraphicView(QGraphicsView):
         # get the item that right clicked on
         item = self.get_item_at_click(event)
         if isinstance(item, KMBNodeGraphicItem):
-            #self.pop_up_right_menu.emit(item.id_str, 'null')
+            self.pop_up_right_menu.emit(item.id_str)
             # get item self right menu to display
             item.contextMenuEvent(event)
 
@@ -304,8 +307,6 @@ class KMBNodeGraphicView(QGraphicsView):
         """ Return the object that clicked on. """
         pos = event.pos()
         obj = self.itemAt(pos)
-        if DEBUG and obj is not None:
-            print(f"[CLICK] at {obj}")
         return obj
 
     def add_selected_node_item(self):
@@ -352,9 +353,15 @@ class KMBNodeGraphicView(QGraphicsView):
         pix = QPixmap(icon['CROSS']).scaled(30, 30)
         self.setCursor(QCursor(pix))
 
+    def set_chosen_state_from_rm(self, _):
+        # if not choose one arg item from menu,
+        # then del this edge, and this is sign.
+        self.has_chosen_from_rm = True
+
     def edge_drag_start(self, item):
         # pass the wrapper of gr_scene and gr_node
         self.drag_start_item = item
+        self.has_chosen_from_rm = False
         self.drag_edge = KMBEdge(self.gr_scene.scene,
                                  item.node,
                                  None, self.edge_type)
@@ -373,16 +380,26 @@ class KMBNodeGraphicView(QGraphicsView):
         self.drag_edge.remove()
         self.drag_edge = None
         # saving for the new edge.
-        if not new_edge.store():  # fail to add new edge.
+        saving_state = new_edge.store()
+        # -1 (Invalid), 0 (Valid but not display), 1 (Valid and display)
+        if saving_state == -1:  # fail to add new edge.
             self.gr_scene.removeItem(new_edge.gr_edge)
             if DEBUG:
-                print(f"[dropped] => {self.drag_edge} cause invalid connection.")
+                print(f"[dropped] invalid connection.")
         else:  # add new edge successfully.
             if DEBUG:
                 print(f"[connect] {self.drag_start_item} ~ {item} => {new_edge}")
             # only ref edge is able to pop up right menu of the end item,
             # so now you're able to pick up which arg it ref to.
             if self.edge_type == EDGE_CURVES:
-                self.pop_up_right_menu.emit(item.id_str,
-                                            self.drag_start_item.id_str)
                 self.contextMenuEvent(event)
+            # if hadn't chosen a item in right menu,
+            # then give up this edge.
+            if not self.has_chosen_from_rm:
+                self.del_selected_node_item(new_edge.gr_edge)
+            # just remove gr-edge this time.
+            if saving_state == 0:
+                self.gr_scene.removeItem(new_edge.gr_edge)
+                if DEBUG:
+                    print(f"[dropped] repeating edge but stored.")
+                # TODO: take over DEBUG, and make it a func

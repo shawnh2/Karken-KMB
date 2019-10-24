@@ -20,27 +20,40 @@ class KMBNodeScene(Serializable):
                                              self.scene_height)
 
     def check_edge(self, edge, edge_type):
-        """ Check edge valid. """
+        """ Check edge valid.
+        :return -1 (Invalid), 0 (valid but not display), 1 (valid)
+        """
         if edge_type == EDGE_DIRECT:
             # check input edge if it's Input or Model
             if edge.end_item.gr_name == "Input" or\
                edge.end_item.gr_name == "PlaceHolder" or\
                edge.start_item.gr_name == "Model" or\
                edge.start_item.gr_name == "PlaceHolder":
-                return False
+                return -1
+            # check the same edge in previous edges
+            for e in self.edges:
+                if e.start_item == edge.start_item and \
+                        e.end_item is edge.end_item:
+                    return -1
+            # which means ref curves allow user to drag from same node,
+            # but it must link to the different arg item.
+            # good thing is referenced arg item will be disable,
+            # so it's unnecessary to add few more `if` block.
         elif edge_type == EDGE_CURVES:
             # ref curve only begins from 'common' or 'other' tab page
             # and end up with 'layers' tab.
-            if edge.start_item.gr_type == "Layers":
-                return False
-            if edge.end_item.gr_type != "Layers":
-                return False
-        # check the same edge in previous edges
-        for e in self.edges:
-            if e.start_item == edge.start_item and \
-               e.end_item is edge.end_item:
-                return False
-        return True
+            if edge.start_item.gr_type == "Layers" or\
+               edge.end_item.gr_type != "Layers":
+                return -1
+            # ref curve allow to repeat, but it's very unnecessary to
+            # display the edge again, just use the first one.
+            # but will still store it in memory.
+            for e in self.edges:
+                if e.start_item == edge.start_item and \
+                        e.end_item is edge.end_item:
+                    return 0
+        # if there's no invalid edge, then return True
+        return 1
 
     def add_edge(self, edge):
         self.edges.append(edge)

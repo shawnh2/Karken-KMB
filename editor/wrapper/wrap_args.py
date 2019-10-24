@@ -16,42 +16,20 @@ class KMBArgsMenu(Serializable):
         return self.panel.fetch_node(key)
 
     def serialize(self):
-        # TODO: rebuild there
-        # <args> element that lives in <layer>
+        # get <args> element in <layer>
         args_dict = OrderedDict()
         vars_name_dict = {}
         for id_, model in self.panel.edit_model.items():
             arg_dict = OrderedDict()
-            var_name = ""
             # filter every items that has been changed
-            idx = 0
-            check_idx = 0  # idx for check-box
-            combo_idx = 0  # idx for combo-box
-            while True:
-                arg_name = model.item(idx, 0)
-                # stop when arg goes end
-                if arg_name is None:
-                    break
-                # tell different arg type by its tag
-                arg_value = model.item(idx, 1)
-                if arg_value.tag == 0:  # normal-input
-                    if arg_name.text() == 'var_name':
-                        var_name = arg_value.text()
-                    elif arg_value.is_changed:
-                        arg_dict[arg_name.text()] = arg_value.text()
-
-                elif arg_value.tag == 1:  # check-box
-                    if model.check_args[check_idx][3]:
-                        arg_dict[arg_name.text()] = model.check_args[check_idx][2]
-                    check_idx += 1
-
-                elif arg_value.tag == 2:  # combo-box
-                    if model.combo_args[combo_idx][5]:
-                        arg_dict[arg_name.text()] = model.combo_args[combo_idx][4]
-                    combo_idx += 1
-                idx += 1
+            for idx, arg_name, arg_value in model.items():
+                if arg_name.text() == 'var_name':
+                    vars_name_dict[id_] = arg_value.text()
+                elif arg_value.is_changed:
+                    arg_dict[arg_name.text()] = arg_value.text()
+                elif arg_value.is_referenced:
+                    arg_dict[arg_name.text()] = arg_value.get_ref()
             args_dict[id_] = arg_dict
-            vars_name_dict[id_] = var_name
         return args_dict, vars_name_dict
 
     def deserialize(self):

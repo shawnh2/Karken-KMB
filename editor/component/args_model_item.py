@@ -50,8 +50,9 @@ class ArgEditItem(QStandardItem):
         self.dtype = dtype
         # default tag is 0.
         # when self is token by other widget,
-        # 1 means checkbox, 2 means combobox.
+        # 1 is checkbox, 2 is combobox.
         self.tag = tag
+        self.ref = None
 
         self.setEditable(True)
         self.setToolTip(dtype)
@@ -62,13 +63,25 @@ class ArgEditItem(QStandardItem):
         if self.tag == 0:
             self.setBackground(QColor(color['ARG_CHANGED']))
 
-    def has_referenced(self):
+    def set_ref(self, ref):
+        self.ref = ref
+        self.setText(self.get_var_name())
+        # set to referenced bg color
         self.is_referenced = True
-        if self.tag == 0:
-            self.setBackground(QColor(color['ARG_REFED']))
+        self.setBackground(QColor(color['ARG_REFED']))
+    # TODO: try to make ref var name a property and setter
+    def get_ref(self):
+        # get the id of ref item
+        return str(id(self.ref))
+
+    def get_var_name(self):
+        return self.ref.var_name
 
     def text(self):
-        return self._value
+        if self._store_bg:
+            return self._value
+        else:
+            return super().text()
 
     def setText(self, p_str):
         if self._store_bg:

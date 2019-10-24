@@ -11,6 +11,7 @@ class KMBNodeGraphicScene(QGraphicsScene):
 
     # right menu signal, when picked up an arg item
     picked_one_arg_to_ref = pyqtSignal(str, int, str)  # dst id, idx, src id
+    do_not_pick_one = pyqtSignal(bool)  # pick state
 
     def __init__(self, scene, parent=None):
         super().__init__(parent)
@@ -42,6 +43,10 @@ class KMBNodeGraphicScene(QGraphicsScene):
         receive = self.sender().objectName()
         dst_node_id, arg_idx, src_node_id = receive.split('-')
         self.picked_one_arg_to_ref.emit(dst_node_id, int(arg_idx), src_node_id)
+        # if had clicked the menu item, will trigger this signal.
+        # send True or False. True means had clicked,
+        # False means hadn't, then will clean edge and cancel this ref.
+        self.do_not_pick_one.emit(True)
 
     def drawBackground(self, painter, rect):
         super().drawBackground(painter, rect)

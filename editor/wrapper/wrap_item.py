@@ -21,7 +21,8 @@ class KMBNodeItem(Serializable):
 
     def update_connect_edges(self):
         for edge in self.gr_scene.scene.edges:
-            edge.update_positions()
+            if edge.is_available():
+                edge.update_positions()
 
     def serialize(self):
         return {

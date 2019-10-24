@@ -25,7 +25,7 @@ class KMBNodesMenu(QTabWidget):
         self.set_toolbox()
         self.addTab(self.layer_nodes, "Layers")
         self.addTab(self.common_nodes, "Common")
-        self.addTab(self.other_nodes, "Other")
+        self.addTab(self.other_nodes, "Units")
         self.setMinimumWidth(270)
         self.setMaximumWidth(470)
 
@@ -54,7 +54,7 @@ class KMBNodesMenu(QTabWidget):
                 vb_layout.addWidget(node_button, alignment=Qt.AlignLeft)
             if c.lower() == 'layers':
                 self.layer_nodes.addItem(group_box, s)
-            elif c.lower() == 'other':
+            elif c.lower() == 'units':
                 self.other_nodes.addItem(group_box, s)
             elif c.lower() == 'common':
                 self.common_nodes.addItem(group_box, s)

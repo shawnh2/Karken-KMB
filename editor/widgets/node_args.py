@@ -82,9 +82,14 @@ class KMBNodesArgsMenu(QTableView):
             check.clicked.connect(self.modify_state)
 
     def modify_item(self, item):
-        # has override the text() and setText() methods,
-        # so is unnecessary to change it again.
+        item.setText(item.text())
         item.has_changed()
+        cur_idx = self.current_model.indexFromItem(item).row()
+        # if this is where var_name got changed,
+        # also change value where nodes referenced with.
+        # TODO: change the node that attach to it also.
+        if cur_idx == self.current_model.var_name_idx:
+            pass
 
     def modify_args(self, value):
         self.current_model.reassign_value(self.sender().at, value)
@@ -94,22 +99,15 @@ class KMBNodesArgsMenu(QTableView):
         self.sender().setText(str(state))
 
     def modify_ref(self, dst_node_id, idx, src_node_id):
-        # TODO: set ref var name while change
-        # modify for the arg which has a ref
         dst_model = self.edit_model.get(dst_node_id)
-        # drop the invalid src node id
-        if src_node_id != 'null':
-            src_model = self.edit_model.get(src_node_id)
-            item_value = dst_model.item(idx, 1)
-            # set the item to ref's var name
-            item_value.setText(src_model.var_name)
-            item_value.has_referenced()
-            if DEBUG:
-                item_name = dst_model.item(idx, 0).text()
-                print(f'[REF] create <{dst_model.node_name}>{dst_model.var_name}.{item_name} '
-                      f'~ <{src_model.node_name}>{src_model.var_name}')
-        else:
-            pass
+        src_model = self.edit_model.get(src_node_id)
+        item_value = dst_model.item(idx, 1)
+        # modify the arg to ref's var name
+        item_value.set_ref(src_model)
+        if DEBUG:
+            item_name = dst_model.item(idx, 0).text()
+            print(f'[REF] create <{dst_model.node_name}>:{dst_model.var_name}.{item_name} '
+                  f'~ <{src_model.node_name}>:{src_model.var_name}')
 
     def commit_node(self, node_name, node_id: str, count: int):
         # after adding node in canvas
