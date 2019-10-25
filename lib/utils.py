@@ -1,4 +1,4 @@
-from cfg import color
+from cfg import color, DEBUG
 
 
 def split_args_id(id_string: str) -> list:
@@ -64,3 +64,14 @@ def reorder_args_box(head, heap: list) -> list:
     head_idx = heap.index(head)
     heap[0], heap[head_idx] = heap[head_idx], heap[0]
     return heap
+
+
+def debug(*msg):
+    """
+    If it's under debug mode, then print the msg.
+
+    :param msg: debug message
+    :return: null
+    """
+    if DEBUG:
+        print(*msg)

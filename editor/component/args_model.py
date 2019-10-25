@@ -1,6 +1,9 @@
 from PyQt5.QtGui import QStandardItemModel
+from PyQt5.QtGui import QColor
 
 from editor.component.args_model_item import ArgNameItem, ArgTypeItem, ArgEditItem
+from cfg import color
+from lib import debug
 
 
 class ArgsSuperModel(QStandardItemModel):
@@ -29,7 +32,7 @@ class ArgsSuperModel(QStandardItemModel):
             self.feed_inherit_item(i, arg)
             # add counter
             self.n += 1
-        self.io_separator = self.n
+        self.io_separator = self.n  # record here
 
     def _get_original_args(self):
         for i, arg in self.db.get_org_args(self.id_string):
@@ -42,9 +45,9 @@ class ArgsSuperModel(QStandardItemModel):
         init_value = self.node_name.lower()
         value = ArgEditItem(init_value if count == 1
                             else init_value + '_' + str(count),
-                            "String")
+                            'String', 'var_name')
         self.set_col_items(self.n, name, value)
-        self.var_name_idx = self.n
+        self.var_name_idx = self.n  # record here
         self.n += 1
 
     def get_args(self, add_custom_args=False, count=1):
@@ -109,6 +112,7 @@ class ArgsEditableModel(ArgsSuperModel):
     def __init__(self,
                  db_link,
                  node_name: str,
+                 node_type: str,
                  node_id: str,
                  inherit: str):
         super().__init__(db_link, node_name, node_id, inherit)
@@ -116,14 +120,47 @@ class ArgsEditableModel(ArgsSuperModel):
         self.combo_args = []
         # args: check button style cell
         self.check_args = []
-        # where store the name of this node
-        self.name = ""
+        self.node_type = node_type
+        # for optional attrs
+        self._ref_by_list = []
+        self.ref_by_update = False
+        self.ref_color = QColor(color['ARG_REFED'])
         # set header labels for this model
         self.set_header_labels("Name", "Argument Value")
 
     @property
     def var_name(self):
         return self.item(self.var_name_idx, 1).text()
+
+    # ------OPTIONAL PROPERTY------
+    # It's only for some node that can be referenced.
+    # Such as PlaceHolder, Units ...
+
+    def set_ref_by(self, ref_by):
+        self._ref_by_list.append(ref_by)
+        self.ref_by_update = True
+
+    def get_ref_by(self):
+        return self._ref_by_list
+
+    def del_ref_by(self):
+        # no necessary to change ref_by_update to False
+        # because once this func has been called,
+        # its entire instance will be destroyed.
+        for ref in self._ref_by_list:
+            debug(f'[DEL REF] {ref} ref has been removed.')
+            del ref.ref_to
+        # clean all
+        self._ref_by_list = []
+
+    def update_ref_by(self, value: str):
+        for ref in self._ref_by_list:
+            ref.setText(value)
+            ref.setBackground(self.ref_color)
+
+    ref_by = property(get_ref_by, set_ref_by, del_ref_by)
+
+    # -----------------------------
 
     def reassign_value(self, idx, value: str):
         arg_item = self.item(idx, 1)
@@ -142,12 +179,16 @@ class ArgsEditableModel(ArgsSuperModel):
         arg_name_item = ArgNameItem('inh', arg_info, arg_name)
         if arg_type == "bool":
             arg_mark_item = ArgEditItem(arg_init,
-                                        arg_type_item.raw_type_name,
-                                        tag=1, store_bg=True)
+                                        dtype=arg_type_item.raw_type_name,
+                                        belong_to=arg_name,
+                                        tag=1,
+                                        store_bg=True)
             self.check_args.append(idx)
             self.set_col_items(idx, arg_name_item, arg_mark_item)
         else:
-            arg_init_item = ArgEditItem(arg_init, arg_type_item.raw_type_name)
+            arg_init_item = ArgEditItem(arg_init,
+                                        dtype=arg_type_item.raw_type_name,
+                                        belong_to=arg_name)
             self.set_col_items(idx, arg_name_item, arg_init_item)
 
     def feed_original_item(self, idx, unpack_item):
@@ -161,16 +202,20 @@ class ArgsEditableModel(ArgsSuperModel):
             self.combo_args.append([idx, arg_init, arg_box_list])
             # placeholder is where to store the current value
             arg_mark_item = ArgEditItem(arg_init,
-                                        arg_type_item.raw_type_name,
+                                        dtype=arg_type_item.raw_type_name,
+                                        belong_to=arg_name,
                                         tag=2, store_bg=True)
             self.set_col_items(idx, arg_name_item, arg_mark_item)
         elif arg_type == "bool":
             # setup the check button for bool type
             arg_mark_item = ArgEditItem(arg_init,
-                                        arg_type_item.raw_type_name,
+                                        dtype=arg_type_item.raw_type_name,
+                                        belong_to=arg_name,
                                         tag=1, store_bg=True)
             self.check_args.append(idx)
             self.set_col_items(idx, arg_name_item, arg_mark_item)
         else:
-            arg_init_item = ArgEditItem(arg_init, arg_type_item.raw_type_name)
+            arg_init_item = ArgEditItem(arg_init,
+                                        dtype=arg_type_item.raw_type_name,
+                                        belong_to=arg_name)
             self.set_col_items(idx, arg_name_item, arg_init_item)

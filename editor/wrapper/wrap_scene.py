@@ -1,7 +1,7 @@
 from editor.graphic.node_scene import KMBNodeGraphicScene
 from editor.wrapper.serializable import Serializable
-from cfg import DEBUG, EDGE_DIRECT, EDGE_CURVES
-from lib import Counter
+from cfg import EDGE_DIRECT, EDGE_CURVES
+from lib import Counter, debug
 
 
 class KMBNodeScene(Serializable):
@@ -57,25 +57,21 @@ class KMBNodeScene(Serializable):
 
     def add_edge(self, edge):
         self.edges.append(edge)
-        if DEBUG:
-            print("*[E_ADD_%d]" % len(self.edges), self.edges)
+        debug(f"*[E_ADD_{len(self.edges)}] {self.edges}")
 
     def remove_edge(self, edge):
         self.edges.remove(edge)
-        if DEBUG:
-            print("*[E_DEL_%d]" % len(self.edges), self.edges)
+        debug(f"*[E_DEL_{len(self.edges)}] {self.edges}")
 
     def add_node(self, node):
         self.nodes.append(node)
         self.nodes_counter.update(node.gr_name)
-        if DEBUG:
-            print("*[N_ADD_%d]" % len(self.nodes), self.nodes)
+        debug(f"*[N_ADD_{len(self.nodes)}] {self.nodes}")
 
     def remove_node(self, node):
         self.nodes.remove(node)
         self._remove_relative_edges(node)
-        if DEBUG:
-            print("*[N_DEL_%d]" % len(self.nodes), self.nodes)
+        debug(f"*[N_DEL_{len(self.nodes)}] {self.nodes}")
 
     def get_node_count(self, node):
         return self.nodes_counter.get(node.gr_name)

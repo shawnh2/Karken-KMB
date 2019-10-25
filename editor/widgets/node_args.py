@@ -2,10 +2,9 @@ from PyQt5.QtWidgets import QTableView, QHeaderView
 from PyQt5.QtGui import QStandardItemModel
 from PyQt5.QtCore import Qt
 
-from cfg import DEBUG
-from lib import DataBase4Args
 from editor.component.args_model import ArgsPreviewModel, ArgsEditableModel
 from editor.component.args_model_item import ArgComboBox, ArgCheckBox
+from lib import DataBase4Args, debug
 
 
 class KMBNodesArgsMenu(QTableView):
@@ -82,16 +81,24 @@ class KMBNodesArgsMenu(QTableView):
             check.clicked.connect(self.modify_state)
 
     def modify_item(self, item):
-        item.setText(item.text())
-        item.has_changed()
-        cur_idx = self.current_model.indexFromItem(item).row()
+        value = item.text()
+        if item.is_referenced:
+            # avoid referenced here
+            pass
+        else:
+            item.setText(value)
+            if item.check_changed(value):
+                item.has_changed()
+            else:
+                item.undo_change()
         # if this is where var_name got changed,
         # also change value where nodes referenced with.
-        # TODO: change the node that attach to it also.
-        if cur_idx == self.current_model.var_name_idx:
-            pass
+        if self.current_model.ref_by_update:
+            self.current_model.update_ref_by(value)
 
     def modify_args(self, value):
+        # TODO: combo add ref and del
+        # TODO: one ref edge del case
         self.current_model.reassign_value(self.sender().at, value)
 
     def modify_state(self, state):
@@ -99,32 +106,44 @@ class KMBNodesArgsMenu(QTableView):
         self.sender().setText(str(state))
 
     def modify_ref(self, dst_node_id, idx, src_node_id):
+        # create ref here
         dst_model = self.edit_model.get(dst_node_id)
         src_model = self.edit_model.get(src_node_id)
-        item_value = dst_model.item(idx, 1)
-        # modify the arg to ref's var name
-        item_value.set_ref(src_model)
-        if DEBUG:
-            item_name = dst_model.item(idx, 0).text()
-            print(f'[REF] create <{dst_model.node_name}>:{dst_model.var_name}.{item_name} '
-                  f'~ <{src_model.node_name}>:{src_model.var_name}')
+        dst_value_item = dst_model.item(idx, 1)
+        src_value_item = src_model.item(src_model.var_name_idx, 1)
+        # save the relationship of ref
+        dst_value_item.ref_to = src_value_item
+        src_model.ref_by = dst_value_item
 
-    def commit_node(self, node_name, node_id: str, count: int):
+        item_name = dst_model.item(idx, 0).text()
+        debug(f'[REF] create <{dst_model.node_name}>:{dst_model.var_name}.{item_name} '
+              f'~ <{src_model.node_name}>:{src_model.var_name}')
+
+    # ------Operations on Node Model------
+
+    def commit_node(self,
+                    node_name, node_type,
+                    node_id: str, count: int):
         # after adding node in canvas
         # first time make new model.
         id_string, inherit = self.db_link.get_args_id(node_name)
         model = ArgsEditableModel(
             db_link=self.db_link,
             node_name=node_name,
+            node_type=node_type,
             node_id=id_string,
             inherit=inherit
         )
-        model.name = node_name
         model.get_args(add_custom_args=True, count=count)
         # then store it but don't display it.
         self.edit_model[node_id] = model
 
     def delete_node(self, node_id: str):
+        model = self.edit_model.get(node_id)
+        # remove the ref
+        if model.node_name == 'PlaceHolder':
+            del model.ref_by
+        # remove entire node item
         self.edit_model.__delitem__(node_id)
         self.setModel(self.null_model)
 

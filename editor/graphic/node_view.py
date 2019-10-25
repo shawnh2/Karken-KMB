@@ -7,7 +7,8 @@ from editor.graphic.node_edge import KMBGraphicEdge
 from editor.wrapper.wrap_item import KMBNodeItem
 from editor.wrapper.warp_edge import KMBEdge
 from editor.component.edge_type import KMBGraphicEdgeDirect
-from cfg import icon, DEBUG, EDGE_CURVES, EDGE_DIRECT
+from cfg import icon, EDGE_CURVES, EDGE_DIRECT
+from lib import debug
 
 
 MOUSE_SELECT = 0
@@ -26,15 +27,15 @@ class KMBNodeGraphicView(QGraphicsView):
     # ------------------SIGNALS--------------------
 
     # show the changing position in status bar.
-    scene_pos_changed = pyqtSignal(int, int)       # x, y coord
+    scene_pos_changed = pyqtSignal(int, int)            # x, y coord
     # the necessary signal to add a new node in scene.
-    add_new_node_item = pyqtSignal(str, str, int)  # name, id, count
+    add_new_node_item = pyqtSignal(str, str, str, int)  # name, type, id, count
     # pass the id of selected node item to edit.
-    selected_node_item = pyqtSignal(str)           # id or state
-    selected_delete_node = pyqtSignal(str)         # id
+    selected_node_item = pyqtSignal(str)                # id or state
+    selected_delete_node = pyqtSignal(str)              # id
     # pop up the right menu of clicked node,
     # also emit the src node id along with.
-    pop_up_right_menu = pyqtSignal(str)            # dst id
+    pop_up_right_menu = pyqtSignal(str)                 # dst id
 
     # ------------------INIT--------------------
 
@@ -82,14 +83,12 @@ class KMBNodeGraphicView(QGraphicsView):
         self.mode = MOUSE_SELECT
         self.setDragMode(QGraphicsView.RubberBandDrag)
         self.setCursor(Qt.ArrowCursor)
-        if DEBUG:
-            print("Now is <select> mode")
+        debug("Now is <select> mode")
 
     def set_movable_mode(self):
         self.mode = MOUSE_MOVE
         self.setDragMode(QGraphicsView.ScrollHandDrag)
-        if DEBUG:
-            print("Now is <move> mode")
+        debug("Now is <move> mode")
 
     def set_editing_mode(self, node_name, node_type):
         self.mode = MOUSE_EDIT
@@ -97,29 +96,25 @@ class KMBNodeGraphicView(QGraphicsView):
         self.current_node_item_type = node_type
         self.set_edit_node_cursor()
         self.status_bar_msg(f'Select: {node_name} item in {node_type}.')
-        if DEBUG:
-            print("Now is <edit> mode")
+        debug("Now is <edit> mode")
 
     def set_delete_mode(self):
         self.mode = NODE_DELETE
         del_icon = QPixmap(icon['TRASH']).scaled(32, 32)
         self.setCursor(QCursor(del_icon))
-        if DEBUG:
-            print("Now is <delete> mode")
+        debug("Now is <delete> mode")
 
     def set_edge_direct_mode(self):
         self.mode = NODE_CONNECT
         self.edge_type = EDGE_DIRECT
         self.setCursor(Qt.CrossCursor)
-        if DEBUG:
-            print("Now is <connect-direct> mode")
+        debug("Now is <connect-direct> mode")
 
     def set_edge_curve_mode(self):
         self.mode = NODE_CONNECT
         self.edge_type = EDGE_CURVES
         self.setCursor(Qt.CrossCursor)
-        if DEBUG:
-            print("Now is <connect-curve> mode")
+        debug("Now is <connect-curve> mode")
 
     # ------------------OVERRIDES--------------------
 
@@ -274,8 +269,7 @@ class KMBNodeGraphicView(QGraphicsView):
                 self.edge_drag_end(item, event)
             else:
                 # if it's nothing then drop this edge
-                if DEBUG:
-                    print(f"[dropped] => {self.drag_edge} cause nothing happened.")
+                debug(f"[dropped] => {self.drag_edge} cause nothing happened.")
                 self.drag_edge.remove()
                 self.drag_edge = None
 
@@ -320,6 +314,7 @@ class KMBNodeGraphicView(QGraphicsView):
         self.gr_scene.scene.add_node(node)
         count = self.gr_scene.scene.get_node_count(node)
         self.add_new_node_item.emit(node.gr_name,
+                                    node.gr_type,
                                     node.gr_node.id_str,
                                     count)
         self.status_bar_msg(f'Add: {self.current_node_item_name} node.')
@@ -365,13 +360,10 @@ class KMBNodeGraphicView(QGraphicsView):
         self.drag_edge = KMBEdge(self.gr_scene.scene,
                                  item.node,
                                  None, self.edge_type)
-        if DEBUG:
-            print(f"[start dragging edge] => {self.drag_edge} at {item}")
+        debug(f"[start dragging edge] => {self.drag_edge} at {item}")
 
     def edge_drag_end(self, item, event):
-        if DEBUG:
-            print(f"[stop dragging edge] => {self.drag_edge} at {item}")
-
+        debug(f"[stop dragging edge] => {self.drag_edge} at {item}")
         new_edge = KMBEdge(self.gr_scene.scene,
                            self.drag_start_item.node,
                            item.node,
@@ -384,11 +376,9 @@ class KMBNodeGraphicView(QGraphicsView):
         # -1 (Invalid), 0 (Valid but not display), 1 (Valid and display)
         if saving_state == -1:  # fail to add new edge.
             self.gr_scene.removeItem(new_edge.gr_edge)
-            if DEBUG:
-                print(f"[dropped] invalid connection.")
+            debug("[dropped] invalid connection.")
         else:  # add new edge successfully.
-            if DEBUG:
-                print(f"[connect] {self.drag_start_item} ~ {item} => {new_edge}")
+            debug(f"[connect] {self.drag_start_item} ~ {item} => {new_edge}")
             # only ref edge is able to pop up right menu of the end item,
             # so now you're able to pick up which arg it ref to.
             if self.edge_type == EDGE_CURVES:
@@ -400,6 +390,4 @@ class KMBNodeGraphicView(QGraphicsView):
             # just remove gr-edge this time.
             if saving_state == 0:
                 self.gr_scene.removeItem(new_edge.gr_edge)
-                if DEBUG:
-                    print(f"[dropped] repeating edge but stored.")
-                # TODO: take over DEBUG, and make it a func
+                debug(f"[dropped] repeating edge but stored.")

@@ -38,9 +38,18 @@ class ArgTypeItem(QStandardItem):
 
 class ArgEditItem(QStandardItem):
 
-    def __init__(self, value, dtype, tag=0, store_bg=False):
+    def __init__(self,
+                 value, dtype,
+                 belong_to:str,
+                 tag=0, store_bg=False):
+        # save the initial value of one arg
+        self._init_value = value
         self._value = value
         self._store_bg = store_bg
+        self.belong_to = belong_to
+        # store all items that has been referenced.
+        self._ref_by_list = []
+        # behind the widgets is self
         if self._store_bg:
             super().__init__()
         else:
@@ -52,30 +61,61 @@ class ArgEditItem(QStandardItem):
         # when self is token by other widget,
         # 1 is checkbox, 2 is combobox.
         self.tag = tag
-        self.ref = None
+        # color for plain, changed & referenced
+        self.pln_color = QColor(color['ARG_NORMAL'])
+        self.chg_color = QColor(color['ARG_CHANGED'])
+        self.ref_color = QColor(color['ARG_REFED'])
 
         self.setEditable(True)
         self.setToolTip(dtype)
+
+    def __repr__(self):
+        return f"<Arg-TAG:{self.tag}-ARG:{self.belong_to}>"
+
+    def check_changed(self, value: str) -> bool:
+        # if after all, value still equal to initial value,
+        # then consider this to be unchanged.
+        return self._init_value != value
 
     def has_changed(self):
         self.is_changed = True
         # only set changed color for normal edit item
         if self.tag == 0:
-            self.setBackground(QColor(color['ARG_CHANGED']))
+            self.setBackground(self.chg_color)
 
-    def set_ref(self, ref):
-        self.ref = ref
-        self.setText(self.get_var_name())
-        # set to referenced bg color
+    def undo_change(self):
+        self.is_changed = False
+        self.setBackground(self.pln_color)
+
+    def set_ref_to(self, ref_to):
+        self._ref_to = ref_to
+        self.setText(self._ref_to.text())
+        # set referenced bg color,
+        # undo all is_changed sign here.
+        self.is_changed = False
         self.is_referenced = True
-        self.setBackground(QColor(color['ARG_REFED']))
-    # TODO: try to make ref var name a property and setter
-    def get_ref(self):
-        # get the id of ref item
-        return str(id(self.ref))
+        self.setBackground(self.ref_color)
 
-    def get_var_name(self):
-        return self.ref.var_name
+    def get_ref_to(self):
+        return str(id(self._ref_to))
+
+    def del_ref_to(self):
+        del self._ref_to
+        # after deleting, everything back to normal.
+        # arg value becomes initial value.
+        self.is_changed = False
+        self.is_referenced = False
+        self.setText(self._init_value)
+        self.setBackground(self.pln_color)
+
+    ref_to = property(get_ref_to, set_ref_to, del_ref_to)
+
+    @property
+    def var_name(self):
+        if hasattr(self, '_ref_to'):
+            return self._ref_to.text()
+        else:
+            return self.text()
 
     def text(self):
         if self._store_bg:

@@ -21,6 +21,7 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         self.rm_token = QIcon(icon['TOKEN'])
         self.rm_free = QIcon(icon['FREE'])
         self._ref_item = None
+        self.cur_node_var_name = None
 
         self.setPixmap(self.pix)
         self.setFlag(QGraphicsItem.ItemIsSelectable)
@@ -63,18 +64,22 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
             if arg_value.dtype == 'Reference':
                 # set different state mark
                 if arg_value.is_referenced:
+                    self.cur_node_var_name = arg_value.var_name
                     action = QAction(self.rm_token,
-                                     arg_name.text() + ' ~ ' + arg_value.get_var_name())
+                                     arg_name.text() + ' ~ ' + self.cur_node_var_name)
                     action.setDisabled(True)
                 else:
                     action = QAction(self.rm_free, arg_name.text())
-                # only after dragging ref curve to an item,
-                # will get attribute: '_ref_item', so setup some signals.
+                # only after dragging ref curve to a node
+                # will get attribute: '_ref_item'.
                 if self._ref_item is not None:
                     # set its id and the idx of this arg, also src id.
-                    action.setObjectName(f'{self.id_str}-{idx}-{self._ref_item.gr_node.id_str}')
+                    # using object name as signal here.
+                    action.setObjectName(f'{self.id_str}-'
+                                         f'{idx}-'
+                                         f'{self._ref_item.gr_node.id_str}')
                     action.triggered.connect(self.node.gr_scene.right_menu_listener)
-                # collect action
+                # collect actions
                 if idx <= self._arg_model.io_separator:
                     inh_actions.append(action)
                 else:
@@ -82,18 +87,19 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         return inh_actions, org_actions
 
     def contextMenuEvent(self, event):
+        # getting the args of its own and
+        # highlight the Reference (suggested) one.
+        inh_actions, org_actions = self.get_context_menu()
         if self._ref_item is not None:
             # it means this right menu is called after ref edge.
             # add custom sign at head
-            sign = QAction(f'{self._ref_item.gr_name}-')
+            sign = QAction(f'{self._ref_item.gr_name}-'
+                           f'{self.cur_node_var_name}')
         else:
             sign = QAction('Reference Table')
         sign.setEnabled(False)
         self.right_menu.addAction(sign)
         self.right_menu.addSeparator()
-        # getting the args of its own and
-        # highlight the Reference (suggested) one.
-        inh_actions, org_actions = self.get_context_menu()
         self.right_menu.addActions(inh_actions)
         self.right_menu.addSeparator()
         self.right_menu.addActions(org_actions)

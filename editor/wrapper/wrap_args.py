@@ -21,14 +21,16 @@ class KMBArgsMenu(Serializable):
         vars_name_dict = {}
         for id_, model in self.panel.edit_model.items():
             arg_dict = OrderedDict()
-            # filter every items that has been changed
+            # filter every items that has been ...
             for idx, arg_name, arg_value in model.items():
                 if arg_name.text() == 'var_name':
                     vars_name_dict[id_] = arg_value.text()
+                # ... changed
                 elif arg_value.is_changed:
                     arg_dict[arg_name.text()] = arg_value.text()
+                # ... referenced
                 elif arg_value.is_referenced:
-                    arg_dict[arg_name.text()] = arg_value.get_ref()
+                    arg_dict[arg_name.text()] = arg_value.ref_to
             args_dict[id_] = arg_dict
         return args_dict, vars_name_dict
 
