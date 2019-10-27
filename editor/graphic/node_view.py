@@ -57,6 +57,7 @@ class KMBNodeGraphicView(QGraphicsView):
         self.last_scene_mouse_pos = None
         self.current_node_item_name = None
         self.current_node_item_type = None
+        self.current_node_item_sort = None
         self.rest_ref_items_count = 0
 
         self.zoom_in_factor = 1.25
@@ -95,12 +96,13 @@ class KMBNodeGraphicView(QGraphicsView):
         self.setDragMode(QGraphicsView.ScrollHandDrag)
         debug("Now is <move> mode")
 
-    def set_editing_mode(self, node_name, node_type):
+    def set_editing_mode(self, node_name, node_type, node_sort):
         self.mode = MOUSE_EDIT
         self.current_node_item_name = node_name
         self.current_node_item_type = node_type
+        self.current_node_item_sort = node_sort
         self.set_edit_node_cursor()
-        self.status_bar_msg(f'Select: {node_name} item in {node_type}.')
+        self.status_bar_msg(f'Select: {node_name} item in {node_type}:{node_sort}.')
         debug("Now is <edit> mode")
 
     def set_delete_mode(self):
@@ -314,7 +316,8 @@ class KMBNodeGraphicView(QGraphicsView):
                int(self.last_scene_mouse_pos.y())
         node = KMBNodeItem(self.gr_scene,
                            self.current_node_item_name,
-                           self.current_node_item_type)
+                           self.current_node_item_type,
+                           self.current_node_item_sort)
         # add into scene and get count of nodes.
         self.gr_scene.scene.add_node(node)
         count = self.gr_scene.scene.get_node_count(node)
@@ -343,16 +346,17 @@ class KMBNodeGraphicView(QGraphicsView):
                 # del the stored model.
                 self.status_bar_msg(f'Delete: {item.name} node.')
                 self.gr_scene.scene.remove_node(item.node)
+
             elif issubclass(item.__class__, KMBGraphicEdge):
                 # del direct edge directly.
                 self.status_bar_msg('Delete: One edge.')
                 if isinstance(item, KMBGraphicEdgeBezier):
-                    # also del the ref.
+                    # curve edge need to del the ref.
                     src_item_id = str(id(item.edge.start_item.gr_node))
                     dst_item_id = str(id(item.edge.end_item.gr_node))
                     self.del_ref_related_items.emit(src_item_id, dst_item_id)
+                    # will not be deleted under these situations.
                     if self.rest_ref_items_count != 0:
-                        # TODO: remove the edge that store background
                         return
                     if not self.has_chosen_to_del_from_rm:
                         return
@@ -398,7 +402,7 @@ class KMBNodeGraphicView(QGraphicsView):
         self.drag_edge = None
         # saving for the new edge.
         saving_state = new_edge.store()
-        # -1 (Invalid), 0 (Valid but not display), 1 (Valid and display)
+        # -1 (Invalid), 0 (Valid without display or store), 1 (Valid and display)
         if saving_state == -1:  # fail to add new edge.
             self.gr_scene.removeItem(new_edge.gr_edge)
             debug("[dropped] invalid connection.")
@@ -414,8 +418,8 @@ class KMBNodeGraphicView(QGraphicsView):
                     self.gr_scene.removeItem(new_edge.gr_edge)
                     debug("[dropped] triggered no item in right menu.")
                     return
-            # just remove gr-edge this time.
+            # remove gr-edge under this situation.
             if saving_state == 0:
                 self.gr_scene.removeItem(new_edge.gr_edge)
-                debug("[dropped] repeating edge but stored.")
+                debug("[dropped] repeating edge without stored.")
             debug(f"[connect] {self.drag_start_item} ~ {item} => {new_edge}")

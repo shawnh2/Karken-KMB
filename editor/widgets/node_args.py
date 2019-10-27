@@ -72,11 +72,23 @@ class KMBNodesArgsMenu(QTableView):
     def add_combobox_cell(self):
         for row, arg_init, args_list in self.current_model.combo_args:
             index = self.model().index(row, 1)
-            # there's a editable item behind it
+            # there's a editable item behind it.
             item = self.current_model.item(row, 1)
-            # this item store the current value
-            combo = ArgComboBox(args_list, arg_init, at=row)
-            combo.setCurrentText(item.text())
+            cur_value = item.text()
+            # this item store the current value,
+            # grab it and set to current text.
+            # if the value is out of the combo box,
+            # which means this a ref value, and add it,
+            # then set to current value again.
+            if not args_list.__contains__(cur_value):
+                # make a copy of args_list, so won't mess
+                # up with those original values.
+                copy_args_list = args_list.copy()
+                copy_args_list.append(cur_value)
+                combo = ArgComboBox(copy_args_list, arg_init, at=row)
+            else:
+                combo = ArgComboBox(args_list, arg_init, at=row)
+            combo.setCurrentText(cur_value)
             self.setIndexWidget(index, combo)
             combo.currentTextChanged.connect(self.modify_args)
 
@@ -105,7 +117,6 @@ class KMBNodesArgsMenu(QTableView):
             self.current_model.update_ref_by(value)
 
     def modify_args(self, value):
-        # TODO: combo add ref and del (del entire node or one) case
         self.current_model.reassign_value(self.sender().at, value)
 
     def modify_state(self, state):
@@ -169,7 +180,9 @@ class KMBNodesArgsMenu(QTableView):
         # under this situation, just del the ref_by.
         if self.current_ref_model.count_ref_items(dst_model_id) == 1:
             del self.current_ref_model.ref_by
+            # single connected ref edge still needs these signals.
             self.the_rest_ref_items.emit(0)
+            self.do_not_pick_one.emit(False)
         # if one start item connected with one node but multi items.
         # then pop up a menu to decide which edge.
         else:

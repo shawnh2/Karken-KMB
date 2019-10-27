@@ -12,10 +12,6 @@ class KMBEdge(Serializable):
         self.start_item = start_item
         self.end_item = end_item
         self.edge_type = edge_type
-        # set by self checking state, also the sign
-        # of whether to update positions.
-        # available: 0 means NO, 1 means YES.
-        self.available = 0
 
         if self.edge_type == EDGE_DIRECT:
             self.gr_edge = KMBGraphicEdgeDirect(self)
@@ -37,8 +33,8 @@ class KMBEdge(Serializable):
         """ Check state of storing into scene's edges. """
         check_state = self.scene.check_edge(self, self.edge_type)
         if check_state != -1:
-            self.scene.add_edge(self)
-            self.available = check_state
+            if check_state == 1:
+                self.scene.add_edge(self)
             if self.edge_type == EDGE_CURVES:
                 self.end_item.gr_node.feed_ref(self.start_item)
             return check_state
@@ -63,9 +59,6 @@ class KMBEdge(Serializable):
         self.remove_from_current_items()
         self.scene.graphic_scene.removeItem(self.gr_edge)
         self.gr_edge = None
-
-    def is_available(self):
-        return False if self.available == 0 else True
 
     def serialize(self):
         return (str(id(self.start_item.gr_node)),

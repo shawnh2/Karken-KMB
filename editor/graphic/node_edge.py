@@ -26,6 +26,7 @@ class KMBGraphicEdge(QGraphicsPathItem):
         self._pen_io.setWidthF(EDGE_WIDTH)
         self._pen_ref = QPen(self._color_ref)
         self._pen_ref.setWidthF(EDGE_WIDTH)
+        self._pen_ref.setStyle(Qt.DotLine)
 
         self._pen_selected = QPen(self._color_selected)
         self._pen_selected.setWidthF(EDGE_WIDTH)

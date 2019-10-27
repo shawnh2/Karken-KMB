@@ -21,14 +21,16 @@ class KMBNodeScene(Serializable):
 
     def check_edge(self, edge, edge_type):
         """ Check edge valid.
-        :return -1 (Invalid), 0 (valid but not display), 1 (valid)
+        :return -1 (Invalid), 0 (Valid but not display or store), 1 (Valid)
         """
         if edge_type == EDGE_DIRECT:
-            # check input edge if it's Input or Model
+            # add constraints on Direct(IO) edge
             if edge.end_item.gr_name == "Input" or\
                edge.end_item.gr_name == "PlaceHolder" or\
+               edge.end_item.gr_type == 'Units' or\
                edge.start_item.gr_name == "Model" or\
-               edge.start_item.gr_name == "PlaceHolder":
+               edge.start_item.gr_name == "PlaceHolder" or\
+               edge.start_item.gr_type == 'Units':
                 return -1
             # check the same edge in previous edges
             for e in self.edges:
@@ -39,6 +41,7 @@ class KMBNodeScene(Serializable):
             # but it must link to the different arg item.
             # good thing is referenced arg item will be disable,
             # so it's unnecessary to add few more `if` block.
+
         elif edge_type == EDGE_CURVES:
             # ref curve only begins from 'common' or 'other' tab page
             # and end up with 'layers' tab.
@@ -46,8 +49,7 @@ class KMBNodeScene(Serializable):
                edge.end_item.gr_type != "Layers":
                 return -1
             # ref curve allow to repeat, but it's very unnecessary to
-            # display the edge again, just use the first one.
-            # but will still store it in memory.
+            # display the edge again, so just display the line once.
             for e in self.edges:
                 if e.start_item == edge.start_item and \
                         e.end_item is edge.end_item:
@@ -90,8 +92,8 @@ class KMBNodeScene(Serializable):
         # fill with node's <input> and <output> tags
         nodes = {}
         for node in self.nodes:
-            n = node.serialize()
-            nodes[n["id"]] = n
+            sn = node.serialize()
+            nodes[sn["id"]] = sn
         # organize edge's relationship here
         for edge in self.edges:
             edge_from, edge_to = edge.serialize()

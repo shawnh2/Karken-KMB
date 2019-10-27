@@ -96,7 +96,8 @@ class ArgEditItem(QStandardItem):
         # undo all is_changed sign here.
         self.is_changed = False
         self.is_referenced = True
-        self.setBackground(self.ref_color)
+        if self.tag == 0:
+            self.setBackground(self.ref_color)
 
     def get_ref_to(self):
         return str(id(self._ref_to))

@@ -161,8 +161,9 @@ class ArgsEditableModel(ArgsSuperModel):
     def update_ref_by(self, value: str):
         for ref_dict in self._ref_by_dict.values():
             for ref in ref_dict.values():
+                if ref.tag == 0:
+                    ref.setBackground(self.ref_color)
                 ref.setText(value)
-                ref.setBackground(self.ref_color)
 
     def remove_ref_by(self, model_id: str, ref_id: str):
         # remove one ref_by in ref_by_dict.

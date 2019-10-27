@@ -21,7 +21,6 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         self.rm_token = QIcon(icon['TOKEN'])
         self.rm_free = QIcon(icon['FREE'])
         self._ref_item = None
-        self.cur_node_var_name = None
 
         self.setPixmap(self.pix)
         self.setFlag(QGraphicsItem.ItemIsSelectable)
@@ -57,22 +56,24 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
 
+    # TODO: add var-name annotations around item.
+
     def get_context_menu(self):
         inh_actions = []  # actions for inherit args
         org_actions = []  # actions for original args
+        support_type = self._ref_item.gr_sort.lower()
         for idx, arg_name, arg_value in self._arg_model.items():
             if arg_value.dtype == 'Reference':
-                # set different state mark
-                if arg_value.is_referenced:
-                    self.cur_node_var_name = arg_value.var_name
-                    action = QAction(self.rm_token,
-                                     arg_name.text() + ' ~ ' + self.cur_node_var_name)
-                    action.setDisabled(True)
-                else:
-                    action = QAction(self.rm_free, arg_name.text())
+                action = self._make_a_valid_action(arg_value, arg_name)
                 # only after dragging ref curve to a node
                 # will get attribute: '_ref_item'.
                 if self._ref_item is not None:
+                    # if ref src is Units, then only few arg item can add ref.
+                    # so here do some simple check.
+                    if self._ref_item.gr_type == 'Units':
+                        if not self._action_units_type_check(arg_name.text(),
+                                                             support_type):
+                            action.setDisabled(True)
                     # set its id and the idx of this arg, also src id.
                     # using object name as signal here.
                     action.setObjectName(f'{self.id_str}-'
@@ -85,6 +86,30 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
                 else:
                     org_actions.append(action)
         return inh_actions, org_actions
+
+    def _make_a_valid_action(self, arg_value, arg_name):
+        # make a action with different state mark.
+        if arg_value.is_referenced:
+            action = QAction(self.rm_token,
+                             arg_name.text() + ' ~ ' + arg_value.var_name)
+            action.setDisabled(True)
+        else:
+            action = QAction(self.rm_free, arg_name.text())
+        return action
+
+    def _action_units_type_check(self, arg: str, support_type: str) -> bool:
+        """ check whether this arg support this type.
+        Usually, those args which accept the support_type,
+        always contains the support_type.
+
+        eg. activation <=accept Activations.
+            bias_initializer <=accept Initializers.
+
+        but always with plural form, so get rid of the 's'.
+        """
+        if arg.__contains__(support_type[:-2]):
+            return True
+        return False
 
     def contextMenuEvent(self, event):
         # getting the args of its own and

@@ -5,11 +5,15 @@ from lib import tagger
 
 class KMBNodeItem(Serializable):
 
-    def __init__(self, scene, node_name, node_type):
+    def __init__(self, scene,
+                 node_name: str,
+                 node_type: str,
+                 node_sort: str):
         super().__init__()
         self.gr_scene = scene
         self.gr_name = node_name
-        self.gr_type = node_type
+        self.gr_type = node_type  # CATEGORY
+        self.gr_sort = node_sort  # SORT
         self.gr_node = KMBNodeGraphicItem(self, self.gr_name)
 
         self.gr_scene.addItem(self.gr_node)
@@ -22,8 +26,7 @@ class KMBNodeItem(Serializable):
 
     def update_connect_edges(self):
         for edge in self.gr_scene.scene.edges:
-            if edge.is_available():
-                edge.update_positions()
+            edge.update_positions()
 
     def serialize(self):
         return tagger(
