@@ -36,37 +36,62 @@ class MainNodeEditor(QWidget):
         self.splitter.setOrientation(Qt.Horizontal)
 
     def setup_slots(self):
-        # preview node's args.
+        # +++++++++++++++++++++++++++++++++++
+        # ------ NODE MENU => [ARG MENU] ------
+        # 1. preview node's args.
         self.nodes_menu.clicked_node_button_item.connect(
             self.args_menu.panel.set_preview_args
         )
-        # set editing mode, now can add nodes.
+        # ------ NODE MENU => [VIEW] ------
+        # 2. set editing mode, now can add nodes.
         self.nodes_menu.clicked_node_button_item.connect(
             self.nodes_view.set_editing_mode
         )
-        # add new node and store it.
+
+        # +++++++++++++++++++++++++++++++++++
+        # --------- VIEW => ARG MENU --------
+        # 1. add new node and store it.
         self.nodes_view.add_new_node_item.connect(
             self.args_menu.panel.commit_node
         )
-        # load selected node's args.
+        # 2. load selected node's args.
         self.nodes_view.selected_node_item.connect(
             self.args_menu.panel.set_editing_args
         )
-        # ready to delete selected node.
+        # 3. ready to delete selected node.
         self.nodes_view.selected_delete_node.connect(
             self.args_menu.panel.delete_node
         )
-        # ready to pop up the right menu of node.
-        self.nodes_view.pop_up_right_menu.connect(
-            self.send_args_to_node
+        # 4. ready to delete ref related items.
+        self.nodes_view.del_ref_related_items.connect(
+            self.args_menu.panel.delete_ref_related
         )
-        # after picking up an arg item from right menu
+        # 5. after picking up an arg item from right menu.
         self.nodes_scene.graphic_scene.picked_one_arg_to_ref.connect(
             self.args_menu.panel.modify_ref
         )
-        # after not picking up an arg item from right menu
+
+        # +++++++++++++++++++++++++++++++++++
+        # ------ [ARG MENU] => VIEW ------
+        # 1. sending the rest items count of ref dst node.
+        self.args_menu.panel.the_rest_ref_items.connect(
+            self.nodes_view.set_rest_ref_dst_items_count
+        )
+        # 2. do not pick one item to del.
+        self.args_menu.panel.do_not_pick_one.connect(
+            self.nodes_view.set_chosen_to_del_from_rm
+        )
+        # ------ [SCENE] => VIEW ------
+        # 3. after not picking up an arg item from right menu.
         self.nodes_scene.graphic_scene.do_not_pick_one.connect(
-            self.nodes_view.set_chosen_state_from_rm
+            self.nodes_view.set_chosen_to_ref_from_rm
+        )
+
+        # +++++++++++++++++++++++++++++++++++
+        # ------ * => SELF ------
+        # 1. ready to pop up the right menu of node.
+        self.nodes_view.pop_up_right_menu.connect(
+            self.send_args_to_node
         )
 
     # ----------FUNCTIONS----------

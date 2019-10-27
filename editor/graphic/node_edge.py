@@ -72,18 +72,18 @@ class KMBGraphicEdge(QGraphicsPathItem):
                 # paint a output mark on the edge
                 x1, y1 = self.pos_src
                 x2, y2 = self.pos_dst
-                w = 6   # marker radius
-                l = 55  # marker length
+                radius = 6   # marker radius
+                length = 55  # marker length
                 k = math.atan2(y2 - y1, x2 - x1)
-                new_x = x2 - l * math.cos(k) - EDGE_WIDTH
-                new_y = y2 - l * math.sin(k) - EDGE_WIDTH
+                new_x = x2 - length * math.cos(k) - EDGE_WIDTH
+                new_y = y2 - length * math.sin(k) - EDGE_WIDTH
                 # draw path line first
                 painter.setPen(self._pen_io if not self.isSelected() else self._pen_selected)
                 painter.drawPath(path)
                 # draw output marker last
                 painter.setPen(self._mark_pen)
                 painter.setBrush(self._mark_brush)
-                painter.drawEllipse(new_x, new_y, w, w)
+                painter.drawEllipse(new_x, new_y, radius, radius)
             # draw ref curve line with different pen
             else:
                 painter.setPen(self._pen_ref if not self.isSelected() else self._pen_selected)

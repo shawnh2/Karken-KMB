@@ -122,7 +122,9 @@ class ArgsEditableModel(ArgsSuperModel):
         self.check_args = []
         self.node_type = node_type
         # for optional attrs
-        self._ref_by_list = []
+        self._ref_by_dict = {}
+        # the structure of ref_by_dict:
+        # { model(id): {item(id): item(instance), ...}, ... }
         self.ref_by_update = False
         self.ref_color = QColor(color['ARG_REFED'])
         # set header labels for this model
@@ -136,27 +138,41 @@ class ArgsEditableModel(ArgsSuperModel):
     # It's only for some node that can be referenced.
     # Such as PlaceHolder, Units ...
 
-    def set_ref_by(self, ref_by):
-        self._ref_by_list.append(ref_by)
+    def set_ref_by(self, ref_by: tuple):
+        # ref_by is instance of ArgEditItem.
+        model_id, ref_item = ref_by
+        self._ref_by_dict.setdefault(model_id, {})[str(id(ref_item))] = ref_item
         self.ref_by_update = True
 
     def get_ref_by(self):
-        return self._ref_by_list
+        return self._ref_by_dict
 
     def del_ref_by(self):
         # no necessary to change ref_by_update to False
         # because once this func has been called,
         # its entire instance will be destroyed.
-        for ref in self._ref_by_list:
-            debug(f'[DEL REF] {ref} ref has been removed.')
-            del ref.ref_to
+        for ref_dict in self._ref_by_dict.values():
+            for ref in ref_dict.values():
+                debug(f'[DEL REF] {ref} ref has been removed.')
+                del ref.ref_to
         # clean all
-        self._ref_by_list = []
+        self._ref_by_dict = {}
 
     def update_ref_by(self, value: str):
-        for ref in self._ref_by_list:
-            ref.setText(value)
-            ref.setBackground(self.ref_color)
+        for ref_dict in self._ref_by_dict.values():
+            for ref in ref_dict.values():
+                ref.setText(value)
+                ref.setBackground(self.ref_color)
+
+    def remove_ref_by(self, model_id: str, ref_id: str):
+        # remove one ref_by in ref_by_dict.
+        ref_dict = self._ref_by_dict.get(model_id)
+        ref_item = ref_dict.get(ref_id)
+        del ref_item.ref_to
+        ref_dict.pop(ref_id)
+
+    def count_ref_items(self, model_id: str):
+        return len(self._ref_by_dict.get(model_id))
 
     ref_by = property(get_ref_by, set_ref_by, del_ref_by)
 

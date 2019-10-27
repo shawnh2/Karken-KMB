@@ -39,9 +39,11 @@ class ArgTypeItem(QStandardItem):
 class ArgEditItem(QStandardItem):
 
     def __init__(self,
-                 value, dtype,
-                 belong_to:str,
-                 tag=0, store_bg=False):
+                 value,
+                 dtype,
+                 belong_to: str,
+                 tag=0,
+                 store_bg=False):
         # save the initial value of one arg
         self._init_value = value
         self._value = value
@@ -70,7 +72,7 @@ class ArgEditItem(QStandardItem):
         self.setToolTip(dtype)
 
     def __repr__(self):
-        return f"<Arg-TAG:{self.tag}-ARG:{self.belong_to}>"
+        return f"<ArgEditItem TAG:{self.tag} ARG:{self.belong_to}>"
 
     def check_changed(self, value: str) -> bool:
         # if after all, value still equal to initial value,
@@ -114,8 +116,6 @@ class ArgEditItem(QStandardItem):
     def var_name(self):
         if hasattr(self, '_ref_to'):
             return self._ref_to.text()
-        else:
-            return self.text()
 
     def text(self):
         if self._store_bg:

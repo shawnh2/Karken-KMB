@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QTableView, QHeaderView
-from PyQt5.QtGui import QStandardItemModel
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QTableView, QHeaderView, QAction, QMenu
+from PyQt5.QtGui import QStandardItemModel, QContextMenuEvent, QCursor
+from PyQt5.QtCore import Qt, pyqtSignal
 
 from editor.component.args_model import ArgsPreviewModel, ArgsEditableModel
 from editor.component.args_model_item import ArgComboBox, ArgCheckBox
@@ -8,6 +8,9 @@ from lib import DataBase4Args, debug
 
 
 class KMBNodesArgsMenu(QTableView):
+
+    the_rest_ref_items = pyqtSignal(int)  # count
+    do_not_pick_one = pyqtSignal(bool)    # boolean
 
     def __init__(self,
                  menu,
@@ -22,6 +25,8 @@ class KMBNodesArgsMenu(QTableView):
         # for collection the ArgsEditableModel
         self.edit_model = {}
         self.current_model = None
+        self.current_ref_model = None
+        self.current_ref_dst_model_id = None
 
         # set the horizontal head
         self.head.setStretchLastSection(True)
@@ -31,6 +36,9 @@ class KMBNodesArgsMenu(QTableView):
         # set width
         self.setMinimumWidth(320)
         self.setMaximumWidth(500)
+        # set pop up right menu policy
+        self.right_menu = QMenu()
+        self.setContextMenuPolicy(Qt.DefaultContextMenu)
 
     def set_preview_args(self, node_name):
         id_string, inherit = self.db_link.get_args_id(node_name)
@@ -83,7 +91,7 @@ class KMBNodesArgsMenu(QTableView):
     def modify_item(self, item):
         value = item.text()
         if item.is_referenced:
-            # avoid referenced here
+            # avoid referenced item here nor bug.
             pass
         else:
             item.setText(value)
@@ -97,8 +105,7 @@ class KMBNodesArgsMenu(QTableView):
             self.current_model.update_ref_by(value)
 
     def modify_args(self, value):
-        # TODO: combo add ref and del
-        # TODO: one ref edge del case
+        # TODO: combo add ref and del (del entire node or one) case
         self.current_model.reassign_value(self.sender().at, value)
 
     def modify_state(self, state):
@@ -113,7 +120,7 @@ class KMBNodesArgsMenu(QTableView):
         src_value_item = src_model.item(src_model.var_name_idx, 1)
         # save the relationship of ref
         dst_value_item.ref_to = src_value_item
-        src_model.ref_by = dst_value_item
+        src_model.ref_by = (dst_node_id, dst_value_item)
 
         item_name = dst_model.item(idx, 0).text()
         debug(f'[REF] create <{dst_model.node_name}>:{dst_model.var_name}.{item_name} '
@@ -150,3 +157,51 @@ class KMBNodesArgsMenu(QTableView):
     def fetch_node(self, node_id: str):
         # get the arg model by id.
         return self.edit_model.get(node_id)
+
+    # ------Operations on Edge Model------
+
+    def delete_ref_related(self, src_model_id: str, dst_model_id: str):
+        # while deleting ref edge will trigger this method only.
+        # through ref_id will get the model of ref edge's start item.
+        self.current_ref_model = self.edit_model.get(src_model_id)
+        self.current_ref_dst_model_id = dst_model_id
+        # if one start item connected with one node item.
+        # under this situation, just del the ref_by.
+        if self.current_ref_model.count_ref_items(dst_model_id) == 1:
+            del self.current_ref_model.ref_by
+            self.the_rest_ref_items.emit(0)
+        # if one start item connected with one node but multi items.
+        # then pop up a menu to decide which edge.
+        else:
+            fake_event = QContextMenuEvent(QContextMenuEvent.Mouse, QCursor.pos())
+            self.contextMenuEvent(fake_event)
+
+    def delete_rm_selected(self):
+        # deleted the one item that selected in right menu.
+        ref_item_id = self.sender().objectName()
+        self.current_ref_model.remove_ref_by(self.current_ref_dst_model_id, ref_item_id)
+        # if one ref node has multi ref edges linked to one node,
+        # view will only display one of the edges.
+        # so do not delete ref edge until there's no edge left.
+        rest_ref_edge_count = self.current_ref_model.count_ref_items(self.current_ref_dst_model_id)
+        self.the_rest_ref_items.emit(rest_ref_edge_count)
+        # what if do not pick one from right menu.
+        self.do_not_pick_one.emit(False)
+
+    def contextMenuEvent(self, event):
+        # set header of right menu
+        header = QAction('Choose one reference to remove')
+        header.setEnabled(False)
+        self.right_menu.addAction(header)
+        self.right_menu.addSeparator()
+        # set content of right menu
+        actions = []
+        model = self.current_ref_model.ref_by.get(self.current_ref_dst_model_id)
+        for ref_id, ref_item in model.items():
+            action = QAction(ref_item.belong_to)
+            action.setObjectName(f'{ref_id}')
+            action.triggered.connect(self.delete_rm_selected)
+            actions.append(action)
+        self.right_menu.addActions(actions)
+        # show right menu
+        self.right_menu.exec(QCursor.pos())

@@ -93,8 +93,7 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         if self._ref_item is not None:
             # it means this right menu is called after ref edge.
             # add custom sign at head
-            sign = QAction(f'{self._ref_item.gr_name}-'
-                           f'{self.cur_node_var_name}')
+            sign = QAction(f'{self._ref_item.gr_name}~')
         else:
             sign = QAction('Reference Table')
         sign.setEnabled(False)

@@ -14,7 +14,7 @@ class KMBEdge(Serializable):
         self.edge_type = edge_type
         # set by self checking state, also the sign
         # of whether to update positions.
-        # 0 means NO, 1 means YES.
+        # available: 0 means NO, 1 means YES.
         self.available = 0
 
         if self.edge_type == EDGE_DIRECT:

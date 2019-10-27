@@ -51,27 +51,22 @@ def type_color_map(datatype: str) -> tuple:
         return color['DTC_unknown'], 'Unknown'
 
 
-def reorder_args_box(head, heap: list) -> list:
-    """
-    Set the heap list first value to become head value.
-
-    :param head: the first value want to become.
-    :param heap: where store all the value.
-    :return: a head value first heap (list).
-    """
-
-    assert head in heap
-    head_idx = heap.index(head)
-    heap[0], heap[head_idx] = heap[head_idx], heap[0]
-    return heap
-
-
 def debug(*msg):
     """
-    If it's under debug mode, then print the msg.
+    If it's under debug mode, then print debug msg.
 
     :param msg: debug message
     :return: null
     """
     if DEBUG:
         print(*msg)
+
+
+def tagger(**kwargs):
+    """
+    Make a dict that represent tag.
+
+    :param kwargs: key is tag, value is arg
+    :return: a dict
+    """
+    return dict(**kwargs)

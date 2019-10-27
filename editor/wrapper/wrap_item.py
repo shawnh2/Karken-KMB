@@ -1,5 +1,6 @@
 from editor.graphic.node_item import KMBNodeGraphicItem
 from editor.wrapper.serializable import Serializable
+from lib import tagger
 
 
 class KMBNodeItem(Serializable):
@@ -25,16 +26,16 @@ class KMBNodeItem(Serializable):
                 edge.update_positions()
 
     def serialize(self):
-        return {
-            "tag": "layer",
-            "id": str(id(self.gr_node)),
-            "class": self.gr_name,
-            "mode": 'IO',
-            "input": [],
-            "output": [],
-            "var": None,  # None: assign it later
-            "args": None
-        }
+        return tagger(
+            tag='layer',
+            id=str(id(self.gr_node)),
+            class_=self.gr_name,
+            mode='IO',
+            input=[],
+            output=[],
+            var=None,  # None: assign it later
+            args=None
+        )
 
     def deserialize(self):
         pass
