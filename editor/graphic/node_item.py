@@ -61,13 +61,13 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
     def get_context_menu(self):
         inh_actions = []  # actions for inherit args
         org_actions = []  # actions for original args
-        support_type = self._ref_item.gr_sort.lower()
         for idx, arg_name, arg_value in self._arg_model.items():
             if arg_value.dtype == 'Reference':
                 action = self._make_a_valid_action(arg_value, arg_name)
                 # only after dragging ref curve to a node
                 # will get attribute: '_ref_item'.
                 if self._ref_item is not None:
+                    support_type = self._ref_item.gr_sort.lower()
                     # if ref src is Units, then only few arg item can add ref.
                     # so here do some simple check.
                     if self._ref_item.gr_type == 'Units':

@@ -59,21 +59,21 @@ class KMBNodeScene(Serializable):
 
     def add_edge(self, edge):
         self.edges.append(edge)
-        debug(f"*[E_ADD_{len(self.edges)}] {self.edges}")
+        debug(f"*[EDGE {len(self.edges)}] + {edge}")
 
     def remove_edge(self, edge):
         self.edges.remove(edge)
-        debug(f"*[E_DEL_{len(self.edges)}] {self.edges}")
+        debug(f"*[EDGE {len(self.edges)}] - {edge}")
 
     def add_node(self, node):
         self.nodes.append(node)
         self.nodes_counter.update(node.gr_name)
-        debug(f"*[N_ADD_{len(self.nodes)}] {self.nodes}")
+        debug(f"*[NODE {len(self.nodes)}] + {node}")
 
     def remove_node(self, node):
         self.nodes.remove(node)
         self._remove_relative_edges(node)
-        debug(f"*[N_DEL_{len(self.nodes)}] {self.nodes}")
+        debug(f"*[NODE {len(self.nodes)}] - {node}")
 
     def get_node_count(self, node):
         return self.nodes_counter.get(node.gr_name)

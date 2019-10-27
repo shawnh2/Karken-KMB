@@ -351,6 +351,7 @@ class KMBNodeGraphicView(QGraphicsView):
                 # del direct edge directly.
                 self.status_bar_msg('Delete: One edge.')
                 if isinstance(item, KMBGraphicEdgeBezier):
+                    self.has_chosen_to_del_from_rm = False
                     # curve edge need to del the ref.
                     src_item_id = str(id(item.edge.start_item.gr_node))
                     dst_item_id = str(id(item.edge.end_item.gr_node))
