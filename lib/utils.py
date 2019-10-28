@@ -44,7 +44,7 @@ def type_color_map(datatype: str) -> tuple:
     elif datatype == 'bool':
         return color['DTC_bool'], 'Boolean'
     elif datatype == 'num;seq':
-        return color['DTC_numseq'], 'Num/Seq'
+        return color['DTC_numseq'], 'Num_Seq'
     elif datatype == 'mut':
         return color['DTC_mut'], 'Mutable'
     else:

@@ -163,7 +163,7 @@ class ArgsEditableModel(ArgsSuperModel):
             for ref in ref_dict.values():
                 if ref.tag == 0:
                     ref.setBackground(self.ref_color)
-                ref.setText(value)
+                ref.setText('@' + value)
 
     def remove_ref_by(self, model_id: str, ref_id: str):
         # remove one ref_by in ref_by_dict.
@@ -181,7 +181,7 @@ class ArgsEditableModel(ArgsSuperModel):
 
     def reassign_value(self, idx, value: str):
         arg_item = self.item(idx, 1)
-        arg_item.setText(value)
+        arg_item.set_text_with_check(value)
         arg_item.has_changed()
 
     def reassign_state(self, idx, state: str):

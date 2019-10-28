@@ -106,7 +106,7 @@ class KMBNodesArgsMenu(QTableView):
             # avoid referenced item here nor bug.
             pass
         else:
-            item.setText(value)
+            item.set_text_with_check(value)
             if item.check_changed(value):
                 item.has_changed()
             else:

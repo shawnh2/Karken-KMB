@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QComboBox, QCheckBox
 from PyQt5.QtGui import QStandardItem, QColor, QIcon
 
 from cfg import color, icon
-from lib import type_color_map
+from lib import type_color_map, debug, AutoInspector
 
 
 class ArgNameItem(QStandardItem):
@@ -42,8 +42,8 @@ class ArgEditItem(QStandardItem):
                  value,
                  dtype,
                  belong_to: str,
-                 tag=0,
-                 store_bg=False):
+                 tag: int = 0,
+                 store_bg: bool = False):
         # save the initial value of one arg
         self._init_value = value
         self._value = value
@@ -59,17 +59,24 @@ class ArgEditItem(QStandardItem):
         self.is_changed = False
         self.is_referenced = False
         self.dtype = dtype
+        # specially, Mutable dtype cannot be edited.
+        # only edge can affect this value.
+        if self.dtype == 'Mutable':
+            self.setEnabled(False)
         # default tag is 0.
         # when self is token by other widget,
         # 1 is checkbox, 2 is combobox.
         self.tag = tag
-        # color for plain, changed & referenced
+        # color for plain, changed & referenced.
         self.pln_color = QColor(color['ARG_NORMAL'])
         self.chg_color = QColor(color['ARG_CHANGED'])
         self.ref_color = QColor(color['ARG_REFED'])
+        # checking the value by its type.
+        self.auto_inspector = AutoInspector()
 
         self.setEditable(True)
-        self.setToolTip(dtype)
+        self.setToolTip(self.dtype if self.dtype != 'Mutable'
+                        else self.dtype + ' (protected) ')
 
     def __repr__(self):
         return f"<ArgEditItem TAG:{self.tag} ARG:{self.belong_to}>"
@@ -91,7 +98,7 @@ class ArgEditItem(QStandardItem):
 
     def set_ref_to(self, ref_to):
         self._ref_to = ref_to
-        self.setText(self._ref_to.text())
+        self.setText('@' + self._ref_to.text())
         # set referenced bg color,
         # undo all is_changed sign here.
         self.is_changed = False
@@ -117,6 +124,11 @@ class ArgEditItem(QStandardItem):
     def var_name(self):
         if hasattr(self, '_ref_to'):
             return self._ref_to.text()
+
+    def set_text_with_check(self, text: str):
+        """ A proxy of setText() with value check. """
+        value = self.auto_inspector.auto_type_check(text, self.dtype)
+        self.setText(value)
 
     def text(self):
         if self._store_bg:
