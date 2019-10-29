@@ -14,8 +14,9 @@ class KMBNodeItem(Serializable):
         self.gr_name = node_name
         self.gr_type = node_type  # CATEGORY
         self.gr_sort = node_sort  # SORT
-        self.gr_node = KMBNodeGraphicItem(self, self.gr_name)
-
+        self.gr_node = KMBNodeGraphicItem(self,
+                                          self.gr_name,
+                                          self.gr_sort)
         self.gr_scene.addItem(self.gr_node)
 
     def __repr__(self):

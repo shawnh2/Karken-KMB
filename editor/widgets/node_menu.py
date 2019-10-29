@@ -19,13 +19,13 @@ class KMBNodesMenu(QTabWidget):
         super().__init__(parent)
 
         self.layer_nodes = QToolBox(self)
-        self.other_nodes = QToolBox(self)
         self.common_nodes = QToolBox(self)
+        self.units_nodes = QToolBox(self)
 
         self.set_toolbox()
         self.addTab(self.layer_nodes, "Layers")
         self.addTab(self.common_nodes, "Common")
-        self.addTab(self.other_nodes, "Units")
+        self.addTab(self.units_nodes, "Units")
         self.setMinimumWidth(270)
         self.setMaximumWidth(470)
 
@@ -45,7 +45,7 @@ class KMBNodesMenu(QTabWidget):
                 # init tool button
                 node_button = QToolButton(self)
                 node_button.setToolTip(tips)
-                tool_icon_path = NODE_ICONx500_PATH.format(name)
+                tool_icon_path = NODE_ICONx500_PATH.format(s, name)
                 self.valid_node_button(node_button, name,
                                        tool_icon_path)
                 # add clicked event handler
@@ -55,7 +55,7 @@ class KMBNodesMenu(QTabWidget):
             if c.lower() == 'layers':
                 self.layer_nodes.addItem(group_box, s)
             elif c.lower() == 'units':
-                self.other_nodes.addItem(group_box, s)
+                self.units_nodes.addItem(group_box, s)
             elif c.lower() == 'common':
                 self.common_nodes.addItem(group_box, s)
             # else:
