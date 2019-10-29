@@ -24,10 +24,10 @@ class KMBArgsMenu(Serializable):
             # filter every items that has been ...
             for idx, arg_name, arg_value in model.items():
                 if arg_name.text() == 'var_name':
-                    vars_name_dict[id_] = arg_value.text()
+                    vars_name_dict[id_] = arg_value.value
                 # ... changed
                 elif arg_value.is_changed:
-                    arg_dict[arg_name.text()] = arg_value.text()
+                    arg_dict[arg_name.text()] = arg_value.value
                 # ... referenced
                 elif arg_value.is_referenced:
                     arg_dict[arg_name.text()] = arg_value.ref_to

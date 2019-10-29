@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QComboBox, QCheckBox
 from PyQt5.QtGui import QStandardItem, QColor, QIcon
 
 from cfg import color, icon
-from lib import type_color_map, debug, AutoInspector
+from lib import type_color_map
 
 
 class ArgNameItem(QStandardItem):
@@ -71,8 +71,6 @@ class ArgEditItem(QStandardItem):
         self.pln_color = QColor(color['ARG_NORMAL'])
         self.chg_color = QColor(color['ARG_CHANGED'])
         self.ref_color = QColor(color['ARG_REFED'])
-        # checking the value by its type.
-        self.auto_inspector = AutoInspector()
 
         self.setEditable(True)
         self.setToolTip(self.dtype if self.dtype != 'Mutable'
@@ -98,7 +96,7 @@ class ArgEditItem(QStandardItem):
 
     def set_ref_to(self, ref_to):
         self._ref_to = ref_to
-        self.setText('@' + self._ref_to.text())
+        self.value = '@' + self._ref_to.value
         # set referenced bg color,
         # undo all is_changed sign here.
         self.is_changed = False
@@ -115,32 +113,29 @@ class ArgEditItem(QStandardItem):
         # arg value becomes initial value.
         self.is_changed = False
         self.is_referenced = False
-        self.setText(self._init_value)
+        self.value = self._init_value
         self.setBackground(self.pln_color)
 
     ref_to = property(get_ref_to, set_ref_to, del_ref_to)
+
+    def set_value(self, value: str):
+        """ A proxy of setText() with value check. """
+        self._value = value
+        if not self._store_bg:
+            self.setText(self._value)
+
+    def get_value(self):
+        # whether store in bg or not, will get the value anyway.
+        # text() will only get the front value, not the one
+        # that store in background.
+        return self._value
+
+    value = property(get_value, set_value)
 
     @property
     def var_name(self):
         if hasattr(self, '_ref_to'):
             return self._ref_to.text()
-
-    def set_text_with_check(self, text: str):
-        """ A proxy of setText() with value check. """
-        value = self.auto_inspector.auto_type_check(text, self.dtype)
-        self.setText(value)
-
-    def text(self):
-        if self._store_bg:
-            return self._value
-        else:
-            return super().text()
-
-    def setText(self, p_str):
-        if self._store_bg:
-            self._value = p_str
-        else:
-            super().setText(p_str)
 
 
 class ArgComboBox(QComboBox):

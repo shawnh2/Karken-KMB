@@ -125,7 +125,7 @@ class ArgsEditableModel(ArgsSuperModel):
         self._ref_by_dict = {}
         # the structure of ref_by_dict:
         # { model(id): {item(id): item(instance), ...}, ... }
-        self.ref_by_update = False
+        self.ref_by_update_flag = False
         self.ref_color = QColor(color['ARG_REFED'])
         # set header labels for this model
         self.set_header_labels("Name", "Argument Value")
@@ -142,13 +142,13 @@ class ArgsEditableModel(ArgsSuperModel):
         # ref_by is instance of ArgEditItem.
         model_id, ref_item = ref_by
         self._ref_by_dict.setdefault(model_id, {})[str(id(ref_item))] = ref_item
-        self.ref_by_update = True
+        self.ref_by_update_flag = True
 
     def get_ref_by(self):
         return self._ref_by_dict
 
     def del_ref_by(self):
-        # no necessary to change ref_by_update to False
+        # no necessary to change ref_by_update_flag to False.
         # because once this func has been called,
         # its entire instance will be destroyed.
         for ref_dict in self._ref_by_dict.values():
@@ -163,7 +163,9 @@ class ArgsEditableModel(ArgsSuperModel):
             for ref in ref_dict.values():
                 if ref.tag == 0:
                     ref.setBackground(self.ref_color)
-                ref.setText('@' + value)
+                ref.value = '@' + value
+        # also close trigger inside here.
+        self.ref_by_update_flag = False
 
     def remove_ref_by(self, model_id: str, ref_id: str):
         # remove one ref_by in ref_by_dict.
@@ -181,12 +183,12 @@ class ArgsEditableModel(ArgsSuperModel):
 
     def reassign_value(self, idx, value: str):
         arg_item = self.item(idx, 1)
-        arg_item.set_text_with_check(value)
+        arg_item.value = value
         arg_item.has_changed()
 
     def reassign_state(self, idx, state: str):
         arg_item = self.item(idx, 1)
-        arg_item.setText(state)
+        arg_item.value = state
         arg_item.is_changed = ~arg_item.is_changed
 
     def feed_inherit_item(self, idx, unpack_item):

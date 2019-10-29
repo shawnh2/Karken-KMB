@@ -18,14 +18,19 @@ class AutoInspector:
 
     def auto_type_check(self, value: str, dtype: str):
         self._cur_value = value
+        # return the ref value directly.
+        if value.startswith('@'):
+            return value
+        # facing different cases.
         try:
             new_value = eval(f'self._inspect_{dtype.lower()}()')
             return new_value
         except AttributeError:
+            # if got no support type, then return without any check.
             return value
 
-    """def _inspect_string(self):
-         Fill the empty char with '_'. 
+    def _inspect_string(self):
+        """ Fill the empty char with '_'. """
         name = self._cur_value.strip().lower()
         if name[0].isdigit():
             name = '_' + name
@@ -35,7 +40,7 @@ class AutoInspector:
             if p == '_':
                 continue
             name = name.replace(p, '')
-        return name.replace(' ', '_')"""
+        return name.replace(' ', '_')
 
     def _inspect_number(self):
         """ Number check.

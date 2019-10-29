@@ -4,7 +4,7 @@ from PyQt5.QtCore import Qt, pyqtSignal
 
 from editor.component.args_model import ArgsPreviewModel, ArgsEditableModel
 from editor.component.args_model_item import ArgComboBox, ArgCheckBox
-from lib import DataBase4Args, debug
+from lib import DataBase4Args, debug, AutoInspector
 
 
 class KMBNodesArgsMenu(QTableView):
@@ -22,6 +22,8 @@ class KMBNodesArgsMenu(QTableView):
         # link to database
         self.db_link = DataBase4Args()
         self.null_model = QStandardItemModel()
+        # checking the value by its type.
+        self.inspector = AutoInspector()
         # for collection the ArgsEditableModel
         self.edit_model = {}
         self.current_model = None
@@ -74,7 +76,7 @@ class KMBNodesArgsMenu(QTableView):
             index = self.model().index(row, 1)
             # there's a editable item behind it.
             item = self.current_model.item(row, 1)
-            cur_value = item.text()
+            cur_value = item.value
             # this item store the current value,
             # grab it and set to current text.
             # if the value is out of the combo box,
@@ -96,7 +98,7 @@ class KMBNodesArgsMenu(QTableView):
         for row in self.current_model.check_args:
             index = self.model().index(row, 1)
             item = self.current_model.item(row, 1)
-            check = ArgCheckBox(item.text(), at=row)
+            check = ArgCheckBox(item.value, at=row)
             self.setIndexWidget(index, check)
             check.clicked.connect(self.modify_state)
 
@@ -106,22 +108,25 @@ class KMBNodesArgsMenu(QTableView):
             # avoid referenced item here nor bug.
             pass
         else:
-            item.set_text_with_check(value)
+            checked_value = self.inspector.auto_type_check(value, item.dtype)
+            item.value = checked_value
             if item.check_changed(value):
                 item.has_changed()
             else:
                 item.undo_change()
         # if this is where var_name got changed,
         # also change value where nodes referenced with.
-        if self.current_model.ref_by_update:
+        if self.current_model.ref_by_update_flag:
             self.current_model.update_ref_by(value)
+            # ! close the trigger here nor RecursionException here.
+            self.current_model.ref_by_update_flag = False
 
     def modify_args(self, value):
         self.current_model.reassign_value(self.sender().at, value)
 
     def modify_state(self, state):
         self.current_model.reassign_state(self.sender().at, str(state))
-        self.sender().setText(str(state))
+        self.sender().value = str(state)
 
     def modify_ref(self, dst_node_id, idx, src_node_id):
         # create ref here
@@ -131,6 +136,7 @@ class KMBNodesArgsMenu(QTableView):
         src_value_item = src_model.item(src_model.var_name_idx, 1)
         # save the relationship of ref
         dst_value_item.ref_to = src_value_item
+        # dst node model id, and dst value edit item.
         src_model.ref_by = (dst_node_id, dst_value_item)
 
         item_name = dst_model.item(idx, 0).text()
