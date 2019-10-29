@@ -24,7 +24,7 @@ if __name__ == '__main__':
     # handle the main process event.
     qApp.processEvents()
     # setting up main window.
-    size = (width * 0.8, height * 0.75)
+    size = (width * 0.8, height * 0.8)
     win = KMBMainWindow(size)
     # setup about panel.
     #about = AboutWidget()

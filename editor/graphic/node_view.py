@@ -415,8 +415,8 @@ class KMBNodeGraphicView(QGraphicsView):
                 # if hadn't chosen a item in right menu,
                 # then give up this edge.
                 if not self.has_chosen_to_ref_from_rm:
-                    self.gr_scene.scene.remove_edge(new_edge)
                     self.gr_scene.removeItem(new_edge.gr_edge)
+                    self.has_chosen_to_ref_from_rm = False
                     debug("[dropped] triggered no item in right menu.")
                     return
             # remove gr-edge under this situation.

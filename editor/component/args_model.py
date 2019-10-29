@@ -73,11 +73,11 @@ class ArgsSuperModel(QStandardItemModel):
         """ Generator: yield items in model. """
         idx = 0
         while True:
-            arg_name = self.item(idx, 0)
-            if arg_name is None:
+            arg_name_item = self.item(idx, 0)
+            if arg_name_item is None:
                 break
-            arg_value = self.item(idx, 1)
-            yield idx, arg_name, arg_value
+            arg_value_item = self.item(idx, 1)
+            yield idx, arg_name_item, arg_value_item
             idx += 1
 
 
@@ -159,23 +159,29 @@ class ArgsEditableModel(ArgsSuperModel):
         self._ref_by_dict = {}
 
     def update_ref_by(self, value: str):
-        for ref_dict in self._ref_by_dict.values():
-            for ref in ref_dict.values():
-                if ref.tag == 0:
-                    ref.setBackground(self.ref_color)
-                ref.value = '@' + value
-        # also close trigger inside here.
-        self.ref_by_update_flag = False
+        if self.ref_by_update_flag:
+            for ref_dict in self._ref_by_dict.values():
+                for ref in ref_dict.values():
+                    if ref.tag == 0:
+                        ref.setBackground(self.ref_color)
+                    ref.value = value
+                    debug(f'[UPDATE] {ref} => {value}')
+            # also close trigger inside here.
+            self.ref_by_update_flag = False
 
-    def remove_ref_by(self, model_id: str, ref_id: str):
+    def remove_ref_by(self, node_id: str, ref_id: str):
         # remove one ref_by in ref_by_dict.
-        ref_dict = self._ref_by_dict.get(model_id)
+        ref_dict = self._ref_by_dict.get(node_id)
         ref_item = ref_dict.get(ref_id)
         del ref_item.ref_to
         ref_dict.pop(ref_id)
+        debug(f'[DEL REF] at node: {node_id} arg: {ref_id}')
+        # check dict empty.
+        if len(ref_dict) == 0:
+            self._ref_by_dict.pop(node_id)
 
-    def count_ref_items(self, model_id: str):
-        return len(self._ref_by_dict.get(model_id))
+    def count_ref_items(self, node_id: str):
+        return len(self._ref_by_dict.get(node_id))
 
     ref_by = property(get_ref_by, set_ref_by, del_ref_by)
 

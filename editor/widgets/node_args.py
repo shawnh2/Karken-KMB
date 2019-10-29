@@ -37,7 +37,7 @@ class KMBNodesArgsMenu(QTableView):
         self.verticalHeader().setHidden(True)
         # set width
         self.setMinimumWidth(320)
-        self.setMaximumWidth(500)
+        self.setMaximumWidth(520)
         # set pop up right menu policy
         self.right_menu = QMenu()
         self.setContextMenuPolicy(Qt.DefaultContextMenu)
@@ -116,10 +116,7 @@ class KMBNodesArgsMenu(QTableView):
                 item.undo_change()
         # if this is where var_name got changed,
         # also change value where nodes referenced with.
-        if self.current_model.ref_by_update_flag:
-            self.current_model.update_ref_by(value)
-            # ! close the trigger here nor RecursionException here.
-            self.current_model.ref_by_update_flag = False
+        self.current_model.update_ref_by(value)
 
     def modify_args(self, value):
         self.current_model.reassign_value(self.sender().at, value)
@@ -134,9 +131,9 @@ class KMBNodesArgsMenu(QTableView):
         src_model = self.edit_model.get(src_node_id)
         dst_value_item = dst_model.item(idx, 1)
         src_value_item = src_model.item(src_model.var_name_idx, 1)
-        # save the relationship of ref
-        dst_value_item.ref_to = src_value_item
-        # dst node model id, and dst value edit item.
+        # save the relationship of ref and its node id.
+        dst_value_item.ref_to = (src_node_id, src_value_item)
+        # dst node id, and dst value edit item.
         src_model.ref_by = (dst_node_id, dst_value_item)
 
         item_name = dst_model.item(idx, 0).text()
@@ -164,10 +161,21 @@ class KMBNodesArgsMenu(QTableView):
 
     def delete_node(self, node_id: str):
         model = self.edit_model.get(node_id)
-        # remove the ref
-        if model.node_name == 'PlaceHolder':
+        # while remove the ref,
+        # also remove the ref by relation.
+        if model.node_name == 'PlaceHolder' or\
+           model.node_type == 'Units':
             del model.ref_by
-        # remove entire node item
+        # remove entire node item,
+        # also remove the ref to relation.
+        else:
+            for _, _, value_item in model.items():
+                if hasattr(value_item, '_ref_to'):
+                    src_node_id = value_item._ref_to_node_id
+                    src_model = self.edit_model.get(src_node_id)
+                    src_model.remove_ref_by(node_id,
+                                            value_item.id_str)
+        # finally clean it all.
         self.edit_model.__delitem__(node_id)
         self.setModel(self.null_model)
 

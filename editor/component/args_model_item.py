@@ -77,7 +77,7 @@ class ArgEditItem(QStandardItem):
                         else self.dtype + ' (protected) ')
 
     def __repr__(self):
-        return f"<ArgEditItem TAG:{self.tag} ARG:{self.belong_to}>"
+        return f"<ArgEditItem ARG:{self.belong_to} at {str(id(self))[-4:]}>"
 
     def check_changed(self, value: str) -> bool:
         # if after all, value still equal to initial value,
@@ -95,8 +95,9 @@ class ArgEditItem(QStandardItem):
         self.setBackground(self.pln_color)
 
     def set_ref_to(self, ref_to):
-        self._ref_to = ref_to
-        self.value = '@' + self._ref_to.value
+        (self._ref_to_node_id,
+         self._ref_to) = ref_to
+        self.value = self._ref_to.value
         # set referenced bg color,
         # undo all is_changed sign here.
         self.is_changed = False
@@ -108,6 +109,7 @@ class ArgEditItem(QStandardItem):
         return str(id(self._ref_to))
 
     def del_ref_to(self):
+        # be called while deleting ref src node.
         del self._ref_to
         # after deleting, everything back to normal.
         # arg value becomes initial value.
@@ -136,6 +138,10 @@ class ArgEditItem(QStandardItem):
     def var_name(self):
         if hasattr(self, '_ref_to'):
             return self._ref_to.text()
+
+    @property
+    def id_str(self):
+        return str(id(self))
 
 
 class ArgComboBox(QComboBox):
