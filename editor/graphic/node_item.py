@@ -57,36 +57,85 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
 
+    def contextMenuEvent(self, event):
+        # make a menu main header.
+        if self._ref_item is not None:
+            # it means this right menu is called after ref edge.
+            # add custom sign at head.
+            sign = QAction(f'Create reference ~ {self._ref_item.gr_name}')
+        else:
+            sign = QAction(f'Reference Table of <{self._arg_model.var_name}>')
+        sign.setEnabled(False)
+        self.right_menu.addAction(sign)
+        self.right_menu.addSeparator()
+        # then add arg item.
+        actions_list = self.get_context_menu()
+        for actions in actions_list:
+            self.right_menu.addActions(actions)
+            self.right_menu.addSeparator()
+        # show right menu.
+        self.right_menu.exec(QCursor.pos())
+        # clean ref after using.
+        self.clean_ref()
+
     # TODO: add var-name annotations around item.
 
+    # ------------OPERATIONS ON RIGHT MENU--------------
+
     def get_context_menu(self):
+        """ For Layer node, right menu shows items that can be referenced.
+        But for PlaceHolder or Units (etc.), menu shows items that already
+        has been referenced.
+        """
+        if self._arg_model.node_type == 'Layers':
+            return self._get_reference_table()
+        else:
+            return self._get_referenced_table()
+
+    def _get_reference_table(self):
+        # for Layer node.
         inh_actions = []  # actions for inherit args
         org_actions = []  # actions for original args
         for idx, arg_name, arg_value in self._arg_model.items():
-            if arg_value.dtype == 'Reference':
+            if self._conditions(arg_value.dtype):
                 action = self._make_a_valid_action(arg_value, arg_name)
                 # only after dragging ref curve to a node
                 # will get attribute: '_ref_item'.
                 if self._ref_item is not None:
-                    support_type = self._ref_item.gr_sort.lower()
-                    # if ref src is Units, then only few arg item can add ref.
-                    # so here do some simple check.
-                    if self._ref_item.gr_type == 'Units':
-                        if not self._action_units_type_check(arg_name.text(),
-                                                             support_type):
-                            action.setDisabled(True)
-                    # set its id and the idx of this arg, also src id.
-                    # using object name as signal here.
-                    action.setObjectName(f'{self.id_str}-'
-                                         f'{idx}-'
-                                         f'{self._ref_item.gr_node.id_str}')
-                    action.triggered.connect(self.node.gr_scene.right_menu_listener)
+                    self._pre_activate_action(action,
+                                              arg_name.text(),
+                                              idx)
                 # collect actions
                 if idx <= self._arg_model.io_separator:
                     inh_actions.append(action)
                 else:
                     org_actions.append(action)
         return inh_actions, org_actions
+
+    def _get_referenced_table(self):
+        # for PlaceHolder, Units and so on.
+        actions_list = []
+        if self._arg_model.ref_by:
+            for node_id, items in self._arg_model.ref_by.items():
+                var_name = self._arg_model.rb_semaphore.get_var_name(node_id)
+                sub_header = [self._make_a_sub_header(f'{var_name}')]
+                actions = [QAction(self.rm_token,
+                                   f'   - {item.belong_to}')
+                           for item in items.values()]
+                actions_list.append(sub_header + actions)
+        return actions_list
+
+    def _conditions(cls, *args) -> bool:
+        """
+        Only show items that fulfill these conditions
+        here for reference table on right menu.
+
+        :return: True
+        """
+        if args[0] == 'Reference':
+            return True
+        else:
+            return False
 
     def _make_a_valid_action(self, arg_value, arg_name):
         # make a action with different state mark.
@@ -98,8 +147,16 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
             action = QAction(self.rm_free, arg_name.text())
         return action
 
-    def _action_units_type_check(self, arg: str, support_type: str) -> bool:
-        """ check whether this arg support this type.
+    @classmethod
+    def _make_a_sub_header(cls, msg: str):
+        """ Use a disabled action to represent header. """
+        sub_header = QAction(msg)
+        sub_header.setEnabled(False)
+        return sub_header
+
+    @classmethod
+    def _action_units_type_check(cls, arg: str, support_type: str) -> bool:
+        """ Check whether this arg support this type.
         Usually, those args which accept the support_type,
         always contains the support_type.
 
@@ -112,23 +169,25 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
             return True
         return False
 
-    def contextMenuEvent(self, event):
-        # getting the args of its own and
-        # highlight the Reference (suggested) one.
-        inh_actions, org_actions = self.get_context_menu()
-        if self._ref_item is not None:
-            # it means this right menu is called after ref edge.
-            # add custom sign at head
-            sign = QAction(f'{self._ref_item.gr_name}~')
-        else:
-            sign = QAction('Reference Table')
-        sign.setEnabled(False)
-        self.right_menu.addAction(sign)
-        self.right_menu.addSeparator()
-        self.right_menu.addActions(inh_actions)
-        self.right_menu.addSeparator()
-        self.right_menu.addActions(org_actions)
-        # show right menu
-        self.right_menu.exec(QCursor.pos())
-        # clean ref after using
-        self.clean_ref()
+    def _pre_activate_action(self, action, *args):
+        """
+        If one item (also action) is ready to accept ref,
+        then must pre-activate that action by setting
+        different signals and functions.
+
+        :return: One pre-activated action.
+        """
+        arg_name, idx = args
+        support_type = self._ref_item.gr_sort.lower()
+        # if ref src is Units, then only few arg item can add ref.
+        # so here do some simple check.
+        if self._ref_item.gr_type == 'Units':
+            if not self._action_units_type_check(arg_name,
+                                                 support_type):
+                action.setDisabled(True)
+        # set its id and the idx of this arg, also src id.
+        # using object name as signal here.
+        action.setObjectName(f'{self.id_str}-'
+                             f'{idx}-'
+                             f'{self._ref_item.gr_node.id_str}')
+        action.triggered.connect(self.node.gr_scene.right_menu_listener)

@@ -1,9 +1,7 @@
 from PyQt5.QtGui import QStandardItemModel
-from PyQt5.QtGui import QColor
 
 from editor.component.args_model_item import ArgNameItem, ArgTypeItem, ArgEditItem
-from cfg import color
-from lib import debug
+from editor.component.semaphores import ReferenceBySemaphore
 
 
 class ArgsSuperModel(QStandardItemModel):
@@ -121,12 +119,9 @@ class ArgsEditableModel(ArgsSuperModel):
         # args: check button style cell
         self.check_args = []
         self.node_type = node_type
-        # for optional attrs
-        self._ref_by_dict = {}
-        # the structure of ref_by_dict:
-        # { model(id): {item(id): item(instance), ...}, ... }
-        self.ref_by_update_flag = False
-        self.ref_color = QColor(color['ARG_REFED'])
+        # setup semaphore here
+        self.rb_semaphore = ReferenceBySemaphore()
+
         # set header labels for this model
         self.set_header_labels("Name", "Argument Value")
 
@@ -134,60 +129,30 @@ class ArgsEditableModel(ArgsSuperModel):
     def var_name(self):
         return self.item(self.var_name_idx, 1).text()
 
+    @property
+    def var_name_item(self):
+        return self.item(self.var_name_idx, 1)
+
     # ------OPTIONAL PROPERTY------
-    # It's only for some node that can be referenced.
-    # Such as PlaceHolder, Units ...
+    # Maintain the rb_semaphore by property ref_by.
 
     def set_ref_by(self, ref_by: tuple):
         # ref_by is instance of ArgEditItem.
-        model_id, ref_item = ref_by
-        self._ref_by_dict.setdefault(model_id, {})[str(id(ref_item))] = ref_item
-        self.ref_by_update_flag = True
+        self.rb_semaphore.add(ref_by)
+        self.rb_semaphore.update_flag = True
 
     def get_ref_by(self):
-        return self._ref_by_dict
+        return self.rb_semaphore.get()
 
     def del_ref_by(self):
-        # no necessary to change ref_by_update_flag to False.
-        # because once this func has been called,
-        # its entire instance will be destroyed.
-        for ref_dict in self._ref_by_dict.values():
-            for ref in ref_dict.values():
-                debug(f'[DEL REF] {ref} ref has been removed.')
-                del ref.ref_to
-        # clean all
-        self._ref_by_dict = {}
-
-    def update_ref_by(self, value: str):
-        if self.ref_by_update_flag:
-            for ref_dict in self._ref_by_dict.values():
-                for ref in ref_dict.values():
-                    if ref.tag == 0:
-                        ref.setBackground(self.ref_color)
-                    ref.value = value
-                    debug(f'[UPDATE] {ref} => {value}')
-            # also close trigger inside here.
-            self.ref_by_update_flag = False
-
-    def remove_ref_by(self, node_id: str, ref_id: str):
-        # remove one ref_by in ref_by_dict.
-        ref_dict = self._ref_by_dict.get(node_id)
-        ref_item = ref_dict.get(ref_id)
-        del ref_item.ref_to
-        ref_dict.pop(ref_id)
-        debug(f'[DEL REF] at node: {node_id} arg: {ref_id}')
-        # check dict empty.
-        if len(ref_dict) == 0:
-            self._ref_by_dict.pop(node_id)
-
-    def count_ref_items(self, node_id: str):
-        return len(self._ref_by_dict.get(node_id))
+        self.rb_semaphore.destroy()
 
     ref_by = property(get_ref_by, set_ref_by, del_ref_by)
 
     # -----------------------------
 
     def reassign_value(self, idx, value: str):
+        # reassign the value in args combobox.
         arg_item = self.item(idx, 1)
         arg_item.value = value
         arg_item.has_changed()

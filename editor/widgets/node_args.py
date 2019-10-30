@@ -82,7 +82,8 @@ class KMBNodesArgsMenu(QTableView):
             # if the value is out of the combo box,
             # which means this a ref value, and add it,
             # then set to current value again.
-            if not args_list.__contains__(cur_value):
+            if cur_value != '' and not\
+               args_list.__contains__(cur_value):
                 # make a copy of args_list, so won't mess
                 # up with those original values.
                 copy_args_list = args_list.copy()
@@ -102,6 +103,8 @@ class KMBNodesArgsMenu(QTableView):
             self.setIndexWidget(index, check)
             check.clicked.connect(self.modify_state)
 
+    # ------Operations on Model Arg Item------
+
     def modify_item(self, item):
         value = item.text()
         if item.is_referenced:
@@ -116,7 +119,7 @@ class KMBNodesArgsMenu(QTableView):
                 item.undo_change()
         # if this is where var_name got changed,
         # also change value where nodes referenced with.
-        self.current_model.update_ref_by(value)
+        self.current_model.rb_semaphore.update(value)
 
     def modify_args(self, value):
         self.current_model.reassign_value(self.sender().at, value)
@@ -133,8 +136,10 @@ class KMBNodesArgsMenu(QTableView):
         src_value_item = src_model.item(src_model.var_name_idx, 1)
         # save the relationship of ref and its node id.
         dst_value_item.ref_to = (src_node_id, src_value_item)
-        # dst node id, and dst value edit item.
-        src_model.ref_by = (dst_node_id, dst_value_item)
+        # dst node id, and dst value edit item,
+        # and the item of dst model's var name.
+        src_model.ref_by = (dst_node_id, dst_value_item,
+                            dst_model.var_name_item)
 
         item_name = dst_model.item(idx, 0).text()
         debug(f'[REF] create <{dst_model.node_name}>:{dst_model.var_name}.{item_name} '
@@ -173,8 +178,8 @@ class KMBNodesArgsMenu(QTableView):
                 if hasattr(value_item, '_ref_to'):
                     src_node_id = value_item._ref_to_node_id
                     src_model = self.edit_model.get(src_node_id)
-                    src_model.remove_ref_by(node_id,
-                                            value_item.id_str)
+                    src_model.rb_semaphore.popup(node_id,
+                                                 value_item.id_str)
         # finally clean it all.
         self.edit_model.__delitem__(node_id)
         self.setModel(self.null_model)
@@ -183,7 +188,7 @@ class KMBNodesArgsMenu(QTableView):
         # get the arg model by id.
         return self.edit_model.get(node_id)
 
-    # ------Operations on Edge Model------
+    # ------Operations on Ref Model------
 
     def delete_ref_related(self, src_model_id: str, dst_model_id: str):
         # while deleting ref edge will trigger this method only.
@@ -192,8 +197,8 @@ class KMBNodesArgsMenu(QTableView):
         self.current_ref_dst_model_id = dst_model_id
         # if one start item connected with one node item.
         # under this situation, just del the ref_by.
-        if self.current_ref_model.count_ref_items(dst_model_id) == 1:
-            del self.current_ref_model.ref_by
+        if self.current_ref_model.rb_semaphore.count(dst_model_id) == 1:
+            self.current_ref_model.rb_semaphore.popup(dst_model_id, None)
             # single connected ref edge still needs these signals.
             self.the_rest_ref_items.emit(0)
             self.do_not_pick_one.emit(False)
@@ -206,11 +211,11 @@ class KMBNodesArgsMenu(QTableView):
     def delete_rm_selected(self):
         # deleted the one item that selected in right menu.
         ref_item_id = self.sender().objectName()
-        self.current_ref_model.remove_ref_by(self.current_ref_dst_model_id, ref_item_id)
-        # if one ref node has multi ref edges linked to one node,
-        # view will only display one of the edges.
+        self.current_ref_model.rb_semaphore.popup(self.current_ref_dst_model_id, ref_item_id)
+        # if one ref node has multi ref edges connected to one node,
+        # view will only display one of the them.
         # so do not delete ref edge until there's no edge left.
-        rest_ref_edge_count = self.current_ref_model.count_ref_items(self.current_ref_dst_model_id)
+        rest_ref_edge_count = self.current_ref_model.rb_semaphore.count(self.current_ref_dst_model_id)
         self.the_rest_ref_items.emit(rest_ref_edge_count)
         # what if do not pick one from right menu.
         self.do_not_pick_one.emit(False)

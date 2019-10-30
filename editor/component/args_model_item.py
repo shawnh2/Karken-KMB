@@ -48,30 +48,30 @@ class ArgEditItem(QStandardItem):
         self._init_value = value
         self._value = value
         self._store_bg = store_bg
+        self.dtype = dtype
+        # this arg value item belongs to ...
         self.belong_to = belong_to
-        # store all items that has been referenced.
-        self._ref_by_list = []
         # behind the widgets is self
         if self._store_bg:
             super().__init__()
         else:
             super().__init__(self._value)
-        self.is_changed = False
-        self.is_referenced = False
-        self.dtype = dtype
-        # specially, Mutable dtype cannot be edited.
-        # only edge can affect this value.
-        if self.dtype == 'Mutable':
-            self.setEnabled(False)
         # default tag is 0.
         # when self is token by other widget,
         # 1 is checkbox, 2 is combobox.
         self.tag = tag
+
+        self.is_changed = False
+        self.is_referenced = False
         # color for plain, changed & referenced.
         self.pln_color = QColor(color['ARG_NORMAL'])
         self.chg_color = QColor(color['ARG_CHANGED'])
         self.ref_color = QColor(color['ARG_REFED'])
 
+        # specially, Mutable dtype cannot be edited.
+        # only edge can affect this value.
+        if self.dtype == 'Mutable':
+            self.setEnabled(False)
         self.setEditable(True)
         self.setToolTip(self.dtype if self.dtype != 'Mutable'
                         else self.dtype + ' (protected) ')
@@ -79,20 +79,17 @@ class ArgEditItem(QStandardItem):
     def __repr__(self):
         return f"<ArgEditItem ARG:{self.belong_to} at {str(id(self))[-4:]}>"
 
-    def check_changed(self, value: str) -> bool:
-        # if after all, value still equal to initial value,
-        # then consider this to be unchanged.
-        return self._init_value != value
+    @property
+    def var_name(self):
+        if hasattr(self, '_ref_to'):
+            return self._ref_to.text()
 
-    def has_changed(self):
-        self.is_changed = True
-        # only set changed color for normal edit item
-        if self.tag == 0:
-            self.setBackground(self.chg_color)
+    @property
+    def id_str(self):
+        return str(id(self))
 
-    def undo_change(self):
-        self.is_changed = False
-        self.setBackground(self.pln_color)
+    # ------REF TO------
+    # This semaphore is maintained by self.
 
     def set_ref_to(self, ref_to):
         (self._ref_to_node_id,
@@ -134,14 +131,20 @@ class ArgEditItem(QStandardItem):
 
     value = property(get_value, set_value)
 
-    @property
-    def var_name(self):
-        if hasattr(self, '_ref_to'):
-            return self._ref_to.text()
+    def check_changed(self, value: str) -> bool:
+        # if after all, value still equal to initial value,
+        # then consider this to be unchanged.
+        return self._init_value != value
 
-    @property
-    def id_str(self):
-        return str(id(self))
+    def has_changed(self):
+        self.is_changed = True
+        # only set changed color for normal edit item
+        if self.tag == 0:
+            self.setBackground(self.chg_color)
+
+    def undo_change(self):
+        self.is_changed = False
+        self.setBackground(self.pln_color)
 
 
 class ArgComboBox(QComboBox):
