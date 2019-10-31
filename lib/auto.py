@@ -18,9 +18,6 @@ class AutoInspector:
 
     def auto_type_check(self, value: str, dtype: str):
         self._cur_value = value
-        # return the ref value directly.
-        if value.startswith('@'):
-            return value
         # facing different cases.
         try:
             new_value = eval(f'self._inspect_{dtype.lower()}()')

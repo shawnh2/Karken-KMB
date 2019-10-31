@@ -126,7 +126,7 @@ class KMBNodesArgsMenu(QTableView):
 
     def modify_state(self, state):
         self.current_model.reassign_state(self.sender().at, str(state))
-        self.sender().value = str(state)
+        self.sender().setText(str(state))
 
     def modify_ref(self, dst_node_id, idx, src_node_id):
         # create ref here

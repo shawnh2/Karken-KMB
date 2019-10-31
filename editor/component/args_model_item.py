@@ -101,6 +101,8 @@ class ArgEditItem(QStandardItem):
         self.is_referenced = True
         if self.tag == 0:
             self.setBackground(self.ref_color)
+        # ref value cannot be changed unless remove it.
+        self.setEditable(False)
 
     def get_ref_to(self):
         return str(id(self._ref_to))
@@ -114,6 +116,7 @@ class ArgEditItem(QStandardItem):
         self.is_referenced = False
         self.value = self._init_value
         self.setBackground(self.pln_color)
+        self.setEditable(True)
 
     ref_to = property(get_ref_to, set_ref_to, del_ref_to)
 
