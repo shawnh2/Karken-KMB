@@ -4,6 +4,11 @@ from cfg import color
 from lib import debug
 
 
+class ReferenceToSemaphore:
+    """ It's maintained in ArgEditItem. """
+    pass
+
+
 class ReferenceBySemaphore:
     """ The semaphore of referenced. """
 
@@ -45,12 +50,14 @@ class ReferenceBySemaphore:
 
     def update(self, value: str):
         if self.update_flag:
+            # update every item that has a ref relation with self.
             for ref_dict in self._ref_by_dict.values():
                 for ref in ref_dict.values():
                     if ref.tag == 0:
                         ref.setBackground(self.ref_color)
                     ref.value = value
                     debug(f'[UPDATE] {ref} => {value}')
+            # set back the flag.
             self.update_flag = False
 
     def popup(self, node_id: str, ref_id: str):
