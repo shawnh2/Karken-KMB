@@ -70,3 +70,11 @@ def tagger(**kwargs):
     :return: a dict
     """
     return dict(**kwargs)
+
+
+def load_stylesheet(path: str):
+    """ Load stylesheet from certain file. """
+    with open(path) as f:
+        style = f.readlines()
+        style = ''.join(style).strip('\n')
+    return style

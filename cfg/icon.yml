@@ -5,6 +5,9 @@ WINICON: 'lib/icon/kmb/kmb@winicon.png'
 # for splash screen
 SCREEN: 'lib/icon/kmb/kmb@launchscreen.png'
 
+# for node menu tab
+PIN: 'lib/icon/other/pin.png'
+
 # for toolbar
 NEW: 'lib/icon/tools/new.png'
 OPEN: 'lib/icon/tools/open.png'

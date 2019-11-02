@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QVBoxLayout, QToolButton, QGroupBox, QToolBox, QTabW
 from PyQt5.QtCore import QSize, Qt, pyqtSignal
 from PyQt5.QtGui import QIcon
 
-from cfg import NODE_ICONx500_PATH
+from cfg import icon, NODE_ICONx500_PATH
 
 
 DATABASE = sqlite3.connect('lib/node.db')
@@ -21,11 +21,17 @@ class KMBNodesMenu(QTabWidget):
         self.layer_nodes = QToolBox(self)
         self.common_nodes = QToolBox(self)
         self.units_nodes = QToolBox(self)
+        # custom pin tab
+        self.pin_nodes = QToolBox(self)
 
         self.set_toolbox()
+        self.addTab(self.pin_nodes, "Pins")
         self.addTab(self.layer_nodes, "Layers")
         self.addTab(self.common_nodes, "Common")
         self.addTab(self.units_nodes, "Units")
+
+        self.setTabIcon(0, QIcon(icon['PIN']))
+        self.setCurrentWidget(self.layer_nodes)
         self.setMinimumWidth(300)
         self.setMaximumWidth(500)
 
@@ -59,6 +65,9 @@ class KMBNodesMenu(QTabWidget):
             elif c.lower() == 'common':
                 self.common_nodes.addItem(group_box, s)
             # else:
+
+    def set_pin_box(self):
+        pass
 
     def clicked_handler(self):
         clicked_item_name = self.sender().text()

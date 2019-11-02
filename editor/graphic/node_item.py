@@ -19,6 +19,8 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         self.id_str = str(id(self))
 
         self.right_menu = QMenu()
+        self.pin = QIcon(icon['PIN'])
+
         self.rm_token = QIcon(icon['TOKEN'])
         self.rm_free = QIcon(icon['FREE'])
         self._ref_item = None
@@ -107,7 +109,7 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
             return self._get_referenced_table()
 
     def _get_reference_table(self):
-        # for Layer node.
+        # for Layer node. can pin.
 
         def conditions() -> bool:
             """
@@ -142,6 +144,10 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
                     inh_actions.append(action)
                 else:
                     org_actions.append(action)
+        # add `add to pin` item.
+        if self._ref_item is None:
+            pin = self._make_a_pin_item()
+            return inh_actions, org_actions, pin
         return inh_actions, org_actions
 
     def _get_referenced_table(self):
@@ -156,10 +162,14 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
                                    f'   - {item.belong_to}')
                            for item in items.values()]
                 actions_list.append(sub_header + actions)
+        # only Units cam pin.
+        if self._arg_model.node_type == 'Units':
+            pin = self._make_a_pin_item()
+            actions_list.append(pin)
         return actions_list
 
     def _get_model_io_table(self):
-        # especially for Model.
+        # especially for Model. cannot pin.
         inputs = []
         outputs = []
         for idx, arg_name, arg_value in self._arg_model.items():
@@ -215,6 +225,11 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         sub_header.setEnabled(False)
         return sub_header
 
+    def _make_a_pin_item(self):
+        pin = QAction(self.pin, 'Add to Pins')
+        pin.triggered.connect(self._execute_pin_action)
+        return [pin]
+
     def _pre_activate_ref_action(self, action, *args):
         """
         If one item (also action) is ready to accept ref,
@@ -263,3 +278,10 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
                              f'-{mark}-{self._edge_id}')
         # mark: 'i' is inputs, 'o' is outputs.
         action.triggered.connect(self.node.gr_scene.right_menu_listener)
+
+    def _execute_pin_action(self):
+        """ Execute Pin action here. Add item to Pin panel. """
+        for idx, arg_name_item, arg_value_item in self._arg_model.items():
+            # only save the changed value.
+            if arg_value_item.is_changed:
+                print(arg_name_item.text(), arg_value_item.value)

@@ -57,7 +57,6 @@ class KMBMainWindow(QMainWindow):
         self.setWindowIcon(QIcon(icon['WINICON']))
         self.setMinimumHeight(height)
         self.setMinimumWidth(width)
-        self.show()
 
     def init_slots(self):
         # update x,y pos label

@@ -1,0 +1,23 @@
+QToolButton::menu-button:hover {
+    border-left: 1px solid #666;
+    background: transparent;
+    width: 16px;
+}
+
+QToolButton:checked, QToolButton:pressed {
+    background-color: red;
+    border-radius: 5px;
+    color: white;
+}
+
+QTableView::item:hover {
+    color: #f9a11b;
+}
+
+QGroupBox::title {
+    color: black;
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    border: 1px solid #555;
+    border-radius: 5px;
+}

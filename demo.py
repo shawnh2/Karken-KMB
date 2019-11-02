@@ -5,15 +5,16 @@ from PyQt5.QtWidgets import QApplication, QSplashScreen, qApp
 from PyQt5.QtGui import QPixmap
 
 from cfg import icon
+from lib import load_stylesheet
 from editor.main import KMBMainWindow
-#from editor.widgets.about import AboutWidget
+# from editor.widgets.about import AboutWidget
 
 cgitb.enable(format("text"))
 
 
-if __name__ == '__main__':
+def demo_run():
     app = QApplication(sys.argv)
-    # get screen size
+    # get screen size.
     desktop = QApplication.desktop().screenGeometry()
     width = desktop.width()
     height = desktop.height()
@@ -26,9 +27,16 @@ if __name__ == '__main__':
     # setting up main window.
     size = (width * 0.8, height * 0.8)
     win = KMBMainWindow(size)
+    stylesheet = load_stylesheet('lib/skin/default.css')
+    app.setStyleSheet(stylesheet)
+    win.show()
     # setup about panel.
-    #about = AboutWidget()
-    #win.action_about.triggered.connect(about.show)
+    # about = AboutWidget()
+    # win.action_about.triggered.connect(about.show)
     # stay one more second then close.
     splash.finish(win)
     sys.exit(app.exec_())
+
+
+if __name__ == '__main__':
+    demo_run()
