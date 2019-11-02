@@ -1,6 +1,6 @@
 from editor.graphic.node_scene import KMBNodeGraphicScene
 from editor.wrapper.serializable import Serializable
-from cfg import EDGE_DIRECT, EDGE_CURVES
+from cfg import EDGE_DIRECT, EDGE_CURVES, color
 from lib import Counter, debug
 
 
@@ -9,8 +9,8 @@ class KMBNodeScene(Serializable):
     def __init__(self, parent):
         super().__init__()
         self.parent = parent  # main editor widget
-        self.edges = []  # saving wrapper edges
-        self.nodes = []  # saving wrapper nodes
+        self.edges = {}  # saving wrapper edges
+        self.nodes = {}  # saving wrapper nodes
         self.nodes_counter = Counter()  # count the nodes
 
         self.scene_width = 16000
@@ -19,83 +19,116 @@ class KMBNodeScene(Serializable):
         self.graphic_scene.set_graphic_scene(self.scene_width,
                                              self.scene_height)
 
+    def check_node(self):
+        """ Don't need now. """
+        pass
+
     def check_edge(self, edge, edge_type):
         """ Check edge valid.
-        :return -1 (Invalid), 0 (Valid but not display or store), 1 (Valid)
+        :return -1 (Invalid), 0 (Valid but not ignore), 1 (Valid).
         """
         if edge_type == EDGE_DIRECT:
-            # add constraints on Direct(IO) edge
-            if edge.end_item.gr_name == "Input" or\
-               edge.end_item.gr_name == "PlaceHolder" or\
-               edge.end_item.gr_type == 'Units' or\
-               edge.start_item.gr_name == "Model" or\
-               edge.start_item.gr_name == "PlaceHolder" or\
-               edge.start_item.gr_type == 'Units':
+            # add constraints on Direct(IO) edge.
+            # Conditions:
+            # 1. <Input> node doesn't accept any input.
+            if edge.end_item.gr_name == "Input":
                 return -1
-            # check the same edge in previous edges
-            for e in self.edges:
-                if e.start_item == edge.start_item and \
-                        e.end_item is edge.end_item:
+            # 2. Referenced type node doesn't involve in any IO(Direct) edge.
+            if (
+                    edge.end_item.gr_name == "PlaceHolder" or
+                    edge.start_item.gr_name == "PlaceHolder" or
+                    edge.end_item.gr_type == 'Units' or
+                    edge.start_item.gr_type == 'Units'
+            ):
+                return -1
+            # 3. <Model> node cannot be others output.
+            if edge.start_item.gr_name == "Model":
+                return -1
+            # 4. check the same edge in previous edges.
+            for e in self.edges.values():
+                if (
+                        e.start_item == edge.start_item and
+                        e.end_item is edge.end_item
+                ):
                     return -1
+
+        elif edge_type == EDGE_CURVES:
+            # add constraints on Curve(REF) edge.
+            # Conditions:
+            # 1. Ref's output must be <Layers> node,
+            #    input must be the Referenced type.
+            if (
+                    edge.start_item.gr_type == "Layers" or
+                    edge.end_item.gr_type != "Layers"
+            ):
+                return -1
+            # 2. <Model> has nothing to do with ref edge.
+            if (
+                    edge.start_item.gr_name == "Model" or
+                    edge.end_item.gr_name == "Model"
+            ):
+                return -1
+            # 3. check through all the edges,
+            # ref curve allow to repeat, but it's very unnecessary to
+            # display the edge again, so just display the line once.
+            for e in self.edges.values():
+                if (e.start_item == edge.start_item and
+                        e.end_item is edge.end_item):
+                    return 0
             # which means ref curves allow user to drag from same node,
             # but it must link to the different arg item.
             # good thing is referenced arg item will be disable,
             # so it's unnecessary to add few more `if` block.
-
-        elif edge_type == EDGE_CURVES:
-            # ref curve only begins from 'common' or 'other' tab page
-            # and end up with 'layers' tab.
-            if edge.start_item.gr_type == "Layers" or\
-               edge.end_item.gr_type != "Layers":
-                return -1
-            # ref curve allow to repeat, but it's very unnecessary to
-            # display the edge again, so just display the line once.
-            for e in self.edges:
-                if e.start_item == edge.start_item and \
-                        e.end_item is edge.end_item:
-                    return 0
-        # if there's no invalid edge, then return True
         return 1
 
     def add_edge(self, edge):
-        self.edges.append(edge)
+        self.edges[edge.id] = edge
         debug(f"*[EDGE {len(self.edges)}] + {edge}")
 
     def remove_edge(self, edge):
-        self.edges.remove(edge)
+        self.edges.pop(edge.id)
         debug(f"*[EDGE {len(self.edges)}] - {edge}")
 
     def add_node(self, node):
-        self.nodes.append(node)
+        self.nodes[node.id] = node
         self.nodes_counter.update(node.gr_name)
         debug(f"*[NODE {len(self.nodes)}] + {node}")
 
     def remove_node(self, node):
-        self.nodes.remove(node)
+        self.nodes.pop(node.id)
         self._remove_relative_edges(node)
         debug(f"*[NODE {len(self.nodes)}] - {node}")
-
-    def get_node_count(self, node):
-        return self.nodes_counter.get(node.gr_name)
 
     def _remove_relative_edges(self, node):
         # removing node also remove edge that connected to it.
         edges = self.edges.copy()
         # cannot iter self.edges directly that's ...
-        for edge in edges:
+        for edge in edges.values():
             if node == edge.start_item or node == edge.end_item:
                 self.graphic_scene.removeItem(edge.gr_edge)
-                self.remove_edge(edge)  # ... because of this
+                self.remove_edge(edge)  # ... because of this.
+
+    def get_node_count(self, node):
+        return self.nodes_counter.get(node.gr_name)
+
+    def change_color_for_io(self, edge_id, io_type):
+        """ The edge to Model has two different dot color. """
+        io_edge = self.edges.get(edge_id)
+        if io_type == 'i':
+            dot_color = color['DOT_IO_I']
+        else:
+            dot_color = color['DOT_IO_O']
+        io_edge.update_dot_color(dot_color)
 
     def serialize(self):
-        # serialize node and edge here
-        # fill with node's <input> and <output> tags
+        # serialize node and edge here.
+        # fill with node's <input> and <output> tags.
         nodes = {}
-        for node in self.nodes:
+        for node in self.nodes.values():
             sn = node.serialize()
             nodes[sn["id"]] = sn
-        # organize edge's relationship here
-        for edge in self.edges:
+        # organize edge's relationship here.
+        for edge in self.edges.values():
             edge_from, edge_to = edge.serialize()
             nodes[edge_from]['output'].append(edge_to)
             nodes[edge_to]['input'].append(edge_from)

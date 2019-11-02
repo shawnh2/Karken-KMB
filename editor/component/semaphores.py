@@ -87,5 +87,29 @@ class ReferenceBySemaphore:
 class ModelIOSemaphore:
     """ The semaphore of model's inputs and outputs. """
 
-    def __init__(self):
-        pass
+    def __init__(self, owner):
+        self._owner = owner
+        self._inputs = {}
+        self._outputs = {}
+
+    def add(self, io: tuple):
+        node_id, sign, node_vn_item = io
+        if sign == 'i':
+            self._inputs[node_id] = node_vn_item
+        else:
+            self._outputs[node_id] = node_vn_item
+        debug(f'[IO {sign}] add {node_id} in model: {self._owner.var_name}')
+
+    def get(self):
+        return self._inputs, self._outputs
+
+    def popup(self, node_id):
+        # pop up while deleting io edge.
+        if self._inputs.__contains__(node_id):
+            self._inputs.pop(node_id)
+            debug(f'[DEL I] at {node_id}')
+        elif self._outputs.__contains__(node_id):
+            self._outputs.pop(node_id)
+            debug(f'[DEL O] at {node_id}')
+        else:
+            debug('[!!!] No such I/O, maybe a BUG.')

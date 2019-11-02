@@ -61,7 +61,7 @@ class KMBMainWindow(QMainWindow):
 
     def init_slots(self):
         # update x,y pos label
-        self.node_editor.nodes_view.scene_pos_changed.connect(
+        self.node_editor.nodes_view.SCENE_POS_CHANGED.connect(
             self.update_xy_pos
         )
 

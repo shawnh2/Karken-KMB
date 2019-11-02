@@ -35,8 +35,12 @@ class KMBEdge(Serializable):
         if check_state != -1:
             if check_state == 1:
                 self.scene.add_edge(self)
+            # feed ref, so can create ref relation.
             if self.edge_type == EDGE_CURVES:
                 self.end_item.gr_node.feed_ref(self.start_item)
+            # feed io, so can create io relation in Model.
+            if self.end_item.gr_name == 'Model':
+                self.end_item.gr_node.feed_io(self.start_item, self.id)
             return check_state
         return -1
 
@@ -50,6 +54,9 @@ class KMBEdge(Serializable):
         else:
             self.gr_edge.set_dst(src_pos.x()+patch, src_pos.y()+patch)
         self.gr_edge.update()
+
+    def update_dot_color(self, color_hex):
+        self.gr_edge.set_marker_color(color_hex)
 
     def remove_from_current_items(self):
         self.end_item = None

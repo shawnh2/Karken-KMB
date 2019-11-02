@@ -6,7 +6,7 @@ from editor.graphic.node_item import KMBNodeGraphicItem
 from editor.graphic.node_edge import KMBGraphicEdge
 from editor.wrapper.wrap_item import KMBNodeItem
 from editor.wrapper.warp_edge import KMBEdge
-from editor.component.edge_type import KMBGraphicEdgeBezier
+from editor.component.edge_type import KMBGraphicEdgeBezier, KMBGraphicEdgeDirect
 from cfg import icon, EDGE_CURVES, EDGE_DIRECT
 from lib import debug
 
@@ -27,17 +27,18 @@ class KMBNodeGraphicView(QGraphicsView):
     # ------------------SIGNALS--------------------
 
     # show the changing position in status bar.
-    scene_pos_changed = pyqtSignal(int, int)            # x, y coord
+    SCENE_POS_CHANGED = pyqtSignal(int, int)            # x, y coord
     # the necessary signal to add a new node in scene.
-    add_new_node_item = pyqtSignal(str, str, str, int)  # name, type, id, count
+    ADD_NEW_NODE_ITEM = pyqtSignal(str, str, str, int)  # name, type, id, count
     # pass the id of selected node item to edit.
-    selected_node_item = pyqtSignal(str)                # id or state
-    selected_delete_node = pyqtSignal(str)              # id
+    SELECTED_NODE_ITEM = pyqtSignal(str)                # id or state
+    SELECTED_DELETE_NODE = pyqtSignal(str)              # id
     # pop up the right menu of clicked node,
     # also emit the src node id along with.
-    pop_up_right_menu = pyqtSignal(str)                 # dst id
+    POP_UP_RIGHT_MENU = pyqtSignal(str)                 # dst id
     # del ref related items if one ref edge got deleted.
-    del_ref_related_items = pyqtSignal(str, str)        # referenced src id, dst id
+    DEL_REF_RELATED_ITEMS = pyqtSignal(str, str)        # referenced src id, dst id
+    DEL_IO_EDGE_ITEM = pyqtSignal(str, str)             # io src id, dst id
 
     # ------------------INIT--------------------
 
@@ -51,7 +52,7 @@ class KMBNodeGraphicView(QGraphicsView):
         self.status_bar_msg = status_bar_msg
         self.mode = MOUSE_SELECT
         self.edge_type = None
-        self.has_chosen_to_ref_from_rm = False
+        self.has_chosen_from_rm = False
         self.has_chosen_to_del_from_rm = False
 
         self.last_scene_mouse_pos = None
@@ -153,7 +154,7 @@ class KMBNodeGraphicView(QGraphicsView):
 
         # emit pos changed signal
         self.last_scene_mouse_pos = self.mapToScene(event.pos())
-        self.scene_pos_changed.emit(
+        self.SCENE_POS_CHANGED.emit(
             int(self.last_scene_mouse_pos.x()),
             int(self.last_scene_mouse_pos.y())
         )
@@ -203,7 +204,7 @@ class KMBNodeGraphicView(QGraphicsView):
         # get the item that right clicked on
         item = self.get_item_at_click(event)
         if isinstance(item, KMBNodeGraphicItem):
-            self.pop_up_right_menu.emit(item.id_str)
+            self.POP_UP_RIGHT_MENU.emit(item.id_str)
             # get item self right menu to display
             item.contextMenuEvent(event)
 
@@ -315,7 +316,7 @@ class KMBNodeGraphicView(QGraphicsView):
         # add into scene and get count of nodes.
         self.gr_scene.scene.add_node(node)
         count = self.gr_scene.scene.get_node_count(node)
-        self.add_new_node_item.emit(node.gr_name,
+        self.ADD_NEW_NODE_ITEM.emit(node.gr_name,
                                     node.gr_type,
                                     node.gr_node.id_str,
                                     count)
@@ -326,11 +327,11 @@ class KMBNodeGraphicView(QGraphicsView):
         # get args of node and edit it
         if item is not None and isinstance(item, KMBNodeGraphicItem):
             # if select obj, send its name.
-            self.selected_node_item.emit(item.id_str)
+            self.SELECTED_NODE_ITEM.emit(item.id_str)
             self.status_bar_msg(f'Select: {item.name} node.')
         else:
             # if select no obj, send empty signal to clear arg panel.
-            self.selected_node_item.emit('null')
+            self.SELECTED_NODE_ITEM.emit('null')
 
     def del_selected_node_item(self, item):
         # del selected node or edge
@@ -341,7 +342,7 @@ class KMBNodeGraphicView(QGraphicsView):
                 self._del_edge_item(item)
 
     def _del_node_item(self, node):
-        self.selected_delete_node.emit(node.id_str)
+        self.SELECTED_DELETE_NODE.emit(node.id_str)
         # del the stored model.
         self.status_bar_msg(f'Delete: {node.name} node.')
         self.gr_scene.scene.remove_node(node.node)
@@ -356,12 +357,19 @@ class KMBNodeGraphicView(QGraphicsView):
             # curve edge need to del the ref.
             src_item_id = str(id(edge.edge.start_item.gr_node))
             dst_item_id = str(id(edge.edge.end_item.gr_node))
-            self.del_ref_related_items.emit(src_item_id, dst_item_id)
+            self.DEL_REF_RELATED_ITEMS.emit(src_item_id, dst_item_id)
             # will not be deleted under these situations.
             if self.rest_ref_items_count != 0:
                 return
             if not self.has_chosen_to_del_from_rm:
                 return
+
+        elif isinstance(edge, KMBGraphicEdgeDirect):
+            # only works if edge's end is Model.
+            if edge.edge.end_item.gr_name == 'Model':
+                src_item_id = str(id(edge.edge.start_item.gr_node))
+                dst_item_id = str(id(edge.edge.end_item.gr_node))
+                self.DEL_IO_EDGE_ITEM.emit(src_item_id, dst_item_id)
         self.gr_scene.scene.remove_edge(edge.edge)
         # del the edge in view.
         self.gr_scene.removeItem(edge)
@@ -369,7 +377,7 @@ class KMBNodeGraphicView(QGraphicsView):
     def edge_drag_start(self, item):
         # pass the wrapper of gr_scene and gr_node
         self.drag_start_item = item
-        self.has_chosen_to_ref_from_rm = False
+        self.has_chosen_from_rm = False
         self.drag_edge = KMBEdge(self.gr_scene.scene,
                                  item.node,
                                  None, self.edge_type)
@@ -391,24 +399,42 @@ class KMBNodeGraphicView(QGraphicsView):
             self.gr_scene.removeItem(new_edge.gr_edge)
             debug("[dropped] invalid connection.")
         else:  # add new edge successfully.
+            debug(f"[connect] {self.drag_start_item} ~ {item} => {new_edge}")
             # only ref edge is able to pop up right menu of the end item,
             # so now you're able to pick up which arg it ref to.
             if self.edge_type == EDGE_CURVES:
-                self.contextMenuEvent(event)
-                # if hadn't chosen a item in right menu,
-                # then give up this edge.
-                if not self.has_chosen_to_ref_from_rm:
-                    self.gr_scene.removeItem(new_edge.gr_edge)
-                    self.has_chosen_to_ref_from_rm = False
-                    # saving successfully but invalid.
-                    if saving_state == 1:
-                        self.gr_scene.scene.remove_edge(new_edge)
-                    debug("[dropped] triggered no item in right menu.")
+                self._curve_edge_drag_end(event, new_edge, saving_state)
+            # for Model, show its input and output in right menu.
+            if self.edge_type == EDGE_DIRECT:
+                self._direct_edge_drag_end(event, item, new_edge)
             # remove gr-edge under this situation.
             if saving_state == 0:
                 self.gr_scene.removeItem(new_edge.gr_edge)
                 debug("[dropped] repeating edge without stored.")
-            debug(f"[connect] {self.drag_start_item} ~ {item} => {new_edge}")
+
+    def _curve_edge_drag_end(self, event, new_edge, state: int):
+        """ Event while end up dragging curve edge. """
+        self.contextMenuEvent(event)
+        # if hadn't chosen a item in right menu,
+        # then give up this edge.
+        if not self.has_chosen_from_rm:
+            self.gr_scene.removeItem(new_edge.gr_edge)
+            self.has_chosen_from_rm = False
+            # saving successfully but invalid.
+            if state == 1:
+                self.gr_scene.scene.remove_edge(new_edge)
+            debug("[dropped] triggered no item in right menu.")
+
+    def _direct_edge_drag_end(self, event, item, new_edge):
+        """ Event while end up dragging direct edge.
+        This method is specially for <Model> node. """
+        # display its inputs and outputs in right menu.
+        if item.name == 'Model':
+            self.contextMenuEvent(event)
+            if not self.has_chosen_from_rm:
+                self.gr_scene.removeItem(new_edge.gr_edge)
+                self.gr_scene.scene.remove_edge(new_edge)
+                debug("[dropped] triggered no item in right menu.")
 
     # ------------------UTILS--------------------
 
@@ -422,10 +448,10 @@ class KMBNodeGraphicView(QGraphicsView):
         pix = QPixmap(icon['CROSS']).scaled(30, 30)
         self.setCursor(QCursor(pix))
 
-    def set_chosen_to_ref_from_rm(self, _):
-        # if not choose one arg item from menu to ref,
+    def set_chosen_item_from_rm(self, _):
+        # if not choose one arg item from menu to ref/io,
         # then del this edge, and this is sign.
-        self.has_chosen_to_ref_from_rm = True
+        self.has_chosen_from_rm = True
 
     def set_chosen_to_del_from_rm(self, _):
         # if not choose one arg item from menu to del,

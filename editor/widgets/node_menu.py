@@ -13,7 +13,7 @@ CURSOR = DATABASE.cursor()
 
 class KMBNodesMenu(QTabWidget):
 
-    clicked_node_button_item = pyqtSignal(str, str, str)  # name, category, sort
+    CLICKED_NODE_BUTTON_ITEM = pyqtSignal(str, str, str)  # name, category, sort
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -65,7 +65,7 @@ class KMBNodesMenu(QTabWidget):
         res = CURSOR.execute(f'SELECT CATEGORY, SORT '
                              f'FROM nodes '
                              f'WHERE NAME="{clicked_item_name}"').fetchone()
-        self.clicked_node_button_item.emit(clicked_item_name, res[0], res[1])
+        self.CLICKED_NODE_BUTTON_ITEM.emit(clicked_item_name, res[0], res[1])
 
     @classmethod
     def valid_node_button(cls,

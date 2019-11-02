@@ -2,7 +2,7 @@
 class Serializable:
 
     def __init__(self):
-        self.id = id(self)
+        self.id = str(id(self))
 
     def serialize(self):
         raise NotImplemented

@@ -26,7 +26,7 @@ class KMBNodeItem(Serializable):
         self.gr_node.set_pos(x, y)
 
     def update_connect_edges(self):
-        for edge in self.gr_scene.scene.edges:
+        for edge in self.gr_scene.scene.edges.values():
             edge.update_positions()
 
     def serialize(self):

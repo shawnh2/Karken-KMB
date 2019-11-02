@@ -1,7 +1,7 @@
 from PyQt5.QtGui import QStandardItemModel
 
 from editor.component.args_model_item import ArgNameItem, ArgTypeItem, ArgEditItem
-from editor.component.semaphores import ReferenceBySemaphore
+from editor.component.semaphores import ReferenceBySemaphore, ModelIOSemaphore
 
 
 class ArgsSuperModel(QStandardItemModel):
@@ -121,6 +121,7 @@ class ArgsEditableModel(ArgsSuperModel):
         self.node_type = node_type
         # setup semaphore here
         self.rb_semaphore = ReferenceBySemaphore()
+        self.io_semaphore = ModelIOSemaphore(self)
 
         # set header labels for this model
         self.set_header_labels("Name", "Argument Value")
@@ -133,11 +134,10 @@ class ArgsEditableModel(ArgsSuperModel):
     def var_name_item(self):
         return self.item(self.var_name_idx, 1)
 
-    # ------OPTIONAL PROPERTY------
+    # ------MAINTAIN SEMAPHORE------
     # Maintain the rb_semaphore by property ref_by.
 
     def set_ref_by(self, ref_by: tuple):
-        # ref_by is instance of ArgEditItem.
         self.rb_semaphore.add(ref_by)
         self.rb_semaphore.update_flag = True
 
@@ -148,6 +148,16 @@ class ArgsEditableModel(ArgsSuperModel):
         self.rb_semaphore.destroy()
 
     ref_by = property(get_ref_by, set_ref_by, del_ref_by)
+
+    # Maintain the io_semaphore by property io.
+
+    def set_io(self, io: tuple):
+        self.io_semaphore.add(io)
+
+    def get_io(self):
+        return self.io_semaphore.get()
+
+    io = property(get_io, set_io)
 
     # -----------------------------
 

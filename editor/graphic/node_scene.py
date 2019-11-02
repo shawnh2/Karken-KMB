@@ -10,8 +10,9 @@ from cfg import color
 class KMBNodeGraphicScene(QGraphicsScene):
 
     # right menu signal, when picked up an arg item
-    picked_one_arg_to_ref = pyqtSignal(str, int, str)  # dst id, idx, src id
-    do_not_pick_one = pyqtSignal(bool)  # pick state
+    PICKED_ONE_ARG_TO_REF = pyqtSignal(str, int, str)  # dst id, idx, src id
+    PICKED_ONE_TO_IO = pyqtSignal(str, str, str)  # dst id, I/O sign, src id
+    WAS_DONE_PICKING_ONE = pyqtSignal(bool)  # pick state
 
     def __init__(self, scene, parent=None):
         super().__init__(parent)
@@ -38,15 +39,21 @@ class KMBNodeGraphicScene(QGraphicsScene):
     def right_menu_listener(self):
         # couldn't call sender() in QGraphicsPixmapItem,
         # so add it here, emit the signal here also.
-        # see objectName as a data media which
-        # store node_id and arg item idx.
+        # using objectName as a data media here.
         receive = self.sender().objectName()
-        dst_node_id, arg_idx, src_node_id = receive.split('-')
-        self.picked_one_arg_to_ref.emit(dst_node_id, int(arg_idx), src_node_id)
+        args = receive.split('-')
+        if args[0] == 'REF':
+            self.PICKED_ONE_ARG_TO_REF.emit(args[1], int(args[3]), args[2])
+        elif args[0] == 'IO':
+            self.PICKED_ONE_TO_IO.emit(args[1], args[3], args[2])
+            # after picking successfully, change the dot color.
+            self.scene.change_color_for_io(args[4], args[3])
+        # else ...
+
         # if had clicked the menu item, will trigger this signal.
         # send True or False. True means had clicked,
         # False means hadn't, then will clean edge and cancel this ref.
-        self.do_not_pick_one.emit(True)
+        self.WAS_DONE_PICKING_ONE.emit(True)
 
     def drawBackground(self, painter, rect):
         super().drawBackground(painter, rect)

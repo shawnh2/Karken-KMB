@@ -50,6 +50,11 @@ class KMBGraphicEdge(QGraphicsPathItem):
     def set_dst(self, x, y):
         self.pos_dst = [x, y]
 
+    def set_marker_color(self, color_hex):
+        self._mark_pen.setColor(QColor(color_hex))
+        self._mark_brush.setColor(QColor(color_hex))
+        self.update()
+
     def calc_path(self):
         # every type of edges are special here.
         raise NotImplemented

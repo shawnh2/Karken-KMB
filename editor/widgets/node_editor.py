@@ -37,61 +37,70 @@ class MainNodeEditor(QWidget):
 
     def setup_slots(self):
         # +++++++++++++++++++++++++++++++++++
-        # ------ NODE MENU => [ARG MENU] ------
-        # 1. preview node's args.
-        self.nodes_menu.clicked_node_button_item.connect(
+        #           FROM NODE-MENU
+        # +++++++++++++++++++++++++++++++++++
+        # preview node's args.
+        self.nodes_menu.CLICKED_NODE_BUTTON_ITEM.connect(
             self.args_menu.panel.set_preview_args
         )
-        # ------ NODE MENU => [VIEW] ------
-        # 2. set editing mode, now can add nodes.
-        self.nodes_menu.clicked_node_button_item.connect(
+        # set editing mode, now can add nodes.
+        self.nodes_menu.CLICKED_NODE_BUTTON_ITEM.connect(
             self.nodes_view.set_editing_mode
         )
 
         # +++++++++++++++++++++++++++++++++++
-        # --------- VIEW => ARG MENU --------
-        # 1. add new node and store it.
-        self.nodes_view.add_new_node_item.connect(
+        #             FROM VIEW
+        # +++++++++++++++++++++++++++++++++++
+        # add new node and store it.
+        self.nodes_view.ADD_NEW_NODE_ITEM.connect(
             self.args_menu.panel.commit_node
         )
-        # 2. load selected node's args.
-        self.nodes_view.selected_node_item.connect(
+        # load selected node's args.
+        self.nodes_view.SELECTED_NODE_ITEM.connect(
             self.args_menu.panel.set_editing_args
         )
-        # 3. ready to delete selected node.
-        self.nodes_view.selected_delete_node.connect(
+        # ready to delete selected node.
+        self.nodes_view.SELECTED_DELETE_NODE.connect(
             self.args_menu.panel.delete_node
         )
-        # 4. ready to delete ref related items.
-        self.nodes_view.del_ref_related_items.connect(
+        # ready to delete ref related items.
+        self.nodes_view.DEL_REF_RELATED_ITEMS.connect(
             self.args_menu.panel.delete_ref_related
         )
-        # 5. after picking up an arg item from right menu.
-        self.nodes_scene.graphic_scene.picked_one_arg_to_ref.connect(
-            self.args_menu.panel.modify_ref
+        # ready to delete io item.
+        self.nodes_view.DEL_IO_EDGE_ITEM.connect(
+            self.args_menu.panel.delete_io
+        )
+        # ready to pop up the right menu of node.
+        self.nodes_view.POP_UP_RIGHT_MENU.connect(
+            self.send_args_to_node
         )
 
         # +++++++++++++++++++++++++++++++++++
-        # ------ [ARG MENU] => VIEW ------
-        # 1. sending the rest items count of ref dst node.
-        self.args_menu.panel.the_rest_ref_items.connect(
+        #            FROM ARG-MENU
+        # +++++++++++++++++++++++++++++++++++
+        # sending the rest items count of ref dst node.
+        self.args_menu.panel.REST_REF_ITEMS_COUNT.connect(
             self.nodes_view.set_rest_ref_dst_items_count
         )
-        # 2. do not pick one item to del.
-        self.args_menu.panel.do_not_pick_one.connect(
+        # do not pick one item to del.
+        self.args_menu.panel.WAS_DONE_PICKING_ONE.connect(
             self.nodes_view.set_chosen_to_del_from_rm
-        )
-        # ------ [SCENE] => VIEW ------
-        # 3. after not picking up an arg item from right menu.
-        self.nodes_scene.graphic_scene.do_not_pick_one.connect(
-            self.nodes_view.set_chosen_to_ref_from_rm
         )
 
         # +++++++++++++++++++++++++++++++++++
-        # ------ * => SELF ------
-        # 1. ready to pop up the right menu of node.
-        self.nodes_view.pop_up_right_menu.connect(
-            self.send_args_to_node
+        #            FROM SCENE
+        # +++++++++++++++++++++++++++++++++++
+        # after picking up an arg item from right menu.
+        self.nodes_scene.graphic_scene.PICKED_ONE_ARG_TO_REF.connect(
+            self.args_menu.panel.modify_ref
+        )
+        self.nodes_scene.graphic_scene.PICKED_ONE_TO_IO.connect(
+            self.args_menu.panel.modify_io
+        )
+        # after not picking up an arg item from right menu.
+        self.nodes_scene.graphic_scene.WAS_DONE_PICKING_ONE.connect(
+            self.nodes_view.set_chosen_item_from_rm
         )
 
     # ----------FUNCTIONS----------
@@ -108,9 +117,9 @@ class MainNodeEditor(QWidget):
         # organize the nodes here
         # fill with node's <var> and <args> tag
         nodes = self.nodes_scene.serialize()
-        args, vars = self.args_menu.serialize()
+        args, vars_ = self.args_menu.serialize()
         for node_id in nodes.keys():
-            nodes[node_id]['var'] = vars.get(node_id)
+            nodes[node_id]['var'] = vars_.get(node_id)
             nodes[node_id]['args'] = args.get(node_id)
 
         for k, v in nodes.items():

@@ -9,8 +9,8 @@ from lib import DataBase4Args, debug, AutoInspector
 
 class KMBNodesArgsMenu(QTableView):
 
-    the_rest_ref_items = pyqtSignal(int)  # count
-    do_not_pick_one = pyqtSignal(bool)    # boolean
+    REST_REF_ITEMS_COUNT = pyqtSignal(int)     # count
+    WAS_DONE_PICKING_ONE = pyqtSignal(bool)    # boolean
 
     def __init__(self,
                  menu,
@@ -129,7 +129,7 @@ class KMBNodesArgsMenu(QTableView):
         self.sender().setText(str(state))
 
     def modify_ref(self, dst_node_id, idx, src_node_id):
-        # create ref here
+        # create ref here.
         dst_model = self.edit_model.get(dst_node_id)
         src_model = self.edit_model.get(src_node_id)
         dst_value_item = dst_model.item(idx, 1)
@@ -144,6 +144,15 @@ class KMBNodesArgsMenu(QTableView):
         item_name = dst_model.item(idx, 0).text()
         debug(f'[REF] create <{dst_model.node_name}>:{dst_model.var_name}.{item_name} '
               f'~ <{src_model.node_name}>:{src_model.var_name}')
+
+    def modify_io(self, model_id, io_sign, src_node_id):
+        # create io here.
+        # only Model will collect I/O, other node won't.
+        dst_model = self.edit_model.get(model_id)
+        src_model = self.edit_model.get(src_node_id)
+        src_value_item = src_model.item(src_model.var_name_idx, 1)
+        # load in IO semaphore by io.
+        dst_model.io = (src_node_id, io_sign, src_value_item)
 
     # ------Operations on Node Model------
 
@@ -167,12 +176,12 @@ class KMBNodesArgsMenu(QTableView):
     def delete_node(self, node_id: str):
         model = self.edit_model.get(node_id)
         # while remove the ref,
-        # also remove the ref by relation.
+        # also remove the ref_by's relation.
         if model.node_name == 'PlaceHolder' or\
            model.node_type == 'Units':
             del model.ref_by
         # remove entire node item,
-        # also remove the ref to relation.
+        # also remove the ref_to relation.
         else:
             for _, _, value_item in model.items():
                 if hasattr(value_item, '_ref_to'):
@@ -200,8 +209,8 @@ class KMBNodesArgsMenu(QTableView):
         if self.current_ref_model.rb_semaphore.count(dst_model_id) == 1:
             self.current_ref_model.rb_semaphore.popup(dst_model_id, None)
             # single connected ref edge still needs these signals.
-            self.the_rest_ref_items.emit(0)
-            self.do_not_pick_one.emit(False)
+            self.REST_REF_ITEMS_COUNT.emit(0)
+            self.WAS_DONE_PICKING_ONE.emit(True)
         # if one start item connected with one node but multi items.
         # then pop up a menu to decide which edge.
         else:
@@ -216,9 +225,8 @@ class KMBNodesArgsMenu(QTableView):
         # view will only display one of the them.
         # so do not delete ref edge until there's no edge left.
         rest_ref_edge_count = self.current_ref_model.rb_semaphore.count(self.current_ref_dst_model_id)
-        self.the_rest_ref_items.emit(rest_ref_edge_count)
-        # what if do not pick one from right menu.
-        self.do_not_pick_one.emit(False)
+        self.REST_REF_ITEMS_COUNT.emit(rest_ref_edge_count)
+        self.WAS_DONE_PICKING_ONE.emit(True)
 
     def contextMenuEvent(self, event):
         # set header of right menu
@@ -237,3 +245,9 @@ class KMBNodesArgsMenu(QTableView):
         self.right_menu.addActions(actions)
         # show right menu
         self.right_menu.exec(QCursor.pos())
+
+    # ------Operations on Model------
+
+    def delete_io(self, src_model_id: str, dst_model_id: str):
+        io_model = self.edit_model.get(dst_model_id)
+        io_model.io_semaphore.popup(src_model_id)
