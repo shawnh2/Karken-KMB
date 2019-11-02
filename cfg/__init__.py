@@ -3,23 +3,19 @@ import yaml
 __version__ = '1.0.0'
 __author__ = 'ShawnHu'
 
-# Loading mod configure.
-with open('cfg/mod.yaml', 'r') as mf:
-    mod = yaml.safe_load(mf)
-
 # Loading color configure.
-with open('cfg/color.yaml', 'r') as cf:
+with open('cfg/color.yml', 'r') as cf:
     color = yaml.safe_load(cf)
 
 # Loading icon configure.
 # NODE SORT/NAME.png
 NODE_ICONx85_PATH = 'lib/icon/nodesx85/{}/{}.png'
 NODE_ICONx500_PATH = 'lib/icon/nodesx500/{}/{}.png'
-with open('cfg/icon.yaml', 'r') as icf:
+with open('cfg/icon.yml', 'r') as icf:
     icon = yaml.safe_load(icf)
 
 # Loading tips configure.
-with open('cfg/tips.yaml', 'r') as tf:
+with open('cfg/tips.yml', 'r') as tf:
     tips = yaml.safe_load(tf)
 
 # Loading configure for graphic path: edge.

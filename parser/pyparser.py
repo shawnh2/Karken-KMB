@@ -1,12 +1,51 @@
 import lxml.html
 
-from cfg import mod
-
-
 etree = lxml.html.etree
-# This process is loading variables from mod,
-# so may causing 'Unresolved Reference' in IDE.
-locals().update(mod)
+
+# Configures
+ATTR_ID = 'id'
+ATTR_TITLE = 'name'
+
+ATTR_START = 'head'
+ATTR_START_VALUE = 'head'
+
+ATTR_UNIT = 'u'
+ATTR_UNIT_VALUE_CON = 'constraints'
+ATTR_UNIT_VALUE_ACT = 'activations'
+ATTR_UNIT_VALUE_INT = 'initializers'
+ATTR_UNIT_VALUE_REG = 'regularizers'
+
+ATTR_ARG_CLS = 'c'
+ATTR_ARG_CLS_VALUE_ID = 'id'
+ATTR_ARG_CLS_VALUE_STR = 'str'
+ATTR_ARG_CLS_VALUE_NUM = 'num'
+ATTR_ARG_CLS_VALUE_SEQ = 'seq'
+ATTR_ARG_CLS_VALUE_BOL = 'bool'
+
+TAG_VNM = 'var'
+TAG_CLS = 'class'
+TAG_ARGS = 'args'
+TAG_MODE = 'mode'
+TAG_UNIT = 'unit'
+TAG_MODEL = 'model'
+TAG_LAYER = 'layer'
+TAG_PLACEHOLDER = 'ph'
+
+TAG_MODE_VALUE_IO = 'IO'
+TAG_MODE_VALUE_CA = 'CA'  # Mode that accept other layer as its arg.
+TAG_MODE_VALUE_AC = 'AC'  # Mode that can be accepted by Mode: CA.
+TAG_MODEL_CLS_VALUE = 'Model'
+
+L_TAG_INPUT = 'input'   # Layer's type input tag.
+M_TAG_INPUT = 'inputs'  # Model's type input tag.
+L_TAG_OUTPUT = 'output'
+M_TAG_OUTPUT = 'outputs'
+
+# The path of all the layers and models in Keras.
+TAG_LAYER_SRC = 'layers'
+TAG_MODEL_SRC = 'models'
+
+IO_SPLIT = ';'
 
 
 class PlaceHolder(object):
@@ -479,7 +518,7 @@ class PyParser:
         if mode == TAG_MODE_VALUE_IO:
             var_nm = self.get_node_value_in_elm(elm, TAG_VNM)
             collector.append(f'{var_nm}')
-        # For CA node.py just grab class name and args.
+        # For CA node just grab class name and args.
         elif mode == TAG_MODE_VALUE_CA:
             collector.append(self.gv_mv_cv(elm))
         # Besides IO and CA, is AC, the only one accept CA.
