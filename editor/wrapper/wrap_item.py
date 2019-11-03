@@ -8,15 +8,18 @@ class KMBNodeItem(Serializable):
     def __init__(self, scene,
                  node_name: str,
                  node_type: str,
-                 node_sort: str):
+                 node_sort: str,
+                 parent):
         super().__init__()
         self.gr_scene = scene
         self.gr_name = node_name
         self.gr_type = node_type  # CATEGORY
         self.gr_sort = node_sort  # SORT
+        self.parent = parent
         self.gr_node = KMBNodeGraphicItem(self,
                                           self.gr_name,
-                                          self.gr_sort)
+                                          self.gr_sort,
+                                          self.parent)
         self.gr_scene.addItem(self.gr_node)
 
     def __repr__(self):

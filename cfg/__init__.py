@@ -23,5 +23,8 @@ EDGE_WIDTH = 3.0
 EDGE_DIRECT = 1
 EDGE_CURVES = 2
 
+# Loading configure for User Custom Pins.
+UCP_LOC = 'user/'
+
 # Loading configure for debug.
 DEBUG = True

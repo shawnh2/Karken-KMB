@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from PyQt5.QtGui import QStandardItemModel
 
 from editor.component.args_model_item import ArgNameItem, ArgTypeItem, ArgEditItem
@@ -219,3 +221,26 @@ class ArgsEditableModel(ArgsSuperModel):
                                         dtype=arg_type_item.raw_type_name,
                                         belong_to=arg_name)
             self.set_col_items(idx, arg_name_item, arg_init_item)
+
+    def extract_args(self,
+                     get_changed=False,
+                     get_referenced=False):
+        # extract all the args from model and
+        # wrap all of them in OrderDict then return.
+        arg_dict = OrderedDict()
+        # get all the args by conditions in signature.
+        for idx, arg_name, arg_value in self.items():
+            if arg_value.is_changed and get_changed:
+                arg_dict[arg_name.text()] = arg_value.value
+            elif arg_value.is_referenced and get_referenced:
+                arg_dict[arg_name.text()] = arg_value.ref_to
+            # else ...
+        return arg_dict
+
+    def extract_pin(self):
+        # extract necessary info for pin.
+        pin_args = ";".join([f'{arg_name}={arg_value}'
+                             for arg_name, arg_value in
+                             self.extract_args(get_changed=True).items()])
+        pin_org_sort = self.db.get_sort_by_name(self.node_name)
+        return pin_args, self.node_name, pin_org_sort

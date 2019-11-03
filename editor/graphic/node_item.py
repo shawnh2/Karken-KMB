@@ -1,16 +1,19 @@
-from PyQt5.QtWidgets import QGraphicsItem, QGraphicsPixmapItem, QMenu, QAction
+from PyQt5.QtWidgets import (QGraphicsItem, QGraphicsPixmapItem,
+                             QMenu, QAction, QInputDialog)
 from PyQt5.QtGui import QPixmap, QCursor, QIcon
 
+from lib import debug, write_custom_pin
 from cfg import NODE_ICONx85_PATH, icon
 
 
 class KMBNodeGraphicItem(QGraphicsPixmapItem):
 
-    def __init__(self, node, name, sort, parent=None):
+    def __init__(self, node, name, sort, main_editor, parent=None):
         super().__init__(parent)
         self.node = node  # the wrapper of itself
         self.name = name
         self.sort = sort
+        self.main_editor = main_editor
         self.pix = QPixmap(NODE_ICONx85_PATH.format(self.sort, self.name))
         self.current_pos = None
 
@@ -19,14 +22,14 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         self.id_str = str(id(self))
 
         self.right_menu = QMenu()
-        self.pin = QIcon(icon['PIN'])
+        self.rm_pin = QIcon(icon['PIN'])
 
         self.rm_token = QIcon(icon['TOKEN'])
         self.rm_free = QIcon(icon['FREE'])
         self._ref_item = None
 
-        self.i_icon = QIcon(icon['INPUTS'])
-        self.o_icon = QIcon(icon['OUTPUTS'])
+        self.rm_input = QIcon(icon['INPUTS'])
+        self.rm_output = QIcon(icon['OUTPUTS'])
         self._io_item = None
         self._edge_id = None
 
@@ -188,10 +191,10 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
                     self._pre_activate_io_action(action, item_name[0])
                 # collect item into different container.
                 if item_name == 'inputs':
-                    action.setIcon(self.i_icon)
+                    action.setIcon(self.rm_input)
                     inputs.append(action)
                 else:
-                    action.setIcon(self.o_icon)
+                    action.setIcon(self.rm_output)
                     outputs.append(action)
         # display the I/O items if have.
         if self._arg_model.io:
@@ -226,7 +229,7 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         return sub_header
 
     def _make_a_pin_item(self):
-        pin = QAction(self.pin, 'Add to Pins')
+        pin = QAction(self.rm_pin, 'Add to Pins')
         pin.triggered.connect(self._execute_pin_action)
         return [pin]
 
@@ -279,9 +282,21 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         # mark: 'i' is inputs, 'o' is outputs.
         action.triggered.connect(self.node.gr_scene.right_menu_listener)
 
+    # ------------OPERATIONS ON INPUT DIALOG--------------
+
+    def _popup_input_dialog(self):
+        # get pin item custom name before save.
+        name, ok = QInputDialog.getText(self.main_editor, "Please input Pin Node name",
+                                        "Note: This node will be added at Pin panel with its arguments.")
+        return name if ok else False
+
     def _execute_pin_action(self):
         """ Execute Pin action here. Add item to Pin panel. """
-        for idx, arg_name_item, arg_value_item in self._arg_model.items():
-            # only save the changed value.
-            if arg_value_item.is_changed:
-                print(arg_name_item.text(), arg_value_item.value)
+        pin_name = self._popup_input_dialog()
+        # give up this operation if got cancel.
+        if not pin_name:
+            debug('[PIN] canceled.')
+            return
+        debug(f'[PIN] item => {pin_name}')
+        # pin only save its changed args not referenced.
+        write_custom_pin(pin_name, *self._arg_model.extract_pin())

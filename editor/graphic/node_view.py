@@ -50,6 +50,8 @@ class KMBNodeGraphicView(QGraphicsView):
 
         self.gr_scene = graphic_scene
         self.status_bar_msg = status_bar_msg
+        self.parent = parent
+
         self.mode = MOUSE_SELECT
         self.edge_type = None
         self.has_chosen_from_rm = False
@@ -312,7 +314,8 @@ class KMBNodeGraphicView(QGraphicsView):
         node = KMBNodeItem(self.gr_scene,
                            self.current_node_item_name,
                            self.current_node_item_type,
-                           self.current_node_item_sort)
+                           self.current_node_item_sort,
+                           self.parent)
         # add into scene and get count of nodes.
         self.gr_scene.scene.add_node(node)
         count = self.gr_scene.scene.get_node_count(node)

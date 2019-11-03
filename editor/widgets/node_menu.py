@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QVBoxLayout, QToolButton, QGroupBox, QToolBox, QTabW
 from PyQt5.QtCore import QSize, Qt, pyqtSignal
 from PyQt5.QtGui import QIcon
 
+from lib import read_custom_pin, create_ucp_tip
 from cfg import icon, NODE_ICONx500_PATH
 
 
@@ -13,7 +14,10 @@ CURSOR = DATABASE.cursor()
 
 class KMBNodesMenu(QTabWidget):
 
-    CLICKED_NODE_BUTTON_ITEM = pyqtSignal(str, str, str)  # name, category, sort
+    # name, category, sort
+    CLICKED_NODE_BUTTON_ITEM = pyqtSignal(str, str, str)
+    # name, category, sort, args
+    CLICKED_PIN_BUTTON_ITEM = pyqtSignal(str, str, str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -34,6 +38,7 @@ class KMBNodesMenu(QTabWidget):
         self.setCurrentWidget(self.layer_nodes)
         self.setMinimumWidth(300)
         self.setMaximumWidth(500)
+        self.tabBarClicked.connect(self.set_pin_box)
 
     def set_toolbox(self):
         nodes = {}
@@ -50,12 +55,10 @@ class KMBNodesMenu(QTabWidget):
             for name, tips in ls:
                 # init tool button
                 node_button = QToolButton(self)
-                node_button.setToolTip(tips)
-                tool_icon_path = NODE_ICONx500_PATH.format(s, name)
-                self.valid_node_button(node_button, name,
-                                       tool_icon_path)
+                self.valid_node_button(node_button, name, tips,
+                                       NODE_ICONx500_PATH.format(s, name))
                 # add clicked event handler
-                node_button.clicked.connect(self.clicked_handler)
+                node_button.clicked.connect(self.tool_box_clicked_handler)
                 # add it in layout
                 vb_layout.addWidget(node_button, alignment=Qt.AlignLeft)
             if c.lower() == 'layers':
@@ -66,25 +69,57 @@ class KMBNodesMenu(QTabWidget):
                 self.common_nodes.addItem(group_box, s)
             # else:
 
-    def set_pin_box(self):
-        pass
+    def set_pin_box(self, tab_idx: int):
+        """ Every time click this tab will get refresh. """
+        if tab_idx != 0:
+            return
+        pins = read_custom_pin()
+        if pins is None:
+            return
 
-    def clicked_handler(self):
+        # avoid repeating group box.
+        self.pin_nodes.removeItem(0)
+        pin_box = QGroupBox(self)
+        pin_layout = QVBoxLayout(pin_box)
+        pin_layout.setAlignment(Qt.AlignTop)
+        for pin in pins:
+            id_, pin_name, pin_args, category, org_name, org_sort = pin
+            pin_button = QToolButton(self)
+            self.valid_node_button(pin_button, pin_name,
+                                   create_ucp_tip(pin),
+                                   NODE_ICONx500_PATH.format('Core', org_name),
+                                   text_button_beside=False)
+            pin_button.setObjectName(f'{pin_args}-{org_name}-{org_sort}')
+            pin_button.clicked.connect(self.pin_box_clicked_handler)
+            pin_layout.addWidget(pin_button, alignment=Qt.AlignLeft)
+        self.pin_nodes.addItem(pin_box, '')
+
+    def tool_box_clicked_handler(self):
         clicked_item_name = self.sender().text()
         res = CURSOR.execute(f'SELECT CATEGORY, SORT '
                              f'FROM nodes '
                              f'WHERE NAME="{clicked_item_name}"').fetchone()
         self.CLICKED_NODE_BUTTON_ITEM.emit(clicked_item_name, res[0], res[1])
 
+    def pin_box_clicked_handler(self):
+        clicked_pin = self.sender()
+        pin = clicked_pin.objectName().split('-')
+
     @classmethod
     def valid_node_button(cls,
                           node_button: QToolButton,
                           text: str,
+                          tooltip: str,
                           icon_path: str,
-                          icon_size=50):
+                          icon_size=50,
+                          text_button_beside=True):
 
         node_button.setText(text)
         node_button.setIcon(QIcon(icon_path))
         node_button.setIconSize(QSize(icon_size, icon_size))
+        node_button.setToolTip(tooltip)
         node_button.setAutoRaise(True)
-        node_button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        if text_button_beside:
+            node_button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        else:
+            node_button.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)

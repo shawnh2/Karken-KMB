@@ -35,3 +35,9 @@ class DataBase4Args:
             f'SELECT "VALUES" FROM box_args WHERE ID={box_id}'
         )
         return res.fetchone()[0]
+
+    def get_sort_by_name(self, node_name):
+        res = self.CURSOR.execute(
+            f'SELECT SORT FROM nodes WHERE NAME="{node_name}"'
+        )
+        return res.fetchone()[0]
