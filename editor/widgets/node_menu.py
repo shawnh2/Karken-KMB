@@ -1,6 +1,6 @@
 import sqlite3
 
-from PyQt5.QtWidgets import QVBoxLayout, QToolButton, QGroupBox, QToolBox, QTabWidget
+from PyQt5.QtWidgets import QVBoxLayout, QToolButton, QGroupBox, QToolBox, QTabWidget, QWidget
 from PyQt5.QtCore import QSize, Qt, pyqtSignal
 from PyQt5.QtGui import QIcon
 
@@ -26,19 +26,19 @@ class KMBNodesMenu(QTabWidget):
         self.common_nodes = QToolBox(self)
         self.units_nodes = QToolBox(self)
         # custom pin tab
-        self.pin_nodes = QToolBox(self)
+        self.pin_nodes = QWidget(self)
 
         self.set_toolbox()
+        self.tabBarClicked.connect(self.set_pin_box)
         self.addTab(self.pin_nodes, "Pins")
         self.addTab(self.layer_nodes, "Layers")
         self.addTab(self.common_nodes, "Common")
         self.addTab(self.units_nodes, "Units")
 
-        self.setTabIcon(0, QIcon(icon['PIN']))
+        self.setTabIcon(0, QIcon(icon['PIN_TAB']))
         self.setCurrentWidget(self.layer_nodes)
         self.setMinimumWidth(300)
         self.setMaximumWidth(500)
-        self.tabBarClicked.connect(self.set_pin_box)
 
     def set_toolbox(self):
         nodes = {}
@@ -78,9 +78,7 @@ class KMBNodesMenu(QTabWidget):
             return
 
         # avoid repeating group box.
-        self.pin_nodes.removeItem(0)
-        pin_box = QGroupBox(self)
-        pin_layout = QVBoxLayout(pin_box)
+        pin_layout = QVBoxLayout(self.pin_nodes)
         pin_layout.setAlignment(Qt.AlignTop)
         for pin in pins:
             id_, pin_name, pin_args, category, org_name, org_sort = pin
@@ -92,7 +90,6 @@ class KMBNodesMenu(QTabWidget):
             pin_button.setObjectName(f'{pin_args}-{org_name}-{org_sort}')
             pin_button.clicked.connect(self.pin_box_clicked_handler)
             pin_layout.addWidget(pin_button, alignment=Qt.AlignLeft)
-        self.pin_nodes.addItem(pin_box, '')
 
     def tool_box_clicked_handler(self):
         clicked_item_name = self.sender().text()

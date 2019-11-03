@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QComboBox, QCheckBox
+from PyQt5.QtWidgets import QComboBox, QCheckBox, QListView
 from PyQt5.QtGui import QStandardItem, QColor, QIcon
 
 from cfg import color, icon
@@ -158,9 +158,15 @@ class ArgComboBox(QComboBox):
 
         self.addItems(box_args)
         self.setCurrentText(default)
-        self.setItemIcon(box_args.index(default), QIcon(icon["COMBO"]))
-        self.setMaxVisibleItems(7)
+        init_idx = box_args.index(default)
+        for idx in range(len(box_args)):
+            if init_idx == idx:
+                self.setItemIcon(idx, QIcon(icon["COMBO"]))
+            else:
+                self.setItemIcon(idx, QIcon(icon['COMBO_EMPTY']))
+        self.setMaxVisibleItems(8)
         self.setInsertPolicy(QComboBox.InsertAtBottom)
+        self.setView(QListView())  # set style later.
 
 
 class ArgCheckBox(QCheckBox):

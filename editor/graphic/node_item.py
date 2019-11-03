@@ -22,7 +22,7 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         self.id_str = str(id(self))
 
         self.right_menu = QMenu()
-        self.rm_pin = QIcon(icon['PIN'])
+        self.rm_pin = QIcon(icon['PIN_RM'])
 
         self.rm_token = QIcon(icon['TOKEN'])
         self.rm_free = QIcon(icon['FREE'])
@@ -287,7 +287,7 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
     def _popup_input_dialog(self):
         # get pin item custom name before save.
         name, ok = QInputDialog.getText(self.main_editor, "Please input Pin Node name",
-                                        "Note: This node will be added at Pin panel with its arguments.")
+                                        "Note: This node will be added in Pin panel with its arguments.")
         return name if ok else False
 
     def _execute_pin_action(self):

@@ -6,7 +6,9 @@ WINICON: 'lib/icon/kmb/kmb@winicon.png'
 SCREEN: 'lib/icon/kmb/kmb@launchscreen.png'
 
 # for node menu tab
-PIN: 'lib/icon/other/pin.png'
+PIN_TAB: 'lib/icon/other/pin_tab.png'
+# for node right menu
+PIN_RM: 'lib/icon/other/pin_rm.png'
 
 # for toolbar
 NEW: 'lib/icon/tools/new.png'
@@ -32,6 +34,7 @@ TRASH: 'lib/icon/cursor/trash.png'
 
 # for default combo box item
 COMBO: 'lib/icon/other/default.png'
+COMBO_EMPTY: 'lib/icon/other/empty.png'
 # for items in node's right menu
 TOKEN: 'lib/icon/other/token.png'
 FREE: 'lib/icon/other/free.png'

@@ -1,9 +1,9 @@
 # Configures for Colormap
 
 # for args
-INH_ARG: '#CCFFFF'  # BG for inherit args
-ORG_ARG: '#FFFFCC'  # BG for original args
-CUS_ARG: '#FFCCCC'  # BG for custom args, like: var name
+INH_ARG: '#CAFFFD'  # BG for inherit args
+ORG_ARG: '#FFFEBE'  # BG for original args
+CUS_ARG: '#FF7193'  # BG for custom args, like: var name
 
 ARG_NORMAL: '#FFFFFF'  # BG for plain args that hasn't been modify
 ARG_CHANGED: '#FFCC99'  # BG for changed args
@@ -25,7 +25,7 @@ DOT_IO_O: '#7200DA'
 
 # for DataType-Color map
 DTC_str: '#6699CC'
-DTC_ref: '#CCFF99'
+DTC_ref: '#99F19E'
 DTC_num: '#FF6666'
 DTC_seq: '#FFCCCC'
 DTC_mut: '#FFFFFF'
