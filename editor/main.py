@@ -20,6 +20,7 @@ class KMBMainWindow(QMainWindow):
         # ------
         self.action_new = QAction(QIcon(icon['NEW']), '', self)
         self.action_open = QAction(QIcon(icon['OPEN']), '', self)
+        self.action_import = QAction(QIcon(icon['IMPORT']), '', self)
         self.action_save = QAction(QIcon(icon['SAVE']), '', self)
         self.action_export = QAction(QIcon(icon['EXPORT']), '', self)
         # ------
@@ -75,6 +76,8 @@ class KMBMainWindow(QMainWindow):
         self.action_open.setToolTip("Open (Ctrl+O)")
         self.action_open.setEnabled(False)
         self.action_save.setToolTip("Save (Ctrl+S)")
+        self.action_import.setToolTip("Import (Ctrl+I)")
+        self.action_import.setEnabled(False)
         self.action_export.setToolTip("Export (Ctrl+E)")
         self.action_export.setEnabled(False)
         # ------
@@ -105,6 +108,8 @@ class KMBMainWindow(QMainWindow):
         self.toolbar.addAction(self.action_open)
         self.toolbar.addAction(self.action_save)
         self.action_save.setShortcut('Ctrl+S')
+        self.toolbar.addAction(self.action_import)
+        self.action_import.setShortcut('Ctrl+I')
         self.toolbar.addAction(self.action_export)
         self.toolbar.addSeparator()
         # tool operation

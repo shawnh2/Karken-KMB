@@ -158,7 +158,8 @@ class KMBNodesArgsMenu(QTableView):
 
     def commit_node(self,
                     node_name, node_type,
-                    node_id: str, count: int):
+                    node_id: str, count: int,
+                    pin_args: str):
         # after adding node in canvas
         # first time make new model.
         id_string, inherit = self.db_link.get_args_id(node_name)
@@ -167,7 +168,10 @@ class KMBNodesArgsMenu(QTableView):
             node_name=node_name,
             node_type=node_type,
             node_id=id_string,
-            inherit=inherit
+            inherit=inherit,
+            pin_args=pin_args
+            # if it's not 'None', then pin args will cover
+            # the original args.
         )
         model.get_args(add_custom_args=True, count=count)
         # then store it but don't display it.

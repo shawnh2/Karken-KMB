@@ -47,6 +47,13 @@ class MainNodeEditor(QWidget):
         self.nodes_menu.CLICKED_NODE_BUTTON_ITEM.connect(
             self.nodes_view.set_editing_mode
         )
+        # do the same things.
+        self.nodes_menu.CLICKED_PIN_BUTTON_ITEM.connect(
+            self.args_menu.panel.set_preview_args
+        )
+        self.nodes_menu.CLICKED_PIN_BUTTON_ITEM.connect(
+            self.nodes_view.set_editing_mode
+        )
 
         # +++++++++++++++++++++++++++++++++++
         #             FROM VIEW

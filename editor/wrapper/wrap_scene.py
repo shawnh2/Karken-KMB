@@ -129,7 +129,7 @@ class KMBNodeScene(Serializable):
             nodes[sn["id"]] = sn
         # organize edge's relationship here.
         for edge in self.edges.values():
-            edge_from, edge_to = edge.serialize()
+            edge_type, edge_from, edge_to = edge.serialize()
             nodes[edge_from]['output'].append(edge_to)
             nodes[edge_to]['input'].append(edge_from)
         return nodes

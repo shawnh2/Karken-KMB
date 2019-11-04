@@ -4,6 +4,7 @@ from PyQt5.QtGui import QStandardItemModel
 
 from editor.component.args_model_item import ArgNameItem, ArgTypeItem, ArgEditItem
 from editor.component.semaphores import ReferenceBySemaphore, ModelIOSemaphore
+from lib import pin_args_queue
 
 
 class ArgsSuperModel(QStandardItemModel):
@@ -114,13 +115,19 @@ class ArgsEditableModel(ArgsSuperModel):
                  node_name: str,
                  node_type: str,
                  node_id: str,
-                 inherit: str):
+                 inherit: str,
+                 pin_args: str):
         super().__init__(db_link, node_name, node_id, inherit)
         # args: combobox style cell
         self.combo_args = []
         # args: check button style cell
         self.check_args = []
         self.node_type = node_type
+        # args: for pin args
+        if pin_args != 'None':
+            self.pin_args = pin_args_queue(pin_args)
+        else:
+            self.pin_args = None
         # setup semaphore here
         self.rb_semaphore = ReferenceBySemaphore()
         self.io_semaphore = ModelIOSemaphore(self)
@@ -222,6 +229,12 @@ class ArgsEditableModel(ArgsSuperModel):
                                         belong_to=arg_name)
             self.set_col_items(idx, arg_name_item, arg_init_item)
 
+    def feed_with_pins(self, org_value):
+        # cover the original args value with pin args.
+        if self.pin_args is None:
+            return org_value
+        pin_name, pin_value = self.pin_args.get()
+
     def extract_args(self,
                      get_changed=False,
                      get_referenced=False):
@@ -242,5 +255,4 @@ class ArgsEditableModel(ArgsSuperModel):
         pin_args = ";".join([f'{arg_name}={arg_value}'
                              for arg_name, arg_value in
                              self.extract_args(get_changed=True).items()])
-        pin_org_sort = self.db.get_sort_by_name(self.node_name)
-        return pin_args, self.node_name, pin_org_sort
+        return pin_args, self.node_name

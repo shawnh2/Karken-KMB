@@ -74,7 +74,15 @@ class AutoInspector:
         => 12;2;3     >>> (12, 12)   !! Only first two is valid.
         => 12;        >>> (12, 12)   !! Default times is 2.
         and also only digit is valid.
+
+        if you have a container inside a container, then
+        the inspector may be useless.
+        Under this situation, type 'r' at beginning,
+        like:
+        => r(32, 23, (1, 2))  >>>  (32, 23, (1, 2))
+        the input will keep raw format.
         """
+
         def semicolon_split(value: str):
             # Basic form N;t
             # only works on first two split value.
@@ -85,17 +93,23 @@ class AutoInspector:
                 return [nbr, nbr]
             return [nbr for _ in range(int(times))]
 
+        if self._cur_value.startswith('r'):
+            return self._cur_value
+
         # setup bracket type
         if self._cur_value.startswith('[') or \
            self._cur_value.startswith(']'):
+            # only replace the first bracket.
+            # leave other brackets.
             l_br = '['
             r_br = ']'
+        elif self._cur_value.startswith('(') or \
+             self._cur_value.startswith(')'):
+            l_br = '('
+            r_br = ')'
         else:
             l_br = '('
             r_br = ')'
-        # replace bracket all and reassign.
-        for b in ('(', ')', '[', ']'):
-            self._cur_value = self._cur_value.replace(b, '')
         pattern = re.compile('-?\d+\.?\d*;?\d*')
         separated = []
         for res in pattern.findall(self._cur_value):
@@ -109,8 +123,19 @@ class AutoInspector:
         # and under this situation, return a array that full of zero.
         if len(separated) == 0:
             separated = ['0' for _ in range(len(self._cur_value))]
-        # only one item will be lonely,
-        # add a comma, like '(X)' -> '(X, )'
+        # difference between return_alone or not,
+        # return alone, return the one element without any change;
+        # if not, wrap 'x' like '(x, )'.
         if len(separated) == 1:
             separated = [separated[0] + ', ']
         return l_br + ", ".join([ch for ch in separated]) + r_br
+
+    def _inspect_num_seq(self):
+        if (
+                self._cur_value.__contains__(';') or
+                self._cur_value.__contains__(',') or
+                self._cur_value.__contains__(' ')
+        ):
+            return self._inspect_sequence()
+        else:
+            return self._inspect_number()

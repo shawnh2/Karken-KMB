@@ -68,7 +68,8 @@ class KMBEdge(Serializable):
         self.gr_edge = None
 
     def serialize(self):
-        return (str(id(self.start_item.gr_node)),
+        return (self.edge_type,
+                str(id(self.start_item.gr_node)),
                 str(id(self.end_item.gr_node)))
 
     def deserialize(self):

@@ -29,7 +29,8 @@ class KMBNodeGraphicView(QGraphicsView):
     # show the changing position in status bar.
     SCENE_POS_CHANGED = pyqtSignal(int, int)            # x, y coord
     # the necessary signal to add a new node in scene.
-    ADD_NEW_NODE_ITEM = pyqtSignal(str, str, str, int)  # name, type, id, count
+    # name, type, id, count, pin_args ('None' means empty)
+    ADD_NEW_NODE_ITEM = pyqtSignal(str, str, str, int, str)
     # pass the id of selected node item to edit.
     SELECTED_NODE_ITEM = pyqtSignal(str)                # id or state
     SELECTED_DELETE_NODE = pyqtSignal(str)              # id
@@ -61,6 +62,7 @@ class KMBNodeGraphicView(QGraphicsView):
         self.current_node_item_name = None
         self.current_node_item_type = None
         self.current_node_item_sort = None
+        self.current_node_pin_args = None  # optional
         self.rest_ref_items_count = 0
 
         self.zoom_in_factor = 1.25
@@ -99,13 +101,20 @@ class KMBNodeGraphicView(QGraphicsView):
         self.setDragMode(QGraphicsView.ScrollHandDrag)
         debug("Now is <move> mode")
 
-    def set_editing_mode(self, node_name, node_type, node_sort):
+    def set_editing_mode(self, *args):
         self.mode = MOUSE_EDIT
+        if len(args) == 3:  # ... normal case
+            node_name, node_type, node_sort = args
+            self.status_bar_msg(f'Select: {node_name} item in '
+                                f'{node_type}:{node_sort}.')
+        else:  # ...from pin box
+            node_name, node_type, node_sort, node_args = args
+            self.current_node_pin_args = node_args
+            self.status_bar_msg(f'Select: {node_name} item in Pins.')
         self.current_node_item_name = node_name
         self.current_node_item_type = node_type
         self.current_node_item_sort = node_sort
         self.set_edit_node_cursor()
-        self.status_bar_msg(f'Select: {node_name} item in {node_type}:{node_sort}.')
         debug("Now is <edit> mode")
 
     def set_delete_mode(self):
@@ -322,7 +331,8 @@ class KMBNodeGraphicView(QGraphicsView):
         self.ADD_NEW_NODE_ITEM.emit(node.gr_name,
                                     node.gr_type,
                                     node.gr_node.id_str,
-                                    count)
+                                    count,
+                                    str(self.current_node_pin_args))
         self.status_bar_msg(f'Add: {self.current_node_item_name} node.')
         node.set_pos(x, y)
 

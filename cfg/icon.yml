@@ -9,10 +9,13 @@ SCREEN: 'lib/icon/kmb/kmb@launchscreen.png'
 PIN_TAB: 'lib/icon/other/pin_tab.png'
 # for node right menu
 PIN_RM: 'lib/icon/other/pin_rm.png'
+# for Refresh node
+REFRESH: 'lib/icon/other/refresh.png'
 
 # for toolbar
 NEW: 'lib/icon/tools/new.png'
 OPEN: 'lib/icon/tools/open.png'
+IMPORT: 'lib/icon/tools/import.png'
 SAVE: 'lib/icon/tools/save.png'
 EXPORT: 'lib/icon/tools/export.png'
 

@@ -11,7 +11,8 @@ class DataBase4Args:
 
     def get_args_id(self, node_name: str):
         res = self.CURSOR.execute(
-            f'SELECT ORI_ARGS, INH_ARGS FROM nodes WHERE NAME="{node_name}"'
+            'SELECT ORI_ARGS, INH_ARGS FROM nodes WHERE NAME=(?)',
+            (node_name, )
         )
         return res.fetchone()
 
@@ -33,11 +34,5 @@ class DataBase4Args:
     def get_box_args(self, box_id: int):
         res = self.CURSOR.execute(
             f'SELECT "VALUES" FROM box_args WHERE ID={box_id}'
-        )
-        return res.fetchone()[0]
-
-    def get_sort_by_name(self, node_name):
-        res = self.CURSOR.execute(
-            f'SELECT SORT FROM nodes WHERE NAME="{node_name}"'
         )
         return res.fetchone()[0]
