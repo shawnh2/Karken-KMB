@@ -2,6 +2,8 @@ from PyQt5.QtWidgets import QToolButton, QMenu, QAction
 from PyQt5.QtGui import QIcon, QCursor
 from PyQt5.QtCore import Qt, QSize
 
+from lib import remove_custom_pin
+
 
 class PinToolBox(QToolButton):
     """ Pin Tool button in Node menu. """
@@ -12,10 +14,13 @@ class PinToolBox(QToolButton):
                  tooltip: str,
                  icon_path: str,
                  icon_size: int,
-                 signal: str):
+                 signal: str,
+                 refresh_button):
         super().__init__(parent)
 
         self.pin_name = text
+        self.pin_id = int(signal.split('-')[4])
+        self.refresh = refresh_button
 
         self.setText(self.pin_name)
         self.setToolTip(tooltip)
@@ -31,25 +36,30 @@ class PinToolBox(QToolButton):
 
     def contextMenuEvent(self, event):
         # make title
-        title = QAction(f'Selected: {self.pin_name}')
+        title = QAction(f'{self.pin_name}')
         title.setDisabled(True)
         self.right_menu.addAction(title)
         self.right_menu.addSeparator()
         # make body
-        # body = self.get_right_menu_body()
-        # self.right_menu.addActions(body)
+        body = self.get_right_menu_body()
+        self.right_menu.addActions(body)
         # show
         self.right_menu.exec(QCursor.pos())
 
     def get_right_menu_body(self):
         """ Operations that will execute on Pin. """
-        operations = (
-            'delete this pin',
-            'export this pin',
-            'reset this pin',
-        )
-        actions = []
-        for operation in operations:
-            action = QAction(operation)
-            actions.append(action)
-        return actions
+        delete = QAction('Delete it')
+        delete.triggered.connect(self.delete_action)
+
+        export = QAction('Export it')
+        export.triggered.connect(self.export_action)
+        return delete, export
+
+    # ----------ACTIONS----------
+
+    def delete_action(self):
+        remove_custom_pin(self.pin_id)
+        self.refresh.click()
+
+    def export_action(self):
+        pass

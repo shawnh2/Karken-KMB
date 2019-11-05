@@ -1,6 +1,5 @@
 """ All kinds of atom operations for custom pins. """
 import os
-import queue
 import sqlite3
 
 from cfg import UCP_LOC
@@ -54,10 +53,21 @@ def read_custom_pin():
 
 def remove_custom_pin(pin_id):
     """ Remove one pin from file. """
+    ucp = sqlite3.connect(UCP_FILE)
+    cur = ucp.cursor()
+    cur.execute('DELETE FROM UCP WHERE ID=?', (pin_id, ))
+    ucp.commit()
+    ucp.close()
 
 
-def update_custom_pin(pin_id):
-    """ Update one existing pin in file. """
+def update_custom_pin(pin_id: int, pin_args: str):
+    """ Update one existing pin's args. """
+    ucp = sqlite3.connect(UCP_FILE)
+    cur = ucp.cursor()
+    cur.execute('UPDATE UCP SET PIN_ARGS=? WHERE ID=?',
+                (pin_args, pin_id))
+    ucp.commit()
+    ucp.close()
 
 
 # ----------UTILS----------
@@ -94,8 +104,9 @@ def create_ucp_tip(pin):
     return tip_head + tip_subs + tip_body
 
 
-def pin_args_queue(pin_args: str):
-    args_queue = queue.Queue()
-    for arg in _pin_args_split(pin_args):
-        args_queue.put(arg)
-    return args_queue
+def pin_args_dict(pin_args: str):
+    """ Convert pin_args string to pin_args dict. """
+    args_dict = {}
+    for arg_name, arg_value in _pin_args_split(pin_args):
+        args_dict[arg_name] = arg_value
+    return args_dict

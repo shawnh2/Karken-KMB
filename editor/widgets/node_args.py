@@ -89,6 +89,7 @@ class KMBNodesArgsMenu(QTableView):
                 copy_args_list = args_list.copy()
                 copy_args_list.append(cur_value)
                 combo = ArgComboBox(copy_args_list, arg_init, at=row)
+                combo.set_ref_icon()
             else:
                 combo = ArgComboBox(args_list, arg_init, at=row)
             combo.setCurrentText(cur_value)

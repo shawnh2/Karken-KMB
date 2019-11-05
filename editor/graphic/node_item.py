@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import (QGraphicsItem, QGraphicsPixmapItem,
                              QMenu, QAction, QInputDialog)
 from PyQt5.QtGui import QPixmap, QCursor, QIcon
 
-from lib import debug, write_custom_pin
+from lib import debug, write_custom_pin, update_custom_pin
 from cfg import NODE_ICONx85_PATH, icon
 
 
@@ -23,6 +23,7 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
 
         self.right_menu = QMenu()
         self.rm_pin = QIcon(icon['PIN_RM'])
+        self.rm_pin_up = QIcon(icon['PIN_UPDATE'])
 
         self.rm_token = QIcon(icon['TOKEN'])
         self.rm_free = QIcon(icon['FREE'])
@@ -97,12 +98,12 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
     def get_context_menu(self):
         """
         Right menu all has three different contents:
-        For Layer node, right menu shows items that can be referenced.
+        1.For Layer node, right menu shows items that can be referenced.
 
-        For PlaceHolder or Units (etc.), menu shows items that already
+        2.For PlaceHolder or Units (etc.), menu shows items that already
         has been referenced.
 
-        For Model, menu shows inputs and outputs items.
+        3.For Model, menu shows inputs and outputs items.
         """
         if self._arg_model.node_type == 'Layers':  # case 1
             return self._get_reference_table()
@@ -229,9 +230,19 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         return sub_header
 
     def _make_a_pin_item(self):
-        pin = QAction(self.rm_pin, 'Add to Pins')
-        pin.triggered.connect(self._execute_pin_action)
-        return [pin]
+        # about pin actions.
+        actions = []
+        # actions about pined node itself.
+        if self.node.pin_id is not None:
+            update = QAction(self.rm_pin_up, 'Update pin')
+            update.triggered.connect(self._exec_update_pin_action)
+            actions.append(update)
+        # for those who are not be pined.
+        else:
+            pin = QAction(self.rm_pin, 'Add to pins')
+            pin.triggered.connect(self._exec_add_pin_action)
+            actions.append(pin)
+        return actions
 
     def _pre_activate_ref_action(self, action, *args):
         """
@@ -282,7 +293,7 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         # mark: 'i' is inputs, 'o' is outputs.
         action.triggered.connect(self.node.gr_scene.right_menu_listener)
 
-    # ------------OPERATIONS ON INPUT DIALOG--------------
+    # ------------OPERATIONS ON PINS--------------
 
     def _popup_input_dialog(self):
         # get pin item custom name before save.
@@ -290,7 +301,9 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
                                         "Note: This node will be added in Pin panel with its arguments.")
         return name if ok else False
 
-    def _execute_pin_action(self):
+    # TODO: node after adding in pins.
+
+    def _exec_add_pin_action(self):
         """ Execute Pin action here. Add item to Pin panel. """
         pin_name = self._popup_input_dialog()
         # give up this operation if got cancel.
@@ -300,3 +313,9 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         debug(f'[PIN] item => {pin_name}')
         # pin only save its changed args not referenced.
         write_custom_pin(pin_name, *self._arg_model.extract_pin())
+
+    def _exec_update_pin_action(self):
+        """ Execute update pin action by its pin_id. """
+        update_custom_pin(self.node.pin_id,
+                          self._arg_model.extract_pin()[0])
+        debug(f'[PIN] item update successfully.')

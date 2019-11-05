@@ -43,7 +43,8 @@ class ArgEditItem(QStandardItem):
                  dtype,
                  belong_to: str,
                  tag: int = 0,
-                 store_bg: bool = False):
+                 store_bg: bool = False,
+                 is_pined=None):
         # save the initial value of one arg
         self._init_value = value
         self._value = value
@@ -63,6 +64,7 @@ class ArgEditItem(QStandardItem):
 
         self.is_changed = False
         self.is_referenced = False
+        self.is_pined = True if is_pined is not None else False
         # color for plain, changed & referenced.
         self.pln_color = QColor(color['ARG_NORMAL'])
         self.chg_color = QColor(color['ARG_CHANGED'])
@@ -155,6 +157,7 @@ class ArgComboBox(QComboBox):
     def __init__(self, box_args: list, default: str, at: int, parent=None):
         super().__init__(parent)
         self.at = at  # index at model
+        self.n = len(box_args)  # length of box args
 
         self.addItems(box_args)
         self.setCurrentText(default)
@@ -167,6 +170,10 @@ class ArgComboBox(QComboBox):
         self.setMaxVisibleItems(8)
         self.setInsertPolicy(QComboBox.InsertAtBottom)
         self.setView(QListView())  # set style later.
+
+    def set_ref_icon(self):
+        # set icon for ref item.
+        self.setItemIcon(self.n - 1, QIcon(icon['COMBO_REF']))
 
 
 class ArgCheckBox(QCheckBox):

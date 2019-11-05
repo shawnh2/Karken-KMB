@@ -18,8 +18,8 @@ class KMBNodesMenu(QTabWidget):
 
     # name, category, sort
     CLICKED_NODE_BUTTON_ITEM = pyqtSignal(str, str, str)
-    # org_name, org_category, org_sort, args
-    CLICKED_PIN_BUTTON_ITEM = pyqtSignal(str, str, str, str)
+    # org_name, org_category, org_sort, pin_args, pin_id
+    CLICKED_PIN_BUTTON_ITEM = pyqtSignal(str, str, str, str, str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -107,7 +107,8 @@ class KMBNodesMenu(QTabWidget):
                                     tooltip=create_ucp_tip(pin),
                                     icon_path=NODE_ICONx500_PATH.format(org_sort, org_name),
                                     icon_size=50,
-                                    signal=f'{org_name}-{org_category}-{org_sort}-{pin_args}')
+                                    signal=f'{org_name}-{org_category}-{org_sort}-{pin_args}-{id_}',
+                                    refresh_button=refresh)
             pin_button.clicked.connect(self.pin_box_clicked_handler)
             pos = self.get_grid_pos(i, col)
             pin_layout.addWidget(pin_button, *pos)
@@ -121,6 +122,7 @@ class KMBNodesMenu(QTabWidget):
     def pin_box_clicked_handler(self):
         clicked_pin = self.sender()
         pin = clicked_pin.objectName().split('-')
+        print(pin)
         self.CLICKED_PIN_BUTTON_ITEM.emit(*pin)
 
     def refresh_clicked_handler(self):

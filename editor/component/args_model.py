@@ -4,7 +4,7 @@ from PyQt5.QtGui import QStandardItemModel
 
 from editor.component.args_model_item import ArgNameItem, ArgTypeItem, ArgEditItem
 from editor.component.semaphores import ReferenceBySemaphore, ModelIOSemaphore
-from lib import pin_args_queue
+from lib import pin_args_dict
 
 
 class ArgsSuperModel(QStandardItemModel):
@@ -122,12 +122,13 @@ class ArgsEditableModel(ArgsSuperModel):
         self.combo_args = []
         # args: check button style cell
         self.check_args = []
-        self.node_type = node_type
         # args: for pin args
         if pin_args != 'None':
-            self.pin_args = pin_args_queue(pin_args)
+            self.pin_args = pin_args_dict(pin_args)
         else:
             self.pin_args = None
+
+        self.node_type = node_type
         # setup semaphore here
         self.rb_semaphore = ReferenceBySemaphore()
         self.io_semaphore = ModelIOSemaphore(self)
@@ -184,27 +185,41 @@ class ArgsEditableModel(ArgsSuperModel):
     def feed_inherit_item(self, idx, unpack_item):
         # id, name, init, type, info
         _, arg_name, arg_init, arg_type, arg_info = unpack_item
-        arg_type_item = ArgTypeItem(arg_type)
+        pin_marker = None
+        arg_type_item = ArgTypeItem(arg_type)  # provide dtype for each arg item.
         arg_name_item = ArgNameItem('inh', arg_info, arg_name)
+        # replace org value with pin value if it has.
+        pin_value = self.feed_with_pins(arg_name)
+        if pin_value is not None:
+            arg_init = pin_value
+            pin_marker = 1
+        # set arg value with different types.
         if arg_type == "bool":
             arg_mark_item = ArgEditItem(arg_init,
                                         dtype=arg_type_item.raw_type_name,
                                         belong_to=arg_name,
                                         tag=1,
-                                        store_bg=True)
+                                        store_bg=True,
+                                        is_pined=pin_marker)
             self.check_args.append(idx)
             self.set_col_items(idx, arg_name_item, arg_mark_item)
         else:
             arg_init_item = ArgEditItem(arg_init,
                                         dtype=arg_type_item.raw_type_name,
-                                        belong_to=arg_name)
+                                        belong_to=arg_name,
+                                        is_pined=pin_marker)
             self.set_col_items(idx, arg_name_item, arg_init_item)
 
     def feed_original_item(self, idx, unpack_item):
         # id, note, name, init, type, info, box
         _, _, arg_name, arg_init, arg_type, arg_info, arg_box = unpack_item
+        pin_marker = None
         arg_type_item = ArgTypeItem(arg_type)
         arg_name_item = ArgNameItem('org', arg_info, arg_name)
+        pin_value = self.feed_with_pins(arg_name)
+        if pin_value is not None:
+            arg_init = pin_value
+            pin_marker = 1
         if arg_box:
             # setup the combo box for box args
             arg_box_list = self.db.get_box_args(int(arg_box)).split(';')
@@ -213,31 +228,38 @@ class ArgsEditableModel(ArgsSuperModel):
             arg_mark_item = ArgEditItem(arg_init,
                                         dtype=arg_type_item.raw_type_name,
                                         belong_to=arg_name,
-                                        tag=2, store_bg=True)
+                                        tag=2,
+                                        store_bg=True,
+                                        is_pined=pin_marker)
             self.set_col_items(idx, arg_name_item, arg_mark_item)
         elif arg_type == "bool":
             # setup the check button for bool type
             arg_mark_item = ArgEditItem(arg_init,
                                         dtype=arg_type_item.raw_type_name,
                                         belong_to=arg_name,
-                                        tag=1, store_bg=True)
+                                        tag=1,
+                                        store_bg=True,
+                                        is_pined=pin_marker)
             self.check_args.append(idx)
             self.set_col_items(idx, arg_name_item, arg_mark_item)
         else:
             arg_init_item = ArgEditItem(arg_init,
                                         dtype=arg_type_item.raw_type_name,
-                                        belong_to=arg_name)
+                                        belong_to=arg_name,
+                                        is_pined=pin_marker)
             self.set_col_items(idx, arg_name_item, arg_init_item)
 
-    def feed_with_pins(self, org_value):
-        # cover the original args value with pin args.
+    def feed_with_pins(self, org_name):
+        # return the pin value of this org arg name.
         if self.pin_args is None:
-            return org_value
-        pin_name, pin_value = self.pin_args.get()
+            return None
+        # return result may be None or value.
+        return self.pin_args.get(org_name)
 
     def extract_args(self,
                      get_changed=False,
-                     get_referenced=False):
+                     get_referenced=False,
+                     get_pined=False):
         # extract all the args from model and
         # wrap all of them in OrderDict then return.
         arg_dict = OrderedDict()
@@ -247,6 +269,8 @@ class ArgsEditableModel(ArgsSuperModel):
                 arg_dict[arg_name.text()] = arg_value.value
             elif arg_value.is_referenced and get_referenced:
                 arg_dict[arg_name.text()] = arg_value.ref_to
+            elif arg_value.is_pined and get_pined:
+                arg_dict[arg_name.text()] = arg_value.value
             # else ...
         return arg_dict
 
@@ -254,5 +278,6 @@ class ArgsEditableModel(ArgsSuperModel):
         # extract necessary info for pin.
         pin_args = ";".join([f'{arg_name}={arg_value}'
                              for arg_name, arg_value in
-                             self.extract_args(get_changed=True).items()])
+                             self.extract_args(get_changed=True,
+                                               get_pined=True).items()])
         return pin_args, self.node_name

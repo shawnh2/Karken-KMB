@@ -9,12 +9,14 @@ class KMBNodeItem(Serializable):
                  node_name: str,
                  node_type: str,
                  node_sort: str,
+                 pin_id,
                  parent):
         super().__init__()
         self.gr_scene = scene
         self.gr_name = node_name
         self.gr_type = node_type  # CATEGORY
         self.gr_sort = node_sort  # SORT
+        self.pin_id = pin_id      # also can be marked as a pin.
         self.parent = parent
         self.gr_node = KMBNodeGraphicItem(self,
                                           self.gr_name,

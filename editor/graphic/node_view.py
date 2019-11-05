@@ -62,8 +62,10 @@ class KMBNodeGraphicView(QGraphicsView):
         self.current_node_item_name = None
         self.current_node_item_type = None
         self.current_node_item_sort = None
-        self.current_node_pin_args = None  # optional
         self.rest_ref_items_count = 0
+        # optional
+        self.current_node_pin_args = None
+        self.current_node_pin_id = None
 
         self.zoom_in_factor = 1.25
         self.zoom = 10
@@ -108,8 +110,10 @@ class KMBNodeGraphicView(QGraphicsView):
             self.status_bar_msg(f'Select: {node_name} item in '
                                 f'{node_type}:{node_sort}.')
         else:  # ...from pin box
-            node_name, node_type, node_sort, node_args = args
-            self.current_node_pin_args = node_args
+            (node_name, node_type, node_sort,
+             pin_args, pin_id) = args
+            self.current_node_pin_args = pin_args
+            self.current_node_pin_id = pin_id
             self.status_bar_msg(f'Select: {node_name} item in Pins.')
         self.current_node_item_name = node_name
         self.current_node_item_type = node_type
@@ -324,6 +328,7 @@ class KMBNodeGraphicView(QGraphicsView):
                            self.current_node_item_name,
                            self.current_node_item_type,
                            self.current_node_item_sort,
+                           self.current_node_pin_id,
                            self.parent)
         # add into scene and get count of nodes.
         self.gr_scene.scene.add_node(node)
