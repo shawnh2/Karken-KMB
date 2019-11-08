@@ -185,6 +185,12 @@ class KMBNodesArgsMenu(QTableView):
         if model.node_name == 'PlaceHolder' or\
            model.node_type == 'Units':
             del model.ref_by
+        # sometimes layer can be the ref too.
+        # but only del its ref by if its peer
+        # node is one of TimeDistributed or Bidirectional.
+        elif model.node_type == 'Layers':
+            if model.ref_by:
+                del model.ref_by
         # remove entire node item,
         # also remove the ref_to relation.
         else:
@@ -251,7 +257,7 @@ class KMBNodesArgsMenu(QTableView):
         # show right menu
         self.right_menu.exec(QCursor.pos())
 
-    # ------Operations on Model------
+    # ------Operations on IO Model------
 
     def delete_io(self, src_model_id: str, dst_model_id: str):
         io_model = self.edit_model.get(dst_model_id)

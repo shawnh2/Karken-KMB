@@ -41,7 +41,7 @@ class ArgsSuperModel(QStandardItemModel):
 
     def _get_custom_args(self, count):
         name = ArgNameItem('var',
-                           'The name of this variable.',
+                           'The variable name of this node.',
                            'var_name')
         init_value = self.node_name.lower()
         value = ArgEditItem(init_value if count == 1
@@ -259,18 +259,28 @@ class ArgsEditableModel(ArgsSuperModel):
     def extract_args(self,
                      get_changed=False,
                      get_referenced=False,
-                     get_pined=False):
+                     get_pined=False,
+                     get_datatype=False):
         # extract all the args from model and
         # wrap all of them in OrderDict then return.
         arg_dict = OrderedDict()
-        # get all the args by conditions in signature.
+        # get all the args by conditions.
         for idx, arg_name, arg_value in self.items():
+            # only get changed.
             if arg_value.is_changed and get_changed:
-                arg_dict[arg_name.text()] = arg_value.value
+                arg_dict[arg_name.text()] = (arg_value.value,
+                                             arg_value.dtype)\
+                    if get_datatype else arg_value.value
+            # only get referenced.
             elif arg_value.is_referenced and get_referenced:
-                arg_dict[arg_name.text()] = arg_value.ref_to
+                arg_dict[arg_name.text()] = (arg_value.ref_to,
+                                             arg_value.dtype)\
+                    if get_datatype else arg_value.ref_to
+            # only get pined.
             elif arg_value.is_pined and get_pined:
-                arg_dict[arg_name.text()] = arg_value.value
+                arg_dict[arg_name.text()] = (arg_value.value,
+                                             arg_value.dtype)\
+                    if get_datatype else arg_value.value
             # else ...
         return arg_dict
 

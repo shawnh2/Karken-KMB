@@ -89,6 +89,8 @@ def create_ucp():
 
 def _pin_args_split(pin_args: str, equation_split=True):
     """ The generator of splitting pin args. """
+    if not pin_args:
+        return [None]
     for arg in pin_args.split(';'):
         yield arg.split('=') if equation_split else arg
 
@@ -100,6 +102,8 @@ def create_ucp_tip(pin):
     tip_subs = "src: [<i>{}</i>]<br>" \
                "args:<br>".format(org_name)
     tip_body = "<br>".join(["{} = <i>{}</i>".format(*arg)
+                            if arg is not None
+                            else "<i>None<i>"
                             for arg in _pin_args_split(pin_args)])
     return tip_head + tip_subs + tip_body
 

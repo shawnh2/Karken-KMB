@@ -47,8 +47,14 @@ class KMBNodeScene(Serializable):
             # 4. check the same edge in previous edges.
             for e in self.edges.values():
                 if (
-                        e.start_item == edge.start_item and
-                        e.end_item is edge.end_item
+                        (
+                            e.start_item == edge.start_item and
+                            e.end_item == edge.end_item
+                        ) or
+                        (
+                            e.start_item == edge.end_item and
+                            e.end_item == edge.start_item
+                        )
                 ):
                     return -1
 
@@ -57,6 +63,14 @@ class KMBNodeScene(Serializable):
             # Conditions:
             # 1. Ref's output must be <Layers> node,
             #    input must be the Referenced type.
+            #    Except the nodes which can take layer
+            #    as its arg. For example,
+            #    <Layer> TimeDistributed & Bidirectional.
+            if (
+                    edge.start_item.gr_type == "Layers" and
+                    edge.end_item.gr_name in
+                    ("TimeDistributed", "Bidirectional")):
+                return 1
             if (
                     edge.start_item.gr_type == "Layers" or
                     edge.end_item.gr_type != "Layers"
@@ -125,13 +139,19 @@ class KMBNodeScene(Serializable):
         # fill with node's <input> and <output> tags.
         nodes = {}
         for node in self.nodes.values():
-            sn = node.serialize()
-            nodes[sn["id"]] = sn
+            ns = node.serialize()
+            nodes[ns["id"]] = ns
         # organize edge's relationship here.
+        # only for <layer> node.
         for edge in self.edges.values():
             edge_type, edge_from, edge_to = edge.serialize()
-            nodes[edge_from]['output'].append(edge_to)
-            nodes[edge_to]['input'].append(edge_from)
+            if edge_type == EDGE_DIRECT:
+                if (
+                        nodes[edge_from]['tag'] == 'layer' or
+                        nodes[edge_to]['tag'] == 'layer'
+                ):
+                    nodes[edge_from]['output'].append(edge_to)
+                    nodes[edge_to]['input'].append(edge_from)
         return nodes
 
     def deserialize(self):

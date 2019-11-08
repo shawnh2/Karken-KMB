@@ -16,14 +16,17 @@ class KMBArgsMenu(Serializable):
         return self.panel.fetch_node(key)
 
     def serialize(self):
-        # get <args> element in <layer>
+        # get <args> element for node.
         args_dict = OrderedDict()
-        vars_name_dict = {}
-        for id_, model in self.panel.edit_model.items():
-            args_dict[id_] = model.extract_args(get_changed=True,
-                                                get_referenced=True)
-            vars_name_dict[id_] = model.var_name
-        return args_dict, vars_name_dict
+        var_names_dict = {}
+        for node_id, model in self.panel.edit_model.items():
+            args_dict[node_id] = model.extract_args(
+                get_changed=True,
+                get_referenced=True,
+                get_datatype=True
+            )
+            var_names_dict[node_id] = model.var_name
+        return args_dict, var_names_dict
 
     def deserialize(self):
         pass

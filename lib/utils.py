@@ -51,6 +51,21 @@ def type_color_map(datatype: str) -> tuple:
         return color['DTC_unknown'], 'Unknown'
 
 
+def dtype_map(dtype: str):
+    """ Map raw dtype to dst dtype. """
+    dtype_dict = {
+        'String': 'str',
+        'Reference': 'id',
+        'Number': 'num',
+        'Sequence': 'seq',
+        'Boolean': 'bool',
+        'Mutable': 'id',
+        'Num_Seq': 'num',  #
+        'Unknown': None
+    }
+    return dtype_dict.get(dtype)
+
+
 def debug(*msg):
     """
     If it's under debug mode, then print debug msg.

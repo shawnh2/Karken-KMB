@@ -166,7 +166,7 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
                                    f'   - {item.belong_to}')
                            for item in items.values()]
                 actions_list.append(sub_header + actions)
-        # only Units cam pin.
+        # only Units can be pined.
         if self._arg_model.node_type == 'Units':
             pin = self._make_a_pin_item()
             actions_list.append(pin)
@@ -266,13 +266,22 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
             """
             if arg_name.__contains__(support_type[:-2]):
                 return True
+            if arg_name == 'layer':
+                return True
             return False
 
         arg_name, idx = args
         support_type = self._ref_item.gr_sort.lower()
         # if ref src is Units, then only few arg item can add ref.
+        # or get the layer node that can accept other layer as its arg.
         # so here do some simple check.
-        if self._ref_item.gr_type == 'Units':
+        if (
+                self._ref_item.gr_type == 'Units' or
+                (
+                    self.name in ("TimeDistributed", "Bidirectional") and
+                    self._ref_item.gr_type == 'Layers'
+                )
+        ):
             if not action_units_type_check():
                 action.setDisabled(True)
         # signal field:

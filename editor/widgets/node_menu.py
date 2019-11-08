@@ -122,7 +122,6 @@ class KMBNodesMenu(QTabWidget):
     def pin_box_clicked_handler(self):
         clicked_pin = self.sender()
         pin = clicked_pin.objectName().split('-')
-        print(pin)
         self.CLICKED_PIN_BUTTON_ITEM.emit(*pin)
 
     def refresh_clicked_handler(self):

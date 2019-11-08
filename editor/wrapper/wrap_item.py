@@ -35,16 +35,59 @@ class KMBNodeItem(Serializable):
             edge.update_positions()
 
     def serialize(self):
-        return tagger(
-            tag='layer',
-            id=str(id(self.gr_node)),
-            class_=self.gr_name,
-            mode='IO',
-            input=[],
-            output=[],
-            var=None,  # None: assign it later
-            args=None
-        )
+        # common tag here:
+        node_id = self.gr_node.id_str
+
+        # None value key will assign later.
+        if self.gr_name == 'PlaceHolder':
+            # tag for PlaceHolder:
+            tag = tagger(
+                tag='ph',
+                id=node_id,
+                var=None
+            )
+        elif self.gr_name == 'Model':
+            # tag for Model:
+            tag = tagger(
+                tag='model',
+                id=node_id,
+                var=None,
+                class_=None,
+                args=None
+            )
+        elif self.gr_type == 'Units':
+            # tag for Units:
+            tag = tagger(
+                tag='unit',
+                id=node_id,
+                var=None,
+                class_=self.gr_name,
+                args=None,
+                # # #
+                type=self.gr_sort.lower()
+            )
+        else:
+            # tag for Layers:
+            tag = tagger(
+                tag='layer',
+                id=node_id,
+                var=None,
+                class_=self.gr_name,
+                args=None,
+                # # #
+                # [mode] can be 'IO', 'CA' or 'AC', which stands for:
+                # Input/Output, Callable and Acceptable.
+                # The node usually use direct edge to represent IO relation,
+                # so in that case, the [mode] will be 'IO'.
+                # However, some layers are able to accept others as their args,
+                # under this scenario, the one that accept one layer as its arg
+                # will be 'AC', those which are accepted by 'AC' will be 'CA' anyway.
+                mode='IO' if self.gr_name not in ('TimeDistributed', 'Bidirectional') else 'AC',
+                # the 'CA' will be assigned later.
+                input=[],
+                output=[]
+            )
+        return tag
 
     def deserialize(self):
         pass
