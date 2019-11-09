@@ -51,16 +51,20 @@ def type_color_map(datatype: str) -> tuple:
         return color['DTC_unknown'], 'Unknown'
 
 
-def dtype_map(dtype: str):
-    """ Map raw dtype to dst dtype. """
+def type_tag_map(dtype: str):
+    """
+     Mapping datatype to tag needs.
+
+     :param dtype: datatype
+     :return: A dtype for tag.
+     """
     dtype_dict = {
         'String': 'str',
         'Reference': 'id',
         'Number': 'num',
         'Sequence': 'seq',
         'Boolean': 'bool',
-        'Mutable': 'id',
-        'Num_Seq': 'num',  #
+        'Num_Seq': 'num',
         'Unknown': None
     }
     return dtype_dict.get(dtype)

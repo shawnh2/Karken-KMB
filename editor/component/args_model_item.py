@@ -64,19 +64,20 @@ class ArgEditItem(QStandardItem):
 
         self.is_changed = False
         self.is_referenced = False
-        self.is_pined = True if is_pined is not None else False
+        self.is_pined = False if is_pined is None else True
         # color for plain, changed & referenced.
         self.pln_color = QColor(color['ARG_NORMAL'])
         self.chg_color = QColor(color['ARG_CHANGED'])
         self.ref_color = QColor(color['ARG_REFED'])
+        self.ipt_color = QColor(color['DOT_IO_I'])
+        self.opt_color = QColor(color['DOT_IO_O'])
 
-        # specially, Mutable dtype cannot be edited.
-        # only edge can affect this value.
-        if self.dtype == 'Mutable':
-            self.setEnabled(False)
+        if belong_to == 'inputs':
+            self.setBackground(self.ipt_color)
+        elif belong_to == 'outputs':
+            self.setBackground(self.opt_color)
         self.setEditable(True)
-        self.setToolTip(self.dtype if self.dtype != 'Mutable'
-                        else self.dtype + ' (protected) ')
+        self.setToolTip(self.dtype)
 
     def __repr__(self):
         return f"<ArgEditItem ARG:{self.belong_to} at {str(id(self))[-4:]}>"
@@ -107,7 +108,7 @@ class ArgEditItem(QStandardItem):
         self.setEditable(False)
 
     def get_ref_to(self):
-        return str(id(self._ref_to))
+        return self._ref_to_node_id
 
     def del_ref_to(self):
         # be called while deleting ref src node.

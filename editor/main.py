@@ -3,6 +3,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 
 from editor.widgets.node_editor import MainNodeEditor
+from parser.saver import Saver
 from cfg import icon, tips
 
 
@@ -163,4 +164,6 @@ class KMBMainWindow(QMainWindow):
         self.status_mouse_pos.setText(pos)
 
     def save(self):
-        self.node_editor.serialize()
+        serialized = self.node_editor.serialize()
+        save = Saver(serialized)
+        save.save_file()

@@ -339,6 +339,7 @@ class KMBNodeGraphicView(QGraphicsView):
                                     count,
                                     str(self.current_node_pin_args))
         self.status_bar_msg(f'Add: {self.current_node_item_name} node.')
+        self.drop_receive_pin()
         node.set_pos(x, y)
 
     def set_selected_node_item(self, item):
@@ -455,6 +456,11 @@ class KMBNodeGraphicView(QGraphicsView):
                 debug("[dropped] triggered no item in right menu.")
 
     # ------------------UTILS--------------------
+
+    def drop_receive_pin(self):
+        """ Drop all the received pin value after using. """
+        self.current_node_pin_id = None
+        self.current_node_pin_args = None
 
     def get_item_at_click(self, event):
         """ Return the object that clicked on. """

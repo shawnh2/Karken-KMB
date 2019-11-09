@@ -4,7 +4,7 @@ from PyQt5.QtGui import QStandardItemModel
 
 from editor.component.args_model_item import ArgNameItem, ArgTypeItem, ArgEditItem
 from editor.component.semaphores import ReferenceBySemaphore, ModelIOSemaphore
-from lib import pin_args_dict
+from lib import pin_args_dict, type_tag_map
 
 
 class ArgsSuperModel(QStandardItemModel):
@@ -259,6 +259,7 @@ class ArgsEditableModel(ArgsSuperModel):
     def extract_args(self,
                      get_changed=False,
                      get_referenced=False,
+                     get_io=False,
                      get_pined=False,
                      get_datatype=False):
         # extract all the args from model and
@@ -266,22 +267,26 @@ class ArgsEditableModel(ArgsSuperModel):
         arg_dict = OrderedDict()
         # get all the args by conditions.
         for idx, arg_name, arg_value in self.items():
+            dtype = type_tag_map(arg_value.dtype)
             # only get changed.
             if arg_value.is_changed and get_changed:
-                arg_dict[arg_name.text()] = (arg_value.value,
-                                             arg_value.dtype)\
+                arg_dict[arg_name.text()] = (arg_value.value, dtype)\
                     if get_datatype else arg_value.value
             # only get referenced.
             elif arg_value.is_referenced and get_referenced:
-                arg_dict[arg_name.text()] = (arg_value.ref_to,
-                                             arg_value.dtype)\
+                arg_dict[arg_name.text()] = (arg_value.ref_to, dtype)\
                     if get_datatype else arg_value.ref_to
             # only get pined.
             elif arg_value.is_pined and get_pined:
-                arg_dict[arg_name.text()] = (arg_value.value,
-                                             arg_value.dtype)\
+                arg_dict[arg_name.text()] = (arg_value.value, dtype)\
                     if get_datatype else arg_value.value
             # else ...
+        if self.node_name == 'Model' and get_io:
+            inputs, outputs = self.io
+            arg_dict['inputs'] = (list(inputs.keys()), 'id')\
+                if get_datatype else list(inputs.keys())
+            arg_dict['outputs'] = (list(outputs.keys()), 'id')\
+                if get_datatype else list(outputs.keys())
         return arg_dict
 
     def extract_pin(self):

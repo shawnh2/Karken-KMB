@@ -13,8 +13,8 @@ class KMBNodeScene(Serializable):
         self.nodes = {}  # saving wrapper nodes
         self.nodes_counter = Counter()  # count the nodes
 
-        self.scene_width = 16000
-        self.scene_height = 16000
+        self.scene_width = 10000
+        self.scene_height = 10000
         self.graphic_scene = KMBNodeGraphicScene(self)
         self.graphic_scene.set_graphic_scene(self.scene_width,
                                              self.scene_height)
@@ -25,6 +25,7 @@ class KMBNodeScene(Serializable):
 
     def check_edge(self, edge, edge_type):
         """ Check edge valid.
+
         :return -1 (Invalid), 0 (Valid but not ignore), 1 (Valid).
         """
         if edge_type == EDGE_DIRECT:
@@ -145,13 +146,17 @@ class KMBNodeScene(Serializable):
         # only for <layer> node.
         for edge in self.edges.values():
             edge_type, edge_from, edge_to = edge.serialize()
-            if edge_type == EDGE_DIRECT:
-                if (
-                        nodes[edge_from]['tag'] == 'layer' or
-                        nodes[edge_to]['tag'] == 'layer'
-                ):
+            if edge_type != EDGE_DIRECT:
+                continue
+            # execute only for direct edge.
+            from_tag = nodes[edge_from]['tag']
+            to_tag = nodes[edge_to]['tag']
+            if from_tag == 'layer':
+                if to_tag == 'layer':
                     nodes[edge_from]['output'].append(edge_to)
                     nodes[edge_to]['input'].append(edge_from)
+                elif to_tag == 'model':
+                    nodes[edge_from]['output'].append(edge_to)
         return nodes
 
     def deserialize(self):

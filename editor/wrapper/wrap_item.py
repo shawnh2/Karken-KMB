@@ -52,7 +52,7 @@ class KMBNodeItem(Serializable):
                 tag='model',
                 id=node_id,
                 var=None,
-                class_=None,
+                class_=self.gr_name,
                 args=None
             )
         elif self.gr_type == 'Units':

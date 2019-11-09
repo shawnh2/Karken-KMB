@@ -114,26 +114,33 @@ class MainNodeEditor(QWidget):
 
     def send_args_to_node(self, dst_node_id: str):
         fetched_dst_model = self.args_menu.fetch(dst_node_id)
-        # get the node by id (a very unsafe way)
+        # get the node by id (a very unsafe way).
         dst_gr_node = ctypes.cast(int(dst_node_id), ctypes.py_object).value
         # pass the args to node,
         # now is able to show them on right menu.
         dst_gr_node.feed_args(fetched_dst_model)
 
     def serialize(self):
-        # organize the nodes here
-        # fill with node's <var> and <args> tag
+        # organize the nodes here,
         nodes_dict = self.nodes_scene.serialize()
         args_dict, vars_dict = self.args_menu.serialize()
-        for node_id in nodes_dict.keys():
-            cur_node = nodes_dict[node_id]
+
+        for node_id, cur_node in nodes_dict.items():
+            # fill with node's <var> and <args> tag.
             cur_node['var'] = vars_dict.get(node_id)
+            cur_args = args_dict.get(node_id)
             if cur_node.__contains__('args'):
-                cur_node['args'] = args_dict.get(node_id)
+                cur_node['args'] = cur_args
+            # config the node's <mode>, especially for 'CA'.
+            if cur_node['tag'] == 'layer' and \
+               cur_node['mode'] == 'AC':
+                ca = cur_args.get('layer')
+                if ca:
+                    nodes_dict[ca[0]]['mode'] = 'CA'
 
         for k, v in nodes_dict.items():
-            print(k, v)
-        #return nodes_dict
+            print(v)
+        return nodes_dict
 
     def deserialize(self):
         pass
