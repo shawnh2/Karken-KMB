@@ -91,8 +91,6 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         # clean all after using.
         self.clean_feed()
 
-    # TODO: add var-name annotations around item.
-
     # ------------OPERATIONS ON RIGHT MENU--------------
 
     def get_context_menu(self):
@@ -266,6 +264,13 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
             """
             if arg_name.__contains__(support_type[:-2]):
                 return True
+            return False
+
+        def action_layer_type_check() -> bool:
+            """
+            TimeDistributed and Bidirectional are able to
+            have ref edges, but only available for arg `layer`.
+            """
             if arg_name == 'layer':
                 return True
             return False
@@ -275,14 +280,12 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         # if ref src is Units, then only few arg item can add ref.
         # or get the layer node that can accept other layer as its arg.
         # so here do some simple check.
-        if (
-                self._ref_item.gr_type == 'Units' or
-                (
-                    self.name in ("TimeDistributed", "Bidirectional") and
-                    self._ref_item.gr_type == 'Layers'
-                )
-        ):
+        if self._ref_item.gr_type == 'Units':
             if not action_units_type_check():
+                action.setDisabled(True)
+        elif self.name in ("TimeDistributed", "Bidirectional") and\
+             self._ref_item.gr_type == 'Layers':
+            if not action_layer_type_check():
                 action.setDisabled(True)
         # signal field:
         # TYPE - DST_ID - SRC-ID - ARG_IDX

@@ -21,6 +21,7 @@ class KMBGraphicEdge(QGraphicsPathItem):
         self._color_io = QColor(color['EDGE_IO'])
         self._color_ref = QColor(color['EDGE_REF'])
         self._color_selected = QColor(color['EDGE_SEL'])
+        self._color_hover = QColor(color['EDGE_HOVER'])
 
         self._pen_io = QPen(self._color_io)
         self._pen_io.setWidthF(EDGE_WIDTH)
@@ -42,6 +43,7 @@ class KMBGraphicEdge(QGraphicsPathItem):
         self._mark_brush.setStyle(Qt.SolidPattern)
 
         self.setFlag(QGraphicsItem.ItemIsSelectable)
+        self.setAcceptHoverEvents(True)
         self.setZValue(-1)
 
     def set_src(self, x, y):
@@ -65,7 +67,7 @@ class KMBGraphicEdge(QGraphicsPathItem):
     def shape(self):
         return self.calc_path()
 
-    def paint(self, painter, QStyleOptionGraphicsItem, widget=None):
+    def paint(self, painter, graphics_item, widget=None):
         self.setPath(self.calc_path())
 
         path = self.path()
@@ -94,3 +96,13 @@ class KMBGraphicEdge(QGraphicsPathItem):
             else:
                 painter.setPen(self._pen_ref if not self.isSelected() else self._pen_selected)
                 painter.drawPath(path)
+
+    def hoverEnterEvent(self, event):
+        self._pen_io.setColor(self._color_hover)
+        self._pen_ref.setColor(self._color_hover)
+        self.update()
+
+    def hoverLeaveEvent(self, event):
+        self._pen_io.setColor(self._color_io)
+        self._pen_ref.setColor(self._color_ref)
+        self.update()

@@ -18,6 +18,7 @@ SCENE_DARK: '#292929'
 EDGE_IO: '#000000'
 EDGE_REF: '#000000'
 EDGE_SEL: '#FF0033'
+EDGE_HOVER: '#a5dff9'
 # for the dot on edge
 # DOT_NORMAL: 'std green'
 DOT_IO_I: '#00B9F1'
