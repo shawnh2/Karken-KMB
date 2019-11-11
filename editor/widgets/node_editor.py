@@ -7,6 +7,7 @@ from editor.widgets.node_menu import KMBNodesMenu
 from editor.graphic.node_view import KMBNodeGraphicView
 from editor.wrapper.wrap_scene import KMBNodeScene
 from editor.wrapper.wrap_args import KMBArgsMenu
+from cfg import DEBUG
 
 
 class MainNodeEditor(QWidget):
@@ -138,8 +139,9 @@ class MainNodeEditor(QWidget):
                 if ca:
                     nodes_dict[ca[0]]['mode'] = 'CA'
 
-        for k, v in nodes_dict.items():
-            print(v)
+        if DEBUG:
+            for k, v in nodes_dict.items():
+                print(v)
         return nodes_dict
 
     def deserialize(self):

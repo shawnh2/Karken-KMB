@@ -519,9 +519,9 @@ class PyParser:
     def ph_type_support(self, id_, collector: list):
         """ Support for <ph>(placeholder) in type handler. """
 
-        # This <ph> is not same ph in this parser, it's a tag.
+        # This <ph> is not same ph in this test_p, it's a tag.
         _, value = self.get_tag_by_id(id_, value=True)
-        # The tag finally goes into parser,
+        # The tag finally goes into test_p,
         # it will be parse to the attr of class.
         self.phs_tag.append(value)
         collector.append(f'self.{value}')

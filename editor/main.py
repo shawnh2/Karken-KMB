@@ -3,7 +3,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 
 from editor.widgets.node_editor import MainNodeEditor
-from parser.saver import Saver
+from lib.parser import Saver
 from cfg import icon, tips
 
 
@@ -170,7 +170,7 @@ class KMBMainWindow(QMainWindow):
             file_dialog = QFileDialog()
             file = file_dialog.getSaveFileName(self,
                                                "Saving Module",
-                                               "/", "Module (*.kmbm)")
+                                               "/", "KMB Module (*.kmbm)")
             if file[0]:  # confirm
                 self.save_path = file[0]
             else:  # cancel

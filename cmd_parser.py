@@ -2,7 +2,7 @@
 import os
 import argparse
 
-from parser import PyParser, PyHandler
+from lib.parser import PyParser, PyHandler
 
 
 SUPPORT_TYPE = ('.py', )
