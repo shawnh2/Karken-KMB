@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import (QGraphicsItem, QGraphicsPixmapItem,
                              QMenu, QAction, QInputDialog)
 from PyQt5.QtGui import QPixmap, QCursor, QIcon
 
+from editor.graphic.node_text import KMBNodeTextItem
 from lib import debug, write_custom_pin, update_custom_pin
 from cfg import NODE_ICONx85_PATH, icon
 
@@ -16,6 +17,7 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         self.main_editor = main_editor
         self.pix = QPixmap(NODE_ICONx85_PATH.format(self.sort, self.name))
         self.current_pos = None
+        self.text = KMBNodeTextItem(self.name, self)
 
         self.width = 85
         self.height = 85
@@ -37,12 +39,13 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         self.setPixmap(self.pix)
         self.setFlag(QGraphicsItem.ItemIsSelectable)
         self.setFlag(QGraphicsItem.ItemIsMovable)
+        self.setAcceptHoverEvents(True)
 
     def __str__(self):
-        return f"<NodeGrItem {hex(id(self))}>"
+        return f"<NodeGrItem {id(self)}>"
 
     def __repr__(self):
-        return f"<NodeGrItem {hex(id(self))}>"
+        return f"<NodeGrItem {id(self)}>"
 
     def set_pos(self, x, y):
         dis = self.width / 2
@@ -75,6 +78,12 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
 
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
+
+    def hoverEnterEvent(self, event):
+        self.text.appear()
+
+    def hoverLeaveEvent(self, event):
+        self.text.disappear()
 
     def contextMenuEvent(self, event):
         # add header title at right menu.

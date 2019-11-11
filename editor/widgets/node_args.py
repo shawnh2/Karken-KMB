@@ -82,14 +82,12 @@ class KMBNodesArgsMenu(QTableView):
             # if the value is out of the combo box,
             # which means this a ref value, and add it,
             # then set to current value again.
-            if cur_value != '' and not\
-               args_list.__contains__(cur_value):
-                # make a copy of args_list, so won't mess
-                # up with those original values.
-                copy_args_list = args_list.copy()
-                copy_args_list.append(cur_value)
-                combo = ArgComboBox(copy_args_list, arg_init, at=row)
-                combo.set_ref_icon()
+            if item.is_referenced and item:
+                copy_args = args_list.copy()
+                copy_args.append(cur_value)
+                combo = ArgComboBox(copy_args, arg_init, at=row)
+                # lock after getting ref item.
+                combo.setEnabled(False)
             else:
                 combo = ArgComboBox(args_list, arg_init, at=row)
             combo.setCurrentText(cur_value)

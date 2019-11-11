@@ -97,7 +97,8 @@ class ArgEditItem(QStandardItem):
     def set_ref_to(self, ref_to):
         (self._ref_to_node_id,
          self._ref_to) = ref_to
-        self.value = self._ref_to.value
+        # ref value has prefix '@'
+        self.value = '@' + self._ref_to.value
         # set referenced bg color,
         # undo all is_changed sign here.
         self.is_changed = False
@@ -155,15 +156,21 @@ class ArgEditItem(QStandardItem):
 
 class ArgComboBox(QComboBox):
 
-    def __init__(self, box_args: list, default: str, at: int, parent=None):
+    def __init__(self,
+                 box_args: list,
+                 default: str,
+                 at: int,
+                 parent=None):
         super().__init__(parent)
         self.at = at  # index at model
-        self.n = len(box_args)  # length of box args
+        self.box_args = box_args
+        self.n = len(self.box_args)
 
-        self.addItems(box_args)
+        self.addItems(self.box_args)
         self.setCurrentText(default)
-        init_idx = box_args.index(default)
-        for idx in range(len(box_args)):
+        # set icon for all items.
+        init_idx = self.box_args.index(default)
+        for idx in range(len(self.box_args)):
             if init_idx == idx:
                 self.setItemIcon(idx, QIcon(icon["COMBO"]))
             else:
@@ -172,8 +179,10 @@ class ArgComboBox(QComboBox):
         self.setInsertPolicy(QComboBox.InsertAtBottom)
         self.setView(QListView())  # set style later.
 
-    def set_ref_icon(self):
-        # set icon for ref item.
+    def setEnabled(self, state: bool):
+        # only ref item will enter this method.
+        super().setEnabled(state)
+        # now can set last item (ref item) icon.
         self.setItemIcon(self.n - 1, QIcon(icon['COMBO_REF']))
 
 

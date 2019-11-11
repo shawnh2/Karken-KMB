@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QMainWindow, QLabel, QAction
+from PyQt5.QtWidgets import QMainWindow, QLabel, QAction, QFileDialog
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 
@@ -11,6 +11,7 @@ class KMBMainWindow(QMainWindow):
 
     def __init__(self, screen_size):
         super().__init__()
+        self.save_path = None
 
         # init widget
         self.node_editor = MainNodeEditor(self)
@@ -160,10 +161,23 @@ class KMBMainWindow(QMainWindow):
     # --------------------------------------
 
     def update_xy_pos(self, x: int, y: int):
-        pos = f'POS:(x={x: 5}, y={y: 5})'
+        pos = 'POS (x={:>5}, y={:>5})'.format(x, y)
         self.status_mouse_pos.setText(pos)
 
     def save(self):
+        # saving for the first time.
+        if self.save_path is None:
+            file_dialog = QFileDialog()
+            file = file_dialog.getSaveFileName(self,
+                                               "Saving Module",
+                                               "/", "Module (*.kmbm)")
+            if file[0]:  # confirm
+                self.save_path = file[0]
+            else:  # cancel
+                return
+        # continue saving.
+        else:
+            pass
         serialized = self.node_editor.serialize()
         save = Saver(serialized)
-        save.save_file()
+        save.save_file(dst=self.save_path)

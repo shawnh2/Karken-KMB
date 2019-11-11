@@ -2,6 +2,7 @@
 
 from PyQt5.QtWidgets import QGraphicsTextItem
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont
 
 
 class KMBNodeTextItem(QGraphicsTextItem):
@@ -10,16 +11,20 @@ class KMBNodeTextItem(QGraphicsTextItem):
         super().__init__(text, gr_parent)
         # width and height of gr_item is 85
         # show the text item under node.
-        self.x = 24 - len(text) if len(text) < 15 else 0
+        self.x = -4
         self.y = 80
+        self._font = QFont()
+        self._font.setPointSize(11)
+
+        # initial state is hidden
+        self.setVisible(False)
         self.setPos(self.x, self.y)
+        self.setFont(self._font)
         self.setDefaultTextColor(Qt.white)
-        self.setFlag(QGraphicsTextItem.ItemIsMovable,
-                     QGraphicsTextItem.ItemIsSelectable)
         self.setAcceptHoverEvents(True)
 
-    def hoverEnterEvent(self, event):
-        self.setDefaultTextColor(Qt.darkGray)
+    def appear(self):
+        self.setVisible(True)
 
-    def hoverLeaveEvent(self, event):
-        self.setDefaultTextColor(Qt.white)
+    def disappear(self):
+        self.setVisible(False)

@@ -3,6 +3,7 @@ from PyQt5.QtCore import Qt, QEvent, pyqtSignal
 from PyQt5.QtGui import QPainter, QMouseEvent, QCursor, QPixmap
 
 from editor.graphic.node_item import KMBNodeGraphicItem
+from editor.graphic.node_text import KMBNodeTextItem
 from editor.graphic.node_edge import KMBGraphicEdge
 from editor.wrapper.wrap_item import KMBNodeItem
 from editor.wrapper.warp_edge import KMBEdge
@@ -257,7 +258,7 @@ class KMBNodeGraphicView(QGraphicsView):
             self.del_selected_node_item(item)
 
         elif self.mode == NODE_CONNECT:
-            if item is not None:
+            if item is not None and isinstance(item, KMBNodeGraphicItem):
                 self.mode = EDGE_DRAG
                 self.edge_drag_start(item)
 

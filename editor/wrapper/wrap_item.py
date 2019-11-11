@@ -1,5 +1,4 @@
 from editor.graphic.node_item import KMBNodeGraphicItem
-from editor.graphic.node_text import KMBNodeTextItem
 from editor.wrapper.serializable import Serializable
 from lib import tagger
 
@@ -23,7 +22,6 @@ class KMBNodeItem(Serializable):
                                           self.gr_name,
                                           self.gr_sort,
                                           self.parent)
-        self.gr_text = KMBNodeTextItem(node_name, self.gr_node)
         self.gr_scene.addItem(self.gr_node)
 
     def __repr__(self):

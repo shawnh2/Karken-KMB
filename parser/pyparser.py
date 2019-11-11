@@ -46,6 +46,13 @@ TAG_LAYER_SRC = 'layers'
 TAG_MODEL_SRC = 'models'
 
 IO_SPLIT = ';'
+DEBUG = True
+
+
+def debug(*msg):
+    """ Debug mode. """
+    if DEBUG:
+        print(*msg)
 
 
 class PlaceHolder(object):
@@ -189,6 +196,8 @@ class PyLines:
             line += f'{cls}({args})'
         if call:
             line += f'({call})'
+
+        debug('[Line] +', line)
         self.lines.append(line)
 
     def get(self):
@@ -199,8 +208,8 @@ class PyLines:
 class PyParser:
     """ Parse XML file to PY lines. """
 
-    def __init__(self, kml_path):
-        self.content = etree.parse(kml_path)
+    def __init__(self, kmb_path):
+        self.content = etree.parse(kmb_path)
         self.phs_hub = PlaceHolderHub()
         # This is the tag <ph>, not same as the one above.
         self.phs_tag = []
@@ -211,11 +220,12 @@ class PyParser:
         # May have multi-entrance.
         for cur_item in self.get_elm_by_attr(ATTR_START,
                                              ATTR_START_VALUE):
+            debug(f'[Entrance]')
             self.cur_item = cur_item
             self.line_handler()
 
     def commit(self):
-        return self.title, self.lines.get(),\
+        return self.title.replace(' ', '_'), self.lines.get(),\
                self.phs_tag, self.src_dir, self.rtn_mod
 
     # ------------------------------------
@@ -415,11 +425,19 @@ class PyParser:
         @:param argv: could be an arg dict or element.
 
         """
+        debug('[Parsing <args>]', type(argv))
+
         if isinstance(argv, dict):
             ad = argv
+            debug('~~~ dict contains', ad)
         else:
             ad = self.get_args_by_elm(argv)
+            debug('~~~ after parsing', ad)
 
+        # null args element got nothing but blank space.
+        if ad == '':
+            return ad
+        # for those element which has args.
         lines = []
         for k, vs in ad.items():
             line = self.type_handler(vs)
@@ -484,6 +502,7 @@ class PyParser:
         arg = self.get_args_by_elm(elm)
         src = self.src_handler(elm)
 
+        debug('>>> GMC', var, cls, arg, src)
         if arg != '':
             arg = self.args_handler(arg)
         if var is None:
@@ -514,8 +533,8 @@ class PyParser:
 
         elm = self.get_elm_by_attr(ATTR_ID, id_)[0]
         mode = self.get_node_value_in_elm(elm, TAG_MODE)
-        # Only IO node will be added in lines.
-        if mode == TAG_MODE_VALUE_IO:
+        # Only IO, AC node will be added in lines.
+        if mode in (TAG_MODE_VALUE_IO, TAG_MODE_VALUE_AC):
             var_nm = self.get_node_value_in_elm(elm, TAG_VNM)
             collector.append(f'{var_nm}')
         # For CA node just grab class name and args.
@@ -557,8 +576,8 @@ class PyHandler:
         self.add(
             f"# -*- coding:{self.encoding} -*-", "# ",
             f"# {self.title.lower()}.py", "# ",
-            f"# Model {self.title} is built with Karken:",
-            '# A Keras Model Builder Tool. (aka. KMB)',
+            f"# Model {self.title} is built with Karken:KMB",
+            '# A Keras Model Builder Tool.',
             "# "
         )
         self.brk()
@@ -618,7 +637,7 @@ class PyHandler:
             py.write(cnt)
 
 
-if __name__ == '__main__':
-    parse = PyParser("test1.xml")
+"""if __name__ == '__main__':
+    parse = PyParser("test_save.xml")
     ctt = PyHandler(parse)
-    ctt.export('test1.py')
+    ctt.export('test_sss.py')"""

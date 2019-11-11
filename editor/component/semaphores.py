@@ -55,7 +55,10 @@ class ReferenceBySemaphore:
                 for ref in ref_dict.values():
                     if ref.tag == 0:
                         ref.setBackground(self.ref_color)
-                    ref.value = value
+                    if value.startswith('@'):
+                        pass  # avoid trapping in recursion.
+                    else:
+                        ref.value = '@' + value
                     debug(f'[UPDATE] {ref} => {value}')
             # set back the flag.
             self.update_flag = False
