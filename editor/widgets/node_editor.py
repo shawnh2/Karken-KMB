@@ -83,6 +83,14 @@ class MainNodeEditor(QWidget):
         self.nodes_view.POP_UP_RIGHT_MENU.connect(
             self.send_args_to_node
         )
+        # update x,y pos label.
+        self.nodes_view.SCENE_POS_CHANGED.connect(
+            self.send_pos_change_to_main
+        )
+        # has been modified.
+        self.nodes_view.IS_MODIFIED.connect(
+            self.send_modify_state_to_main
+        )
 
         # +++++++++++++++++++++++++++++++++++
         #            FROM ARG-MENU
@@ -94,6 +102,10 @@ class MainNodeEditor(QWidget):
         # do not pick one item to del.
         self.args_menu.panel.WAS_DONE_PICKING_ONE.connect(
             self.nodes_view.set_chosen_to_del_from_rm
+        )
+        # has been modified.
+        self.args_menu.panel.IS_MODIFIED.connect(
+            self.send_modify_state_to_main
         )
 
         # +++++++++++++++++++++++++++++++++++
@@ -120,6 +132,15 @@ class MainNodeEditor(QWidget):
         # pass the args to node,
         # now is able to show them on right menu.
         dst_gr_node.feed_args(fetched_dst_model)
+
+    def send_pos_change_to_main(self, x, y):
+        # send to main, display the real time xy pos.
+        self.parent().update_xy_pos(x, y)
+
+    def send_modify_state_to_main(self):
+        # modify signals may come from any widget,
+        # but finally go into main editor.
+        self.parent().update_modify_state()
 
     def serialize(self):
         # organize the nodes here,

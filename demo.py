@@ -7,7 +7,6 @@ from PyQt5.QtGui import QPixmap
 from cfg import icon
 from lib import load_stylesheet
 from editor.main import KMBMainWindow
-# from editor.widgets.about import AboutWidget
 
 cgitb.enable(format("text"))
 
@@ -30,9 +29,6 @@ def demo_run():
     stylesheet = load_stylesheet('lib/skin/default.css')
     app.setStyleSheet(stylesheet)
     win.show()
-    # setup about panel.
-    # about = AboutWidget()
-    # win.action_about.triggered.connect(about.show)
     # stay one more second then close.
     splash.finish(win)
     sys.exit(app.exec_())

@@ -51,6 +51,10 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         dis = self.width / 2
         self.setPos(x - dis, y - dis)
 
+    def is_modified(self):
+        # send self modified state.
+        self.main_editor.send_modify_state_to_main()
+
     def feed_args(self, dst_model):
         self._arg_model = dst_model
 
@@ -71,6 +75,7 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
 
     def mouseMoveEvent(self, event):
         super().mouseMoveEvent(event)
+        self.is_modified()
         # update selected node and its edge
         for node in self.scene().scene.nodes.values():
             if node.gr_node.isSelected():

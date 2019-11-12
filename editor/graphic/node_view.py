@@ -1,9 +1,8 @@
-from PyQt5.QtWidgets import QGraphicsView, QApplication
+from PyQt5.QtWidgets import QGraphicsView, QApplication, QMessageBox
 from PyQt5.QtCore import Qt, QEvent, pyqtSignal
 from PyQt5.QtGui import QPainter, QMouseEvent, QCursor, QPixmap
 
 from editor.graphic.node_item import KMBNodeGraphicItem
-from editor.graphic.node_text import KMBNodeTextItem
 from editor.graphic.node_edge import KMBGraphicEdge
 from editor.wrapper.wrap_item import KMBNodeItem
 from editor.wrapper.warp_edge import KMBEdge
@@ -41,6 +40,8 @@ class KMBNodeGraphicView(QGraphicsView):
     # del ref related items if one ref edge got deleted.
     DEL_REF_RELATED_ITEMS = pyqtSignal(str, str)        # referenced src id, dst id
     DEL_IO_EDGE_ITEM = pyqtSignal(str, str)             # io src id, dst id
+    # current project has been modified
+    IS_MODIFIED = pyqtSignal(bool)
 
     # ------------------INIT--------------------
 
@@ -56,9 +57,11 @@ class KMBNodeGraphicView(QGraphicsView):
 
         self.mode = MOUSE_SELECT
         self.edge_type = None
+        # signals from right menu.
         self.has_chosen_from_rm = False
         self.has_chosen_to_del_from_rm = False
 
+        # current dynamic variables.
         self.last_scene_mouse_pos = None
         self.current_node_item_name = None
         self.current_node_item_type = None
@@ -67,6 +70,8 @@ class KMBNodeGraphicView(QGraphicsView):
         # optional
         self.current_node_pin_args = None
         self.current_node_pin_id = None
+        # record group selected items.
+        self.rubber_select = []
 
         self.zoom_in_factor = 1.25
         self.zoom = 10
@@ -81,13 +86,14 @@ class KMBNodeGraphicView(QGraphicsView):
         self.setRenderHints(QPainter.Antialiasing |
                             QPainter.HighQualityAntialiasing |
                             QPainter.TextAntialiasing |
-                            QPainter.SmoothPixmapTransform)
+                            QPainter.SmoothPixmapTransform |
+                            QPainter.LosslessImageRendering)
         self.setViewportUpdateMode(QGraphicsView.FullViewportUpdate)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+        self.setTransformationAnchor(self.AnchorUnderMouse)
         # default drag mode
-        self.setDragMode(QGraphicsView.RubberBandDrag)
+        self.setDragMode(self.RubberBandDrag)
         # custom right menu
         self.setContextMenuPolicy(Qt.DefaultContextMenu)
 
@@ -203,7 +209,6 @@ class KMBNodeGraphicView(QGraphicsView):
         key M: move
         key D: direct
         key C: curve
-        TODO: key DELETE: delete selected items
         """
         if event.key() == Qt.Key_V:
             self.set_select_mode()
@@ -255,7 +260,18 @@ class KMBNodeGraphicView(QGraphicsView):
             self.add_selected_node_item()
 
         elif self.mode == NODE_DELETE:
-            self.del_selected_node_item(item)
+            # delete group
+            if self.rubber_select:
+                msg_box = QMessageBox()
+                msg_box.setText("Are you sure to delete all the selected items?")
+                msg_box.setStandardButtons(QMessageBox.No | QMessageBox.Yes)
+                msg_box.setDefaultButton(QMessageBox.No)
+                res = msg_box.exec()
+                if res == QMessageBox.Yes:
+                    self.del_selected_items()
+            # delete single
+            else:
+                self.del_selected_item(item)
 
         elif self.mode == NODE_CONNECT:
             if item is not None and isinstance(item, KMBNodeGraphicItem):
@@ -297,6 +313,12 @@ class KMBNodeGraphicView(QGraphicsView):
                 self.drag_edge.remove()
                 self.drag_edge = None
 
+        elif self.mode == MOUSE_SELECT:
+            # record the group selected result,
+            # if it's None, then will get a empty list.
+            self.get_items_at_rubber()
+            super().mouseReleaseEvent(event)
+
         else:
             if hasattr(item, "node") or item is None or issubclass(item.__class__, KMBGraphicEdge):
                 if event.modifiers() & Qt.ShiftModifier:
@@ -323,6 +345,7 @@ class KMBNodeGraphicView(QGraphicsView):
 
     def add_selected_node_item(self):
         # add new node
+        self.is_modified()
         x, y = int(self.last_scene_mouse_pos.x()),\
                int(self.last_scene_mouse_pos.y())
         node = KMBNodeItem(self.gr_scene,
@@ -340,7 +363,7 @@ class KMBNodeGraphicView(QGraphicsView):
                                     count,
                                     str(self.current_node_pin_args))
         self.status_bar_msg(f'Add: {self.current_node_item_name} node.')
-        self.drop_receive_pin()
+        self.drop_received_pin()
         node.set_pos(x, y)
 
     def set_selected_node_item(self, item):
@@ -353,13 +376,20 @@ class KMBNodeGraphicView(QGraphicsView):
             # if select no obj, send empty signal to clear arg panel.
             self.SELECTED_NODE_ITEM.emit('null')
 
-    def del_selected_node_item(self, item):
+    def del_selected_item(self, item):
         # del selected node or edge
         if item is not None:
+            self.is_modified()
             if isinstance(item, KMBNodeGraphicItem):
                 self._del_node_item(item)
             elif issubclass(item.__class__, KMBGraphicEdge):
                 self._del_edge_item(item)
+
+    def del_selected_items(self):
+        self.is_modified()
+        # del the selected items
+        for item in self.rubber_select:
+            self.del_selected_item(item)
 
     def _del_node_item(self, node):
         self.SELECTED_DELETE_NODE.emit(node.id_str)
@@ -444,6 +474,8 @@ class KMBNodeGraphicView(QGraphicsView):
             if state == 1:
                 self.gr_scene.scene.remove_edge(new_edge)
             debug("[dropped] triggered no item in right menu.")
+        else:
+            self.is_modified()
 
     def _direct_edge_drag_end(self, event, item, new_edge):
         """ Event while end up dragging direct edge.
@@ -455,10 +487,12 @@ class KMBNodeGraphicView(QGraphicsView):
                 self.gr_scene.removeItem(new_edge.gr_edge)
                 self.gr_scene.scene.remove_edge(new_edge)
                 debug("[dropped] triggered no item in right menu.")
+            else:
+                self.is_modified()
 
     # ------------------UTILS--------------------
 
-    def drop_receive_pin(self):
+    def drop_received_pin(self):
         """ Drop all the received pin value after using. """
         self.current_node_pin_id = None
         self.current_node_pin_args = None
@@ -469,9 +503,19 @@ class KMBNodeGraphicView(QGraphicsView):
         obj = self.itemAt(pos)
         return obj
 
+    def get_items_at_rubber(self):
+        """ Get group select items. """
+        area = self.rubberBandRect()
+        self.rubber_select = self.items(area)
+
     def set_edit_node_cursor(self):
         pix = QPixmap(icon['CROSS']).scaled(30, 30)
         self.setCursor(QCursor(pix))
+
+    def is_modified(self):
+        # if current project has any changes,
+        # including args then will trigger this.
+        self.IS_MODIFIED.emit(True)
 
     def set_chosen_item_from_rm(self, _):
         # if not choose one arg item from menu to ref/io,

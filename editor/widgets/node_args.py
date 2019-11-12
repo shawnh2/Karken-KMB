@@ -11,6 +11,7 @@ class KMBNodesArgsMenu(QTableView):
 
     REST_REF_ITEMS_COUNT = pyqtSignal(int)     # count
     WAS_DONE_PICKING_ONE = pyqtSignal(bool)    # boolean
+    IS_MODIFIED = pyqtSignal(bool)
 
     def __init__(self,
                  menu,
@@ -41,6 +42,9 @@ class KMBNodesArgsMenu(QTableView):
         # set pop up right menu policy
         self.right_menu = QMenu()
         self.setContextMenuPolicy(Qt.DefaultContextMenu)
+
+    def is_modified(self):
+        self.IS_MODIFIED.emit(True)
 
     def set_preview_args(self, node_name):
         id_string, inherit = self.db_link.get_args_id(node_name)
@@ -114,6 +118,7 @@ class KMBNodesArgsMenu(QTableView):
             item.value = checked_value
             if item.check_changed(value):
                 item.has_changed()
+                self.is_modified()
             else:
                 item.undo_change()
         # if this is where var_name got changed,
@@ -121,9 +126,11 @@ class KMBNodesArgsMenu(QTableView):
         self.current_model.rb_semaphore.update(value)
 
     def modify_args(self, value):
+        self.is_modified()
         self.current_model.reassign_value(self.sender().at, value)
 
     def modify_state(self, state):
+        self.is_modified()
         self.current_model.reassign_state(self.sender().at, str(state))
         self.sender().setText(str(state))
 

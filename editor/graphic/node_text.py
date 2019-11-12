@@ -13,6 +13,7 @@ class KMBNodeTextItem(QGraphicsTextItem):
         # show the text item under node.
         self.x = -4
         self.y = 80
+        self.text = text
         self._font = QFont()
         self._font.setPointSize(11)
 
@@ -22,6 +23,9 @@ class KMBNodeTextItem(QGraphicsTextItem):
         self.setFont(self._font)
         self.setDefaultTextColor(Qt.white)
         self.setAcceptHoverEvents(True)
+
+    def __repr__(self):
+        return "<NodeText {}>".format(self.text)
 
     def appear(self):
         self.setVisible(True)

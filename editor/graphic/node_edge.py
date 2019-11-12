@@ -46,6 +46,9 @@ class KMBGraphicEdge(QGraphicsPathItem):
         self.setAcceptHoverEvents(True)
         self.setZValue(-1)
 
+    def __repr__(self):
+        return "<NodeGrEdge {} {}>".format(self.type, id(self))
+
     def set_src(self, x, y):
         self.pos_src = [x, y]
 

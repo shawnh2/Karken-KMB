@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QMainWindow, QLabel, QAction, QFileDialog
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (QMainWindow, QLabel, QAction,
+                             QFileDialog, QMessageBox)
 from PyQt5.QtGui import QIcon
 
 from editor.widgets.node_editor import MainNodeEditor
@@ -11,7 +11,7 @@ class KMBMainWindow(QMainWindow):
 
     def __init__(self, screen_size):
         super().__init__()
-        self.save_path = None
+        self.save_path: str = None
 
         # init widget
         self.node_editor = MainNodeEditor(self)
@@ -44,9 +44,7 @@ class KMBMainWindow(QMainWindow):
 
         # init status bar
         self.create_status_bar()
-
         # init main window
-        self.init_slots()
         self.init_ui(screen_size)
 
     # --------------------------------------
@@ -61,12 +59,6 @@ class KMBMainWindow(QMainWindow):
         self.setMinimumHeight(height)
         self.setMinimumWidth(width)
 
-    def init_slots(self):
-        # update x,y pos label
-        self.node_editor.nodes_view.SCENE_POS_CHANGED.connect(
-            self.update_xy_pos
-        )
-
     def create_status_bar(self):
         self.statusBar().showMessage("Welcome to Karken: KMB!")
         self.statusBar().addPermanentWidget(self.status_mouse_pos)
@@ -74,49 +66,59 @@ class KMBMainWindow(QMainWindow):
     def set_toolbar_tooltip(self):
         # set action tooltips
         self.action_new.setToolTip("Create (Ctrl+N)")
-        self.action_new.setEnabled(False)
         self.action_open.setToolTip("Open (Ctrl+O)")
-        self.action_open.setEnabled(False)
         self.action_save.setToolTip("Save (Ctrl+S)")
         self.action_import.setToolTip("Import (Ctrl+I)")
-        self.action_import.setEnabled(False)
         self.action_export.setToolTip("Export (Ctrl+E)")
-        self.action_export.setEnabled(False)
+
+        self.action_new.setStatusTip(tips['ST_NEW'])
+        self.action_open.setStatusTip(tips['ST_OPEN'])
+        self.action_save.setStatusTip(tips['ST_SAVE'])
+        self.action_import.setStatusTip(tips['ST_IMPORT'])
+        self.action_export.setStatusTip(tips['ST_EXPORT'])
         # ------
         self.action_select.setToolTip("Select (V)")
         self.action_hand.setToolTip("Move (M)")
         self.action_undo.setToolTip("Undo (Ctrl+Z)")
-        self.action_undo.setEnabled(False)
         self.action_redo.setToolTip("Redo (Alt+Z)")
-        self.action_redo.setEnabled(False)
+
+        self.action_select.setStatusTip(tips['ST_SELECT'])
+        self.action_hand.setStatusTip(tips['ST_MOVE'])
+        self.action_undo.setStatusTip(tips['ST_UNDO'])
+        self.action_redo.setStatusTip(tips['ST_REDO'])
         # ------
         self.action_edge_direct.setToolTip("Connect: I/O Direct (D)")
-        self.action_edge_direct.setStatusTip(tips['ST_EDGE_DIRECT'])
         self.action_edge_curve.setToolTip("Connect: Ref Curve (C)")
-        self.action_edge_curve.setStatusTip(tips['ST_EDGE_CURVES'])
         self.action_note.setToolTip("Note (T)")
-        self.action_note.setStatusTip(tips['ST_NOTE'])
-        self.action_note.setEnabled(False)
         self.action_delete.setToolTip("Delete")
+
+        self.action_edge_direct.setStatusTip(tips['ST_EDGE_DIRECT'])
+        self.action_edge_curve.setStatusTip(tips['ST_EDGE_CURVES'])
+        self.action_note.setStatusTip(tips['ST_NOTE'])
         self.action_delete.setStatusTip(tips['ST_DEL'])
         # ------
         self.action_about.setToolTip("About")
+
         self.action_about.setStatusTip(tips['ST_ABOUT'])
-        self.action_about.setEnabled(False)
 
     def set_toolbar_actions(self):
         # file operation
         self.toolbar.addAction(self.action_new)
+        self.action_new.setShortcut('Ctrl+N')
         self.toolbar.addAction(self.action_open)
+        self.action_open.setShortcut('Ctrl+O')
         self.toolbar.addAction(self.action_save)
         self.action_save.setShortcut('Ctrl+S')
         self.toolbar.addAction(self.action_import)
         self.action_import.setShortcut('Ctrl+I')
         self.toolbar.addAction(self.action_export)
+        self.action_export.setShortcut('Ctrl+E')
         self.toolbar.addSeparator()
         # tool operation
         self.toolbar.addAction(self.action_undo)
+        self.action_undo.setShortcut('Ctrl+Z')
         self.toolbar.addAction(self.action_redo)
+        self.action_redo.setShortcut('Alt+Z')
         self.toolbar.addAction(self.action_select)
         self.toolbar.addAction(self.action_hand)
         self.toolbar.addSeparator()
@@ -137,8 +139,14 @@ class KMBMainWindow(QMainWindow):
     def set_toolbar_trigger(self):
         # add triggered function
         # ------
-        self.action_save.triggered.connect(self.save)
+        self.action_new.triggered.connect(self.new_)
+        self.action_open.triggered.connect(self.open_)
+        self.action_save.triggered.connect(self.save_)
+        self.action_import.triggered.connect(self.import_)
+        self.action_export.triggered.connect(self.export_)
         # ------
+        # self.action_undo
+        # self.action_redo
         self.action_select.triggered.connect(
             self.node_editor.nodes_view.set_select_mode
         )
@@ -152,9 +160,11 @@ class KMBMainWindow(QMainWindow):
         self.action_edge_curve.triggered.connect(
             self.node_editor.nodes_view.set_edge_curve_mode
         )
+        # self.action_note
         self.action_delete.triggered.connect(
             self.node_editor.nodes_view.set_delete_mode
         )
+        # self.action_about
 
     # --------------------------------------
     #              OPERATIONS
@@ -164,8 +174,49 @@ class KMBMainWindow(QMainWindow):
         pos = 'POS (x={:>5}, y={:>5})'.format(x, y)
         self.status_mouse_pos.setText(pos)
 
-    def save(self):
+    def update_modify_state(self):
+        # call by node_editor.
+        if self.save_path and not self.save_path.endswith('*'):
+            self.setWindowTitle(self.save_path + '*')
+
+    # --------------------------------------
+    #                ACTIONS
+    # --------------------------------------
+
+    def new_(self):
+        # create a new module project.
+        state = self.node_editor.nodes_view.items()
+        if state:
+            # current project exists.
+            msg_box = QMessageBox()
+            msg_box.setText("What are you going to do with current project?")
+            msg_box.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
+            msg_box.setDefaultButton(QMessageBox.Save)
+        else:
+            # current project is the newest.
+            msg_box = self._alert_msg_box("Current project is the newest.")
+        state = msg_box.exec()
+        # actions on different buttons
+        if state == QMessageBox.Save:
+            # call save method.
+            self.save()
+        elif state == QMessageBox.Discard:
+            # don't save, then clean up.
+            self.node_editor.nodes_view.gr_scene.clear()
+        # else: ...
+
+    def open_(self):
+        # load a module to current project.
+        pass
+
+    def save_(self):
         # saving for the first time.
+        # check current state
+        state = self.node_editor.nodes_view.items()
+        if not state:
+            msg = self._alert_msg_box("Current project has nothing to save.")
+            msg.exec()
+            return
         if self.save_path is None:
             file_dialog = QFileDialog()
             file = file_dialog.getSaveFileName(self,
@@ -176,8 +227,30 @@ class KMBMainWindow(QMainWindow):
             else:  # cancel
                 return
         # continue saving.
-        else:
-            pass
         serialized = self.node_editor.serialize()
         save = Saver(serialized)
         save.save_file(dst=self.save_path)
+        # change windows title to current project path.
+        self.setWindowTitle(self.save_path.replace('*', ''))
+
+    def import_(self):
+        # import some thing to kmb.
+        pass
+
+    def export_(self):
+        # export current project to a certain file.
+        # TODO: a config form then export
+        #       return the error from parser if happened.
+        pass
+
+    # --------------------------------------
+    #                  UTILS
+    # --------------------------------------
+
+    @classmethod
+    def _alert_msg_box(cls, text: str):
+        msg = QMessageBox()
+        msg.setText(text)
+        msg.setStandardButtons(QMessageBox.Ok)
+        msg.setDefaultButton(QMessageBox.Ok)
+        return msg

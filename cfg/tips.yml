@@ -1,6 +1,17 @@
 # Tips (status tips or tool tips)
 
 # Status Tips
+ST_NEW: "Create a new project under current view."
+ST_OPEN: "Open a saved Karken: KMB module file."
+ST_SAVE: "Save current project."
+ST_IMPORT: "Import toolbox into current workspace."
+ST_EXPORT: "Export current project to a certain file."
+
+ST_SELECT: "Enter select mode."
+ST_MOVE: "Enter move mode."
+ST_UNDO: "Undo last command or operation."
+ST_REDO: "Redo last command or operation."
+
 ST_EDGE_DIRECT: "Connect two different layers with one direct edge."
 ST_EDGE_CURVES: "Create reference relationship between layer with other node (like PlaceHolder etc.)."
 ST_NOTE: "Take a note to help you understand something."
