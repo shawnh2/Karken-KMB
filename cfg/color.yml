@@ -23,6 +23,8 @@ EDGE_HOVER: '#a5dff9'
 # DOT_NORMAL: 'std green'
 DOT_IO_I: '#00B9F1'
 DOT_IO_O: '#7200DA'
+# for note
+NOTE_HOVER: '#a5dff9'
 
 # for DataType-Color map
 DTC_str: '#6699CC'

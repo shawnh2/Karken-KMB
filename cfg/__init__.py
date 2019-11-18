@@ -26,5 +26,11 @@ EDGE_CURVES = 2
 # Loading configure for User Custom Pins.
 UCP_LOC = 'user/'
 
+# Loading support export type
+EXPORT_SUPPORT = (
+    'Python Code(*.py)',
+    'Screenshots(*.png)',
+)
+
 # Loading configure for debug.
 DEBUG = True

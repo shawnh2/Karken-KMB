@@ -45,26 +45,46 @@ QGroupBox {
 }
 
 /* For the combobox in node args menu. */
-QComboBox {
+ArgComboBox {
     background-color: whitesmoke;
     border-style: none;
 }
-QComboBox:on{background: transparent;}
-QComboBox::drop-down{border-style: none;}
-QComboBox::down-arrow {image: url('lib/icon/other/down.png');}
-QComboBox::down-arrow:on {image: url('lib/icon/other/up.png');}
+ArgComboBox:on{
+    background: transparent;
+}
+ArgComboBox::drop-down{
+    border-style: none;
+}
+ArgComboBox::down-arrow {
+    image: url('lib/icon/other/down.png');
+}
+ArgComboBox::down-arrow:on {
+    image: url('lib/icon/other/up.png');
+}
 
 /* items in combobox. */
-QComboBox QAbstractItemView::item {
+ArgComboBox QAbstractItemView::item {
 	height: 25px;
 	color: #555555;
 	background-color: transparent;
 }
 
-QComboBox QAbstractItemView::item:selected {
+ArgComboBox QAbstractItemView::item:selected {
 	color: #FFFFFF;
 	background-color: #60c5ba;
 }
 
 /* For the checkbox in node args menu. */
-QCheckBox {padding-left: 5px;}
+QCheckBox {
+    padding-left: 5px;
+}
+
+/* For line edit item and text field item */
+QLineEdit {
+    border-radius: 5px;
+}
+QTextEdit {
+    border-style: none;
+    border-radius: 5px;
+    background: white;
+}

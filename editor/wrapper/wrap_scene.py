@@ -101,8 +101,11 @@ class KMBNodeScene(Serializable):
         debug(f"*[EDGE {len(self.edges)}] + {edge}")
 
     def remove_edge(self, edge):
-        self.edges.pop(edge.id)
-        debug(f"*[EDGE {len(self.edges)}] - {edge}")
+        try:
+            self.edges.pop(edge.id)
+            debug(f"*[EDGE {len(self.edges)}] - {edge}")
+        except KeyError:
+            debug(f"*[EDGE IGNORE] - {edge}")
 
     def add_node(self, node):
         self.nodes[node.id] = node
@@ -110,9 +113,12 @@ class KMBNodeScene(Serializable):
         debug(f"*[NODE {len(self.nodes)}] + {node}")
 
     def remove_node(self, node):
-        self.nodes.pop(node.id)
-        self._remove_relative_edges(node)
-        debug(f"*[NODE {len(self.nodes)}] - {node}")
+        try:
+            self.nodes.pop(node.id)
+            self._remove_relative_edges(node)
+            debug(f"*[NODE {len(self.nodes)}] - {node}")
+        except KeyError:
+            debug(f"*[NODE IGNORE] - {node}")
 
     def _remove_relative_edges(self, node):
         # removing node also remove edge that connected to it.

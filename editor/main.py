@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import (QMainWindow, QLabel, QAction,
                              QFileDialog, QMessageBox)
 from PyQt5.QtGui import QIcon
 
+from editor.widgets.forms import ExportFormDialog
 from editor.widgets.node_editor import MainNodeEditor
 from lib.parser import Saver
 from cfg import icon, tips
@@ -25,6 +26,7 @@ class KMBMainWindow(QMainWindow):
         self.action_import = QAction(QIcon(icon['IMPORT']), '', self)
         self.action_save = QAction(QIcon(icon['SAVE']), '', self)
         self.action_export = QAction(QIcon(icon['EXPORT']), '', self)
+        #self.action_export.setEnabled(False)  # only enabled after saving.
         # ------
         self.action_select = QAction(QIcon(icon['ARROW']), '', self)
         self.action_hand = QAction(QIcon(icon['HAND']), '', self)
@@ -160,7 +162,9 @@ class KMBMainWindow(QMainWindow):
         self.action_edge_curve.triggered.connect(
             self.node_editor.nodes_view.set_edge_curve_mode
         )
-        # self.action_note
+        self.action_note.triggered.connect(
+            self.node_editor.nodes_view.set_note_mode
+        )
         self.action_delete.triggered.connect(
             self.node_editor.nodes_view.set_delete_mode
         )
@@ -190,6 +194,7 @@ class KMBMainWindow(QMainWindow):
             # current project exists.
             msg_box = QMessageBox()
             msg_box.setText("What are you going to do with current project?")
+            msg_box.setInformativeText(self.save_path)
             msg_box.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
             msg_box.setDefaultButton(QMessageBox.Save)
         else:
@@ -199,24 +204,27 @@ class KMBMainWindow(QMainWindow):
         # actions on different buttons
         if state == QMessageBox.Save:
             # call save method.
-            self.save()
+            if self.save_():
+                self._drop_current_proj()
+            else:
+                return
         elif state == QMessageBox.Discard:
-            # don't save, then clean up.
-            self.node_editor.nodes_view.gr_scene.clear()
+            self._drop_current_proj()
         # else: ...
+        self.action_export.setEnabled(False)
 
     def open_(self):
         # load a module to current project.
         pass
 
-    def save_(self):
+    def save_(self) -> bool:
         # saving for the first time.
         # check current state
         state = self.node_editor.nodes_view.items()
         if not state:
             msg = self._alert_msg_box("Current project has nothing to save.")
             msg.exec()
-            return
+            return False
         if self.save_path is None:
             file_dialog = QFileDialog()
             file = file_dialog.getSaveFileName(self,
@@ -225,13 +233,16 @@ class KMBMainWindow(QMainWindow):
             if file[0]:  # confirm
                 self.save_path = file[0]
             else:  # cancel
-                return
+                return False
         # continue saving.
         serialized = self.node_editor.serialize()
         save = Saver(serialized)
         save.save_file(dst=self.save_path)
+        # now export function is available
+        self.action_export.setEnabled(True)
         # change windows title to current project path.
         self.setWindowTitle(self.save_path.replace('*', ''))
+        return True
 
     def import_(self):
         # import some thing to kmb.
@@ -239,9 +250,8 @@ class KMBMainWindow(QMainWindow):
 
     def export_(self):
         # export current project to a certain file.
-        # TODO: a config form then export
-        #       return the error from parser if happened.
-        pass
+        model_name = self._get_model_name()
+        ExportFormDialog(self.save_path, self, model_name)()
 
     # --------------------------------------
     #                  UTILS
@@ -254,3 +264,13 @@ class KMBMainWindow(QMainWindow):
         msg.setStandardButtons(QMessageBox.Ok)
         msg.setDefaultButton(QMessageBox.Ok)
         return msg
+
+    def _get_model_name(self):
+        return self.save_path.split('/')[-1].split('.')[0].capitalize() \
+            if self.save_path else None
+
+    def _drop_current_proj(self):
+        # close everything about current project.
+        self.node_editor.nodes_view.gr_scene.clear()
+        self.save_path = None
+        self.setWindowTitle('')

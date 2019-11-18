@@ -1,4 +1,9 @@
+import time
+
 import lxml.html
+
+from lib.parser.errors import *
+
 
 etree = lxml.html.etree
 
@@ -208,25 +213,27 @@ class PyLines:
 class PyParser:
     """ Parse XML file to PY lines. """
 
-    def __init__(self, kmb_path):
-        self.content = etree.parse(kmb_path)
+    def __init__(self, src_path: str):
+        self.content = etree.parse(src_path)
         self.phs_hub = PlaceHolderHub()
         # This is the tag <ph>, not same as the one above.
         self.phs_tag = []
         self.rtn_mod = []
         self.src_dir = set()
         self.lines = PyLines()
-        self.title = self.content.xpath(f'@{ATTR_TITLE}')[0]
         # May have multi-entrance.
-        for cur_item in self.get_elm_by_attr(ATTR_START,
-                                             ATTR_START_VALUE):
-            debug(f'[Entrance]')
+        entrance = self.get_elm_by_attr(ATTR_START,
+                                        ATTR_START_VALUE)
+        # Entrance Error
+        if not entrance:
+            raise PyEntranceError()
+        # Getting started.
+        for cur_item in entrance:
             self.cur_item = cur_item
             self.line_handler()
 
     def commit(self):
-        return self.title.replace(' ', '_'), self.lines.get(),\
-               self.phs_tag, self.src_dir, self.rtn_mod
+        return self.lines.get(), self.phs_tag, self.src_dir, self.rtn_mod
 
     # ------------------------------------
     #           Basic Operation
@@ -425,14 +432,10 @@ class PyParser:
         @:param argv: could be an arg dict or element.
 
         """
-        debug('[Parsing <args>]', type(argv))
-
         if isinstance(argv, dict):
             ad = argv
-            debug('~~~ dict contains', ad)
         else:
             ad = self.get_args_by_elm(argv)
-            debug('~~~ after parsing', ad)
 
         # null args element got nothing but blank space.
         if ad == '':
@@ -502,7 +505,6 @@ class PyParser:
         arg = self.get_args_by_elm(elm)
         src = self.src_handler(elm)
 
-        debug('>>> GMC', var, cls, arg, src)
         if arg != '':
             arg = self.args_handler(arg)
         if var is None:
@@ -525,8 +527,6 @@ class PyParser:
         # it will be parse to the attr of class.
         self.phs_tag.append(value)
         collector.append(f'self.{value}')
-
-    # Luckily, <model> type doesn't need any support.
 
     def layer_type_support(self, id_, collector: list):
         """ Support for <layer> in type handler. """
@@ -553,14 +553,21 @@ class PyHandler:
 
     def __init__(self,
                  parser: PyParser,
-                 encoding='utf-8'):
+                 model_name: str = 'Model',
+                 author: str = None,
+                 comment: str = None):
         self.parser = parser
-        (self.title,
-         self.lines,
+        self.title = model_name.capitalize()
+        self.author = author.capitalize()
+        self.comment = comment
+        self.time = time.strftime('%y/%m/%d',
+                                  time.localtime(time.time()))
+
+        (self.lines,
          self.phs,
          self.src,
          self.rtn) = self.parser.commit()
-        self.encoding = encoding
+        # record .py code content.
         self.contents = []
 
     def brk(self, n=1):
@@ -574,10 +581,13 @@ class PyHandler:
 
     def make_declare(self):
         self.add(
-            f"# -*- coding:{self.encoding} -*-", "# ",
-            f"# {self.title.lower()}.py", "# ",
-            f"# Model {self.title} is built with Karken:KMB",
-            '# A Keras Model Builder Tool.',
+            "# -*- coding: utf-8 -*-",
+            "# ",
+            "# {}.py".format(self.title.lower()),
+            "# Created by {} on {}".format(self.author, self.time),
+            "# "
+            "# Model: {} was built with Karken: KMB".format(self.title),
+            "# A Keras Model Builder Tool.",
             "# "
         )
         self.brk()
@@ -629,7 +639,6 @@ class PyHandler:
 
     def export(self, dst):
         self.organize()
-
         with open(dst, 'w') as py:
             cnt = ''
             for line in self.contents:

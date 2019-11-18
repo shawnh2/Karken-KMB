@@ -25,7 +25,7 @@ class KMBNodeItem(Serializable):
         self.gr_scene.addItem(self.gr_node)
 
     def __repr__(self):
-        return f"<NodeItem {hex(id(self))}>"
+        return f"<NodeItem {id(self)}>"
 
     def set_pos(self, x, y):
         self.gr_node.set_pos(x, y)

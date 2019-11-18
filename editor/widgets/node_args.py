@@ -219,6 +219,9 @@ class KMBNodesArgsMenu(QTableView):
         # while deleting ref edge will trigger this method only.
         # through ref_id will get the model of ref edge's start item.
         self.current_ref_model = self.edit_model.get(src_model_id)
+        # when do group delete, current ref model may be None.
+        if self.current_model is None:
+            return
         self.current_ref_dst_model_id = dst_model_id
         # if one start item connected with one node item.
         # under this situation, just del the ref_by.

@@ -4,6 +4,7 @@ from PyQt5.QtGui import QPainter, QMouseEvent, QCursor, QPixmap
 
 from editor.graphic.node_item import KMBNodeGraphicItem
 from editor.graphic.node_edge import KMBGraphicEdge
+from editor.graphic.node_note import KMBNote
 from editor.wrapper.wrap_item import KMBNodeItem
 from editor.wrapper.warp_edge import KMBEdge
 from editor.component.edge_type import KMBGraphicEdgeBezier, KMBGraphicEdgeDirect
@@ -14,12 +15,13 @@ from lib import debug
 MOUSE_SELECT = 0
 MOUSE_MOVE = 1
 MOUSE_EDIT = 2
+MOUSE_NOTE = 3
 
-NODE_SELECTED = 3
-NODE_DELETE = 4
+NODE_SELECTED = 4
+NODE_DELETE = 5
+NODE_CONNECT = 6
 
-NODE_CONNECT = 5
-EDGE_DRAG = 6
+EDGE_DRAG = 7
 
 
 class KMBNodeGraphicView(QGraphicsView):
@@ -146,6 +148,11 @@ class KMBNodeGraphicView(QGraphicsView):
         self.setCursor(Qt.CrossCursor)
         debug("Now is <connect-curve> mode")
 
+    def set_note_mode(self):
+        self.mode = MOUSE_NOTE
+        self.setCursor(Qt.IBeamCursor)
+        debug("Now is <note> mode")
+
     # ------------------OVERRIDES--------------------
 
     def mousePressEvent(self, event):
@@ -209,6 +216,7 @@ class KMBNodeGraphicView(QGraphicsView):
         key M: move
         key D: direct
         key C: curve
+        key T: note
         """
         if event.key() == Qt.Key_V:
             self.set_select_mode()
@@ -218,6 +226,8 @@ class KMBNodeGraphicView(QGraphicsView):
             self.set_edge_direct_mode()
         elif event.key() == Qt.Key_C:
             self.set_edge_curve_mode()
+        elif event.key() == Qt.Key_T:
+            self.set_note_mode()
         else:
             super().keyPressEvent(event)
 
@@ -258,6 +268,9 @@ class KMBNodeGraphicView(QGraphicsView):
         item = self.get_item_at_click(event)
         if self.mode == MOUSE_EDIT:
             self.add_selected_node_item()
+
+        elif self.mode == MOUSE_NOTE:
+            self.add_note()
 
         elif self.mode == NODE_DELETE:
             # delete group
@@ -304,8 +317,10 @@ class KMBNodeGraphicView(QGraphicsView):
         item = self.get_item_at_click(event)
         if self.mode == EDGE_DRAG:
             self.mode = NODE_CONNECT
-            if item is not None and item is not self.drag_start_item and\
-               not issubclass(item.__class__, KMBGraphicEdge):
+            if (
+                isinstance(item, KMBNodeGraphicItem) and
+                item is not self.drag_start_item
+            ):
                 self.edge_drag_end(item, event)
             else:
                 # if it's nothing then drop this edge
@@ -346,8 +361,7 @@ class KMBNodeGraphicView(QGraphicsView):
     def add_selected_node_item(self):
         # add new node
         self.is_modified()
-        x, y = int(self.last_scene_mouse_pos.x()),\
-               int(self.last_scene_mouse_pos.y())
+        x, y = self.get_last_xy()
         node = KMBNodeItem(self.gr_scene,
                            self.current_node_item_name,
                            self.current_node_item_type,
@@ -365,6 +379,12 @@ class KMBNodeGraphicView(QGraphicsView):
         self.status_bar_msg(f'Add: {self.current_node_item_name} node.')
         self.drop_received_pin()
         node.set_pos(x, y)
+
+    def add_note(self):
+        # add note in scene.
+        self.is_modified()
+        x, y = self.get_last_xy()
+        note = KMBNote(self.gr_scene, x, y)
 
     def set_selected_node_item(self, item):
         # get args of node and edit it
@@ -390,6 +410,7 @@ class KMBNodeGraphicView(QGraphicsView):
         # del the selected items
         for item in self.rubber_select:
             self.del_selected_item(item)
+        self.rubber_select.clear()
 
     def _del_node_item(self, node):
         self.SELECTED_DELETE_NODE.emit(node.id_str)
@@ -507,6 +528,10 @@ class KMBNodeGraphicView(QGraphicsView):
         """ Get group select items. """
         area = self.rubberBandRect()
         self.rubber_select = self.items(area)
+
+    def get_last_xy(self):
+        # return the last position of mouse in scene.
+        return int(self.last_scene_mouse_pos.x()), int(self.last_scene_mouse_pos.y())
 
     def set_edit_node_cursor(self):
         pix = QPixmap(icon['CROSS']).scaled(30, 30)

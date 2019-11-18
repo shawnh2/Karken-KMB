@@ -5,7 +5,7 @@ ST_NEW: "Create a new project under current view."
 ST_OPEN: "Open a saved Karken: KMB module file."
 ST_SAVE: "Save current project."
 ST_IMPORT: "Import toolbox into current workspace."
-ST_EXPORT: "Export current project to a certain file."
+ST_EXPORT: "Export current saved project to a certain file."
 
 ST_SELECT: "Enter select mode."
 ST_MOVE: "Enter move mode."

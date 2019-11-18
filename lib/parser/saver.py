@@ -10,7 +10,6 @@ class Saver:
         self.serialized = serialized
 
         self.root = etree.Element('kmbscene')
-        self.root.set('name', 'YOUR NAME')
 
     # TODO: some arg that choose from combobox, may be str rather than id.
 
@@ -71,7 +70,7 @@ class Saver:
                 self._for_ph(raw)
             # else ...
 
-    def save_file(self, dst="test_p/test_save.xml"):
+    def save_file(self, dst: str):
         self._save()
         file = etree.ElementTree(self.root)
         file.write(open(dst, 'wb'), pretty_print=True)

@@ -24,10 +24,10 @@ class KMBEdge(Serializable):
             self.update_positions()
 
     def __str__(self):
-        return f"<Edge {hex(id(self))}>"
+        return f"<Edge {id(self)}>"
 
     def __repr__(self):
-        return f"<Edge {hex(id(self))}>"
+        return f"<Edge {id(self)}>"
 
     def store(self):
         """ Check state of storing into scene's edges. """
