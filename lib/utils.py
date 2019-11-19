@@ -51,13 +51,15 @@ def type_color_map(datatype: str) -> tuple:
         return color['DTC_unknown'], 'Unknown'
 
 
-def type_tag_map(dtype: str):
+def type_tag_map(arg_value_item):
     """
      Mapping datatype to tag needs.
 
-     :param dtype: datatype
+     :param arg_value_item.
      :return: A dtype for tag.
      """
+    # unwrap from arg value item.
+    dtype = arg_value_item.dtype
     dtype_dict = {
         'String': 'str',
         'Reference': 'id',
@@ -67,6 +69,14 @@ def type_tag_map(dtype: str):
         'Num_Seq': 'num',
         'Unknown': None
     }
+    # Reference and String type may both be 'id'.
+    if dtype == 'Reference':
+        try:
+            arg_value_item.ref_to
+        except AttributeError:
+            return 'str'
+        else:
+            return 'id'
     return dtype_dict.get(dtype)
 
 

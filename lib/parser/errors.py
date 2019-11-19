@@ -12,7 +12,7 @@ class PyParsingError(Exception):
         self.args = args
 
 
-class PyEntranceError(PyParsingError):
+class PyMissingInputError(PyParsingError):
     """
     Occur when the parser doesn't get any entrance.
     Which means the model doesn't own any Input node.

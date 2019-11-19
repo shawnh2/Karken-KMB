@@ -26,7 +26,7 @@ class KMBMainWindow(QMainWindow):
         self.action_import = QAction(QIcon(icon['IMPORT']), '', self)
         self.action_save = QAction(QIcon(icon['SAVE']), '', self)
         self.action_export = QAction(QIcon(icon['EXPORT']), '', self)
-        #self.action_export.setEnabled(False)  # only enabled after saving.
+        self.action_export.setEnabled(False)  # only enabled after saving.
         # ------
         self.action_select = QAction(QIcon(icon['ARROW']), '', self)
         self.action_hand = QAction(QIcon(icon['HAND']), '', self)
@@ -189,14 +189,9 @@ class KMBMainWindow(QMainWindow):
 
     def new_(self):
         # create a new module project.
-        state = self.node_editor.nodes_view.items()
-        if state:
+        if not self._current_proj_is_empty():
             # current project exists.
-            msg_box = QMessageBox()
-            msg_box.setText("What are you going to do with current project?")
-            msg_box.setInformativeText(self.save_path)
-            msg_box.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
-            msg_box.setDefaultButton(QMessageBox.Save)
+            msg_box = self._save_or_not_msg_box()
         else:
             # current project is the newest.
             msg_box = self._alert_msg_box("Current project is the newest.")
@@ -215,13 +210,18 @@ class KMBMainWindow(QMainWindow):
 
     def open_(self):
         # load a module to current project.
-        pass
+        if not self._current_proj_is_empty():
+            # current project exists.
+            msg_box = self._save_or_not_msg_box()
+            msg_box.exec()
+        else:
+            # open directly.
+            pass
 
     def save_(self) -> bool:
         # saving for the first time.
         # check current state
-        state = self.node_editor.nodes_view.items()
-        if not state:
+        if self._current_proj_is_empty():
             msg = self._alert_msg_box("Current project has nothing to save.")
             msg.exec()
             return False
@@ -265,6 +265,14 @@ class KMBMainWindow(QMainWindow):
         msg.setDefaultButton(QMessageBox.Ok)
         return msg
 
+    @classmethod
+    def _save_or_not_msg_box(cls):
+        msg = QMessageBox()
+        msg.setText("What are you going to do with current project?")
+        msg.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
+        msg.setDefaultButton(QMessageBox.Save)
+        return msg
+
     def _get_model_name(self):
         return self.save_path.split('/')[-1].split('.')[0].capitalize() \
             if self.save_path else None
@@ -274,3 +282,7 @@ class KMBMainWindow(QMainWindow):
         self.node_editor.nodes_view.gr_scene.clear()
         self.save_path = None
         self.setWindowTitle('')
+
+    def _current_proj_is_empty(self) -> bool:
+        # check whether current project is empty.
+        return False if self.node_editor.nodes_view.items() else True

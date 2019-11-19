@@ -44,7 +44,8 @@ class ArgEditItem(QStandardItem):
                  belong_to: str,
                  tag: int = 0,
                  store_bg: bool = False,
-                 is_pined=None):
+                 is_pined: bool = False,
+                 is_required: bool = False):
         # save the initial value of one arg
         self._init_value = value
         self._value = value
@@ -64,7 +65,8 @@ class ArgEditItem(QStandardItem):
 
         self.is_changed = False
         self.is_referenced = False
-        self.is_pined = False if is_pined is None else True
+        self.is_pined = is_pined
+        self.is_required = is_required
         # color for plain, changed & referenced.
         self.pln_color = QColor(color['ARG_NORMAL'])
         self.chg_color = QColor(color['ARG_CHANGED'])

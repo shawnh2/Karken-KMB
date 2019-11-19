@@ -51,13 +51,6 @@ TAG_LAYER_SRC = 'layers'
 TAG_MODEL_SRC = 'models'
 
 IO_SPLIT = ';'
-DEBUG = True
-
-
-def debug(*msg):
-    """ Debug mode. """
-    if DEBUG:
-        print(*msg)
 
 
 class PlaceHolder(object):
@@ -201,8 +194,6 @@ class PyLines:
             line += f'{cls}({args})'
         if call:
             line += f'({call})'
-
-        debug('[Line] +', line)
         self.lines.append(line)
 
     def get(self):
@@ -224,9 +215,14 @@ class PyParser:
         # May have multi-entrance.
         entrance = self.get_elm_by_attr(ATTR_START,
                                         ATTR_START_VALUE)
+        endpoint = self.content.xpath('model')
         # Entrance Error
         if not entrance:
-            raise PyEntranceError()
+            raise PyMissingInputError()
+        # Endpoint Error
+        if not endpoint:
+            raise PyMissingModelError()
+
         # Getting started.
         for cur_item in entrance:
             self.cur_item = cur_item
@@ -585,8 +581,8 @@ class PyHandler:
             "# ",
             "# {}.py".format(self.title.lower()),
             "# Created by {} on {}".format(self.author, self.time),
-            "# "
-            "# Model: {} was built with Karken: KMB".format(self.title),
+            "# ",
+            "# {} was built with Karken: KMB".format(self.title),
             "# A Keras Model Builder Tool.",
             "# "
         )
@@ -610,7 +606,7 @@ class PyHandler:
                        f'self.{ph} = {ph}'
                        for ph in self.phs])
         else:
-            self.add('pass')
+            self.add(self.tab(2) + 'pass')
         # Make a break line.
         self.brk()
 
@@ -639,14 +635,8 @@ class PyHandler:
 
     def export(self, dst):
         self.organize()
-        with open(dst, 'w') as py:
+        with open('{}/{}.py'.format(dst, self.title.lower()), 'w') as py:
             cnt = ''
             for line in self.contents:
                 cnt += (line + '\n')
             py.write(cnt)
-
-
-"""if __name__ == '__main__':
-    parse = PyParser("test_save.xml")
-    ctt = PyHandler(parse)
-    ctt.export('test_sss.py')"""

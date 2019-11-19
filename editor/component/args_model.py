@@ -185,14 +185,15 @@ class ArgsEditableModel(ArgsSuperModel):
     def feed_inherit_item(self, idx, unpack_item):
         # id, name, init, type, info
         _, arg_name, arg_init, arg_type, arg_info = unpack_item
-        pin_marker = None
+        # inherit item doesn't have any required args.
+        pin_marker = False
         arg_type_item = ArgTypeItem(arg_type)  # provide dtype for each arg item.
         arg_name_item = ArgNameItem('inh', arg_info, arg_name)
         # replace org value with pin value if it has.
         pin_value = self.feed_with_pins(arg_name)
         if pin_value is not None:
             arg_init = pin_value
-            pin_marker = 1
+            pin_marker = True
         # set arg value with different types.
         if arg_type == "bool":
             arg_mark_item = ArgEditItem(arg_init,
@@ -213,13 +214,16 @@ class ArgsEditableModel(ArgsSuperModel):
     def feed_original_item(self, idx, unpack_item):
         # id, note, name, init, type, info, box
         _, _, arg_name, arg_init, arg_type, arg_info, arg_box = unpack_item
-        pin_marker = None
+        pin_marker = False
+        is_required = False
         arg_type_item = ArgTypeItem(arg_type)
         arg_name_item = ArgNameItem('org', arg_info, arg_name)
         pin_value = self.feed_with_pins(arg_name)
         if pin_value is not None:
             arg_init = pin_value
-            pin_marker = 1
+            pin_marker = True
+        if arg_init is None:
+            is_required = True
         if arg_box:
             # setup the combo box for box args
             arg_box_list = self.db.get_box_args(int(arg_box)).split(';')
@@ -230,7 +234,8 @@ class ArgsEditableModel(ArgsSuperModel):
                                         belong_to=arg_name,
                                         tag=2,
                                         store_bg=True,
-                                        is_pined=pin_marker)
+                                        is_pined=pin_marker,
+                                        is_required=is_required)
             self.set_col_items(idx, arg_name_item, arg_mark_item)
         elif arg_type == "bool":
             # setup the check button for bool type
@@ -239,14 +244,16 @@ class ArgsEditableModel(ArgsSuperModel):
                                         belong_to=arg_name,
                                         tag=1,
                                         store_bg=True,
-                                        is_pined=pin_marker)
+                                        is_pined=pin_marker,
+                                        is_required=is_required)
             self.check_args.append(idx)
             self.set_col_items(idx, arg_name_item, arg_mark_item)
         else:
             arg_init_item = ArgEditItem(arg_init,
                                         dtype=arg_type_item.raw_type_name,
                                         belong_to=arg_name,
-                                        is_pined=pin_marker)
+                                        is_pined=pin_marker,
+                                        is_required=is_required)
             self.set_col_items(idx, arg_name_item, arg_init_item)
 
     def feed_with_pins(self, org_name):
@@ -259,6 +266,7 @@ class ArgsEditableModel(ArgsSuperModel):
     def extract_args(self,
                      get_changed=False,
                      get_referenced=False,
+                     get_required=False,
                      get_io=False,
                      get_pined=False,
                      get_datatype=False):
@@ -267,16 +275,20 @@ class ArgsEditableModel(ArgsSuperModel):
         arg_dict = OrderedDict()
         # get all the args by conditions.
         for idx, arg_name, arg_value in self.items():
-            dtype = type_tag_map(arg_value.dtype)
-            # only get changed.
+            dtype = type_tag_map(arg_value)
+            # get changed.
             if arg_value.is_changed and get_changed:
                 arg_dict[arg_name.text()] = (arg_value.value, dtype)\
                     if get_datatype else arg_value.value
-            # only get referenced.
+            # get referenced.
             elif arg_value.is_referenced and get_referenced:
                 arg_dict[arg_name.text()] = (arg_value.ref_to, dtype)\
                     if get_datatype else arg_value.ref_to
-            # only get pined.
+            # get required.
+            elif arg_value.is_required and get_required:
+                arg_dict[arg_name.text()] = (arg_value.value, dtype)\
+                    if get_datatype else arg_value.value
+            # get pined.
             elif arg_value.is_pined and get_pined:
                 arg_dict[arg_name.text()] = (arg_value.value, dtype)\
                     if get_datatype else arg_value.value

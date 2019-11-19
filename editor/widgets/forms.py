@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import (QFormLayout, QDialog, QHBoxLayout, QMessageBox, QFi
 from PyQt5.QtCore import Qt
 
 from cfg import EXPORT_SUPPORT
+from lib import debug
 from lib.parser import PyHandler, PyParser, PyParsingError
 
 
@@ -92,6 +93,7 @@ class ExportFormDialog(QDialog):
                                     author=self.model_author,
                                     comment=self.model_comment)
                 handler.export(self.dst_loc)
+                debug('[EXPORT] successfully!')
             except PyParsingError as err:
                 msg = QMessageBox()
                 msg.setText(str(err))
