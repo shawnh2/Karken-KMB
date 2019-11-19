@@ -74,6 +74,8 @@ class KMBNodeGraphicView(QGraphicsView):
         self.current_node_pin_id = None
         # record group selected items.
         self.rubber_select = []
+        # whether under note mode.
+        self.under_note = False
 
         self.zoom_in_factor = 1.25
         self.zoom = 10
@@ -211,25 +213,7 @@ class KMBNodeGraphicView(QGraphicsView):
             self.scale(zoom_factor, zoom_factor)
 
     def keyPressEvent(self, event):
-        """
-        key V: select
-        key M: move
-        key D: direct
-        key C: curve
-        key T: note
-        """
-        if event.key() == Qt.Key_V:
-            self.set_select_mode()
-        elif event.key() == Qt.Key_M:
-            self.set_movable_mode()
-        elif event.key() == Qt.Key_D:
-            self.set_edge_direct_mode()
-        elif event.key() == Qt.Key_C:
-            self.set_edge_curve_mode()
-        elif event.key() == Qt.Key_T:
-            self.set_note_mode()
-        else:
-            super().keyPressEvent(event)
+        super().keyPressEvent(event)
 
     def contextMenuEvent(self, event):
         # get the item that right clicked on
@@ -270,7 +254,10 @@ class KMBNodeGraphicView(QGraphicsView):
             self.add_selected_node_item()
 
         elif self.mode == MOUSE_NOTE:
-            self.add_note()
+            if isinstance(item, KMBNote):
+                self.edit_note(item)
+            else:
+                self.add_note()
 
         elif self.mode == NODE_DELETE:
             # delete group
@@ -383,8 +370,9 @@ class KMBNodeGraphicView(QGraphicsView):
     def add_note(self):
         # add note in scene.
         self.is_modified()
+        self.under_note = True
         x, y = self.get_last_xy()
-        note = KMBNote(self.gr_scene, x, y)
+        KMBNote(self.gr_scene, x, y)
 
     def set_selected_node_item(self, item):
         # get args of node and edit it
@@ -396,6 +384,11 @@ class KMBNodeGraphicView(QGraphicsView):
             # if select no obj, send empty signal to clear arg panel.
             self.SELECTED_NODE_ITEM.emit('null')
 
+    def edit_note(self, item):
+        self.under_note = True
+        # edit the existing note item.
+        item.into_editor()
+
     def del_selected_item(self, item):
         # del selected node or edge
         if item is not None:
@@ -404,6 +397,8 @@ class KMBNodeGraphicView(QGraphicsView):
                 self._del_node_item(item)
             elif issubclass(item.__class__, KMBGraphicEdge):
                 self._del_edge_item(item)
+            elif isinstance(item, KMBNote):
+                self._del_note_item(item)
 
     def del_selected_items(self):
         self.is_modified()
@@ -444,6 +439,10 @@ class KMBNodeGraphicView(QGraphicsView):
         self.gr_scene.scene.remove_edge(edge.edge)
         # del the edge in view.
         self.gr_scene.removeItem(edge)
+
+    def _del_note_item(self, note):
+        self.gr_scene.scene.remove_note(note)
+        self.gr_scene.removeItem(note)
 
     def edge_drag_start(self, item):
         # pass the wrapper of gr_scene and gr_node

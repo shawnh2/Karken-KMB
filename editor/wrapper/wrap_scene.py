@@ -11,6 +11,7 @@ class KMBNodeScene(Serializable):
         self.parent = parent  # main editor widget
         self.edges = {}  # saving wrapper edges
         self.nodes = {}  # saving wrapper nodes
+        self.notes = {}  # saving the notes
         self.nodes_counter = Counter()  # count the nodes
 
         self.scene_width = 10000
@@ -19,9 +20,9 @@ class KMBNodeScene(Serializable):
         self.graphic_scene.set_graphic_scene(self.scene_width,
                                              self.scene_height)
 
-    def check_node(self):
-        """ Don't need now. """
-        pass
+    # -------------------------------
+    #              CHECK
+    # -------------------------------
 
     def check_edge(self, edge, edge_type):
         """ Check edge valid.
@@ -96,6 +97,10 @@ class KMBNodeScene(Serializable):
             # so it's unnecessary to add few more `if` block.
         return 1
 
+    # -------------------------------
+    #          MAIN OPERATION
+    # -------------------------------
+
     def add_edge(self, edge):
         self.edges[edge.id] = edge
         debug(f"*[EDGE {len(self.edges)}] + {edge}")
@@ -120,6 +125,18 @@ class KMBNodeScene(Serializable):
         except KeyError:
             debug(f"*[NODE IGNORE] - {node}")
 
+    def add_note(self, note):
+        self.notes[note.id] = note
+        debug(f"*[NOTE {len(self.notes)}] + {note}")
+
+    def remove_note(self, note):
+        self.notes.pop(note.id)
+        debug(f"*[NOTE {len(self.notes)}] - {note}")
+
+    # -------------------------------
+    #              UTILS
+    # -------------------------------
+
     def _remove_relative_edges(self, node):
         # removing node also remove edge that connected to it.
         edges = self.edges.copy()
@@ -140,6 +157,10 @@ class KMBNodeScene(Serializable):
         else:
             dot_color = color['DOT_IO_O']
         io_edge.update_dot_color(dot_color)
+
+    # -------------------------------
+    #               IO
+    # -------------------------------
 
     def serialize(self):
         # serialize node and edge here.
