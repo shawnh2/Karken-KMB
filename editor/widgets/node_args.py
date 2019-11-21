@@ -88,13 +88,14 @@ class KMBNodesArgsMenu(QTableView):
             # then set to current value again.
             if item.is_referenced and item:
                 copy_args = args_list.copy()
-                copy_args.append(cur_value)
+                copy_args.append(cur_value.replace('@', ''))
                 combo = ArgComboBox(copy_args, arg_init, at=row)
-                # lock after getting ref item.
-                combo.setEnabled(False)
+                # lock after setting ref item.
+                combo.set_reference()
             else:
                 combo = ArgComboBox(args_list, arg_init, at=row)
-            combo.setCurrentText(cur_value)
+            # get rid of '@' prefix.
+            combo.setCurrentText(cur_value.replace('@', ''))
             self.setIndexWidget(index, combo)
             combo.currentTextChanged.connect(self.modify_args)
 

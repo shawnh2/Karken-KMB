@@ -181,11 +181,10 @@ class ArgComboBox(QComboBox):
         self.setInsertPolicy(QComboBox.InsertAtBottom)
         self.setView(QListView())  # set style later.
 
-    def setEnabled(self, state: bool):
-        # only ref item will enter this method.
-        super().setEnabled(state)
-        # now can set last item (ref item) icon.
-        self.setItemIcon(self.n - 1, QIcon(icon['COMBO_REF']))
+    def set_reference(self):
+        # set item type is reference.
+        self.setEnabled(False)
+        self.setItemIcon(self.n-1, QIcon(icon['COMBO_REF']))
 
 
 class ArgCheckBox(QCheckBox):

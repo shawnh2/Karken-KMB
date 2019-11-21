@@ -26,7 +26,6 @@ class KMBMainWindow(QMainWindow):
         self.action_import = QAction(QIcon(icon['IMPORT']), '', self)
         self.action_save = QAction(QIcon(icon['SAVE']), '', self)
         self.action_export = QAction(QIcon(icon['EXPORT']), '', self)
-        self.action_export.setEnabled(False)  # only enabled after saving.
         # ------
         self.action_select = QAction(QIcon(icon['ARROW']), '', self)
         self.action_hand = QAction(QIcon(icon['HAND']), '', self)
@@ -206,23 +205,29 @@ class KMBMainWindow(QMainWindow):
         elif state == QMessageBox.Discard:
             self._drop_current_proj()
         # else: ...
-        self.action_export.setEnabled(False)
 
     def open_(self):
         # load a module to current project.
         if not self._current_proj_is_empty():
             # current project exists.
             msg_box = self._save_or_not_msg_box()
-            msg_box.exec()
+            state = msg_box.exec()
+            if state == QMessageBox.Save:
+                if self.save_():
+                    self._drop_current_proj()
+                else:
+                    return
+            elif state == QMessageBox.Discard:
+                self._open_current_proj()
         else:
             # open directly.
-            pass
+            self._open_current_proj()
 
-    def save_(self) -> bool:
+    def save_(self, case='save') -> bool:
         # saving for the first time.
         # check current state
         if self._current_proj_is_empty():
-            msg = self._alert_msg_box("Current project has nothing to save.")
+            msg = self._alert_msg_box("Current project has nothing to {}.".format(case))
             msg.exec()
             return False
         if self.save_path is None:
@@ -250,8 +255,11 @@ class KMBMainWindow(QMainWindow):
 
     def export_(self):
         # export current project to a certain file.
-        model_name = self._get_model_name()
-        ExportFormDialog(self.save_path, self, model_name)()
+        if self.save_(case='export'):
+            model_name = self._get_model_name()
+            ExportFormDialog(self.save_path, self, model_name)()
+        else:
+            self._alert_msg_box('Export canceled.')
 
     # --------------------------------------
     #                  UTILS
@@ -278,10 +286,14 @@ class KMBMainWindow(QMainWindow):
             if self.save_path else None
 
     def _drop_current_proj(self):
-        # close everything about current project.
+        # close and clear everything about current project.
         self.node_editor.nodes_view.gr_scene.clear()
+        self.node_editor.nodes_scene.clear()
         self.save_path = None
         self.setWindowTitle('')
+
+    def _open_current_proj(self):
+        pass
 
     def _current_proj_is_empty(self) -> bool:
         # check whether current project is empty.

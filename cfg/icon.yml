@@ -45,3 +45,6 @@ FREE: 'lib/icon/other/free.png'
 # for model's I/O in its right menu
 INPUTS: 'lib/icon/other/inputs.png'
 OUTPUTS: 'lib/icon/other/outputs.png'
+
+# for export error
+EXPORT_ERR: 'lib/icon/other/export_error.png'

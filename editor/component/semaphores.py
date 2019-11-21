@@ -57,6 +57,8 @@ class ReferenceBySemaphore:
                         ref.setBackground(self.ref_color)
                     if value.startswith('@'):
                         pass  # avoid trapping in recursion.
+                    elif value == '':
+                        pass  # value got deleted.
                     else:
                         ref.value = '@' + value
                     debug(f'[UPDATE] {ref} => {value}')

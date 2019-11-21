@@ -14,3 +14,7 @@ class Counter:
 
     def get(self, obj: str):
         return self._count.get(obj)
+
+    def clear(self):
+        # set to initial state.
+        self._count.clear()

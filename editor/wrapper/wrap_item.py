@@ -24,6 +24,9 @@ class KMBNodeItem(Serializable):
                                           self.parent)
         self.gr_scene.addItem(self.gr_node)
 
+        self.as_arg = True  # whether can be token as some Wrapper layer's arg.
+        self.as_io = True   # whether can be other node's i/o.
+
     def __repr__(self):
         return f"<NodeItem {id(self)}>"
 

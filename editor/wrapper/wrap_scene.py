@@ -35,30 +35,36 @@ class KMBNodeScene(Serializable):
             # 1. <Input> node doesn't accept any input.
             if edge.end_item.gr_name == "Input":
                 return -1
-            # 2. Referenced type node doesn't involve in any IO(Direct) edge.
+            # 2. nodes that cannot be token as i/o.
+            if not edge.start_item.as_io or not edge.end_item.as_io:
+                return -1
+            # 3. Referenced type node doesn't involve in any IO(Direct) edge.
             if (
-                    edge.end_item.gr_name == "PlaceHolder" or
-                    edge.start_item.gr_name == "PlaceHolder" or
-                    edge.end_item.gr_type == 'Units' or
-                    edge.start_item.gr_type == 'Units'
+                edge.end_item.gr_name == "PlaceHolder" or
+                edge.start_item.gr_name == "PlaceHolder" or
+                edge.end_item.gr_type == 'Units' or
+                edge.start_item.gr_type == 'Units'
             ):
                 return -1
-            # 3. <Model> node cannot be others output.
+            # 4. <Model> node cannot be others output.
             if edge.start_item.gr_name == "Model":
                 return -1
-            # 4. check the same edge in previous edges.
+            # 5. check the same edge in previous edges.
             for e in self.edges.values():
                 if (
-                        (
-                            e.start_item == edge.start_item and
-                            e.end_item == edge.end_item
-                        ) or
-                        (
-                            e.start_item == edge.end_item and
-                            e.end_item == edge.start_item
-                        )
+                    (
+                        e.start_item == edge.start_item and
+                        e.end_item == edge.end_item
+                    ) or
+                    (
+                        e.start_item == edge.end_item and
+                        e.end_item == edge.start_item
+                    )
                 ):
                     return -1
+            # io node cannot be token as Wrapper layer's arg anymore.
+            edge.start_item.as_arg = False
+            edge.end_item.as_arg = False
 
         elif edge_type == EDGE_CURVES:
             # add constraints on Curve(REF) edge.
@@ -68,28 +74,42 @@ class KMBNodeScene(Serializable):
             #    Except the nodes which can take layer
             #    as its arg. For example,
             #    <Layer> TimeDistributed & Bidirectional.
+            if edge.start_item.gr_type == "Layers":
+                # Bidirectional node only accept Recurrent type.
+                if (
+                    edge.end_item.gr_name == 'Bidirectional' and
+                    edge.start_item.gr_sort == 'Recurrent' and
+                    edge.start_item.as_arg
+                ):
+                    edge.start_item.as_io = False
+                    return 1
+                # TimeDistributed takes Keras layer.
+                if (
+                    edge.end_item.gr_name == 'TimeDistributed' and
+                    edge.start_item.as_arg
+                ):
+                    edge.start_item.as_io = False
+                    return 1
+            #   common
             if (
-                    edge.start_item.gr_type == "Layers" and
-                    edge.end_item.gr_name in
-                    ("TimeDistributed", "Bidirectional")):
-                return 1
-            if (
-                    edge.start_item.gr_type == "Layers" or
-                    edge.end_item.gr_type != "Layers"
+                edge.start_item.gr_type == "Layers" or
+                edge.end_item.gr_type != "Layers"
             ):
                 return -1
             # 2. <Model> has nothing to do with ref edge.
             if (
-                    edge.start_item.gr_name == "Model" or
-                    edge.end_item.gr_name == "Model"
+                edge.start_item.gr_name == "Model" or
+                edge.end_item.gr_name == "Model"
             ):
                 return -1
             # 3. check through all the edges,
             # ref curve allow to repeat, but it's very unnecessary to
             # display the edge again, so just display the line once.
             for e in self.edges.values():
-                if (e.start_item == edge.start_item and
-                        e.end_item is edge.end_item):
+                if (
+                    e.start_item == edge.start_item and
+                    e.end_item is edge.end_item
+                ):
                     return 0
             # which means ref curves allow user to drag from same node,
             # but it must link to the different arg item.
@@ -132,6 +152,13 @@ class KMBNodeScene(Serializable):
     def remove_note(self, note):
         self.notes.pop(note.id)
         debug(f"*[NOTE {len(self.notes)}] - {note}")
+
+    def clear(self):
+        # clear all the items that stored.
+        self.nodes.clear()
+        self.edges.clear()
+        self.notes.clear()
+        self.nodes_counter.clear()
 
     # -------------------------------
     #              UTILS
