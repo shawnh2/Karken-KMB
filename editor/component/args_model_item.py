@@ -47,7 +47,7 @@ class ArgEditItem(QStandardItem):
                  is_pined: bool = False,
                  is_required: bool = False):
         # save the initial value of one arg
-        self._init_value = value
+        self._init_value = value if value else ''
         self._value = value
         self._store_bg = store_bg
         self.dtype = dtype

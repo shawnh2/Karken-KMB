@@ -269,12 +269,16 @@ class ArgsEditableModel(ArgsSuperModel):
                      get_required=False,
                      get_io=False,
                      get_pined=False,
-                     get_datatype=False):
+                     get_datatype=False,
+                     get_var_name=False):
         # extract all the args from model and
         # wrap all of them in OrderDict then return.
         arg_dict = OrderedDict()
         # get all the args by conditions.
         for idx, arg_name, arg_value in self.items():
+            # whether pass the var_name arg item.
+            if arg_name.text() == 'var_name' and not get_var_name:
+                continue
             dtype = type_tag_map(arg_value)
             # get changed.
             if arg_value.is_changed and get_changed:

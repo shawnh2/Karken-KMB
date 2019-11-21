@@ -1,8 +1,9 @@
 from PyQt5.QtWidgets import (QFormLayout, QDialog, QHBoxLayout, QMessageBox, QFileDialog,
                              QLineEdit, QPushButton, QComboBox, QLabel, QTextEdit)
+from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
 
-from cfg import EXPORT_SUPPORT
+from cfg import EXPORT_SUPPORT, icon
 from lib import debug
 from lib.parser import PyHandler, PyParser, PyParsingError
 
@@ -25,6 +26,8 @@ class ExportFormDialog(QDialog):
         # two commit buttons.
         self.cancel = QPushButton('Cancel')
         self.confirm = QPushButton('Confirm')
+        # icons
+        self.error_icon = QPixmap(icon['EXPORT_ERR'])
 
         # recording
         self.src_loc = src_loc
@@ -84,7 +87,6 @@ class ExportFormDialog(QDialog):
         if not state[0]:
             state[1].exec()
         # completed form.
-        # TODO: popup the error while parsing.
         else:
             try:
                 parser = PyParser(self.src_loc)
@@ -97,6 +99,7 @@ class ExportFormDialog(QDialog):
             except PyParsingError as err:
                 msg = QMessageBox()
                 msg.setText(str(err))
+                msg.setIconPixmap(self.error_icon)
                 msg.setStandardButtons(QMessageBox.Close)
                 msg.exec()
             finally:

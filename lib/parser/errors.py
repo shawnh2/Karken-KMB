@@ -18,7 +18,7 @@ class PyMissingInputError(PyParsingError):
     Which means the model doesn't own any Input node.
     """
     def __str__(self):
-        return "Failure: This model doesn't have any Input node."
+        return "Failure:\nThis model doesn't have any Input node."
 
 
 class PyMissingModelError(PyParsingError):
@@ -27,10 +27,45 @@ class PyMissingModelError(PyParsingError):
     Which means the model doesn't own any Model node.
     """
     def __str__(self):
-        return "Failure: This model doesn't have any Model node."
+        return "Failure:\nThis model doesn't have any Model node."
 
 
-class PyMissingRequiredArgument(PyParsingError):
+class PyMissingRequiredArgumentError(PyParsingError):
     """ Missing the required argument. """
     def __str__(self):
-        return "Failure: Missing required argument - {}".format(self.args)
+        return "Failure:\nMissing required argument at\n{}".format(*self.args)
+
+
+class PyMissingNecessaryConnectionError(PyParsingError):
+    """ Missing necessary connection edge. """
+    def __str__(self):
+        return "Failure:\nMissing necessary connection at\n{}".format(*self.args)
+
+
+class PyMissingModelIO(PyParsingError):
+    """ Missing Input or Output in Model. """
+    def __str__(self):
+        return "Failure:\nMissing I/O in Model."
+
+
+# ------ PyParser Type Warning------
+
+class PyParsingWarning(Exception):
+    """
+    All the warnings that happen during parsing to [.py],
+    should inherit this Exception.
+    """
+    def __init__(self, *args):
+        self.args = args
+
+
+class PyExistedFileWarning(PyParsingWarning):
+    """ Having existed same name file in current directory. """
+    def __str__(self):
+        return "Warning:\nExisted file in current directory."
+
+
+class PyUnusedNodeWarning(PyParsingWarning):
+    """ Having existed but never used node in file. """
+    def __str__(self):
+        return "Warning:\n{} node was never used.".format(*self.args)

@@ -41,11 +41,8 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         self.setFlag(QGraphicsItem.ItemIsMovable)
         self.setAcceptHoverEvents(True)
 
-    def __str__(self):
-        return f"<NodeGrItem {id(self)}>"
-
     def __repr__(self):
-        return f"<NodeGrItem {id(self)}>"
+        return f"<NodeGrItem {self.name} {id(self)}>"
 
     def set_pos(self, x, y):
         dis = self.width / 2

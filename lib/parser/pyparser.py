@@ -21,6 +21,7 @@ ATTR_UNIT_VALUE_INT = 'initializers'
 ATTR_UNIT_VALUE_REG = 'regularizers'
 
 ATTR_ARG_CLS = 'c'
+ATTR_REQUIRED_PH = '!REQ'  # Placeholder for missing but required arg.
 ATTR_ARG_CLS_VALUE_ID = 'id'
 ATTR_ARG_CLS_VALUE_STR = 'str'
 ATTR_ARG_CLS_VALUE_NUM = 'num'
@@ -247,6 +248,10 @@ class PyParser:
         return res
 
     @classmethod
+    def get_elm_by_tag(cls, element, tag):
+        return element.xpath(f'{tag}/text()')
+
+    @classmethod
     def get_node_value_in_elm(cls, element, node, raw=False):
         # Return type has different forms:
         # Form 1: string
@@ -292,7 +297,15 @@ class PyParser:
         attrs_n = element.xpath(f'{TAG_ARGS}//*')
         attrs_v = element.xpath(f'{TAG_ARGS}//*/text()')
         attrs_c = element.xpath(f'{TAG_ARGS}//*/@{ATTR_ARG_CLS}')
+
         for n, c, v in zip(attrs_n, attrs_c, attrs_v):
+            # Raise missing required arg value.
+            if v == ATTR_REQUIRED_PH:
+                src = cls.get_elm_by_tag(element, "class")[0]
+                var = cls.get_elm_by_tag(element, "var")[0]
+                raise PyMissingRequiredArgumentError(
+                    f'{src}: {var} - {n.tag}({c})'
+                )
             if passing and v == passing:
                 continue
             attrs[n.tag] = [ArgItem(item, c)
@@ -342,7 +355,12 @@ class PyParser:
         # Start with element, end with model.
         output_ids = self.get_node_value_in_elm(element, L_TAG_OUTPUT, raw=True)
         for output_id in output_ids:
-            nxt_elm = self.get_elm_by_attr(ATTR_ID, output_id)[0]
+            try:
+                nxt_elm = self.get_elm_by_attr(ATTR_ID, output_id)[0]
+            except IndexError:
+                src = self.get_elm_by_tag(element, 'class')[0]
+                raise PyMissingNecessaryConnectionError(src)
+
             nxt_var, nxt_cls = self.get_batch_node_value(nxt_elm,
                                                          TAG_VNM, TAG_CLS)
             # Making attributes to a valid line.

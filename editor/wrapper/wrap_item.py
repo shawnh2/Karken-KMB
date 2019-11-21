@@ -28,7 +28,7 @@ class KMBNodeItem(Serializable):
         self.as_io = True   # whether can be other node's i/o.
 
     def __repr__(self):
-        return f"<NodeItem {id(self)}>"
+        return f"<NodeItem {self.gr_name} {id(self)}>"
 
     def set_pos(self, x, y):
         self.gr_node.set_pos(x, y)

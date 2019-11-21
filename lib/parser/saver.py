@@ -11,8 +11,6 @@ class Saver:
 
         self.root = etree.Element('kmbscene')
 
-    # TODO: some arg that choose from combobox, may be str rather than id.
-
     def _for_layer(self, feed: dict):
         layer = etree.SubElement(self.root, feed['tag'])
         layer.set('id', feed['id'])
@@ -83,13 +81,17 @@ class Saver:
 
     @classmethod
     def _args_wheel(cls, root, args: dict, io_convert=False):
-        # deliver the args to element
+        # deliver the args to element.
         for arg_name, arg_field in args.items():
-            # arg_value, arg_dtype = arg_field
+            arg_value, arg_dtype = arg_field
             arg_item = etree.SubElement(root, arg_name)
             if io_convert and arg_name in ('inputs', 'outputs'):
-                # convert io sequence to string, split by `;`
+                # convert io sequence to string, split by `;`.
                 arg_item.text = cls.seq2str(arg_field[0])
+            elif arg_value is None:
+                # required value but got None instead.
+                # then set a mark, means this args is required.
+                arg_item.text = '!REQ'
             else:
-                arg_item.text = arg_field[0]
-            arg_item.set('c', arg_field[1])
+                arg_item.text = arg_value
+            arg_item.set('c', arg_dtype)

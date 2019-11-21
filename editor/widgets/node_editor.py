@@ -157,7 +157,7 @@ class MainNodeEditor(QWidget):
             if cur_node['tag'] == 'layer' and \
                cur_node['mode'] == 'AC':
                 ca = cur_args.get('layer')
-                if ca:
+                if ca[0]:
                     nodes_dict[ca[0]]['mode'] = 'CA'
 
         if DEBUG:
