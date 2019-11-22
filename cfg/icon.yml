@@ -30,6 +30,8 @@ SLINE: 'lib/icon/tools/sline.png'
 CLINE: 'lib/icon/tools/cline.png'
 
 ABOUT: 'lib/icon/tools/about.png'
+# for about github
+GIT: 'lib/icon/other/about.png'
 
 # for cursor
 CROSS: 'lib/icon/cursor/cross.png'

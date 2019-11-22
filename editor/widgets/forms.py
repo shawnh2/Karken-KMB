@@ -11,30 +11,38 @@ from lib.parser import PyHandler, PyParser, PyParsingError
 class ExportFormDialog(QDialog):
     """ Form widget for export function. """
 
-    def __init__(self, src_loc: str, parent=None, default_name: str = None):
+    def __init__(self,
+                 src_loc: str,
+                 parent=None,
+                 model_name: str = None,
+                 last_author: str = None,
+                 last_comment: str = None,
+                 last_location: str = None):
         super().__init__(parent)
         self.layout = QFormLayout(self)
         self.commit_layout = QHBoxLayout()
 
         self.title = QLabel('<h2>Export settings</h2>')
         # all the input form items.
-        self.name = QLineEdit(default_name)
-        self.author = QLineEdit()
-        self.comments = QTextEdit()
+        self.name = QLineEdit(model_name)
+        self.author = QLineEdit(last_author)
+        self.comments = QTextEdit(last_comment)
         self.format = QComboBox()
-        self.location = QPushButton('Choose a location')
+        self.location = QPushButton('Choose a location'
+                                    if not last_location
+                                    else '...' + last_location[-20: -1])
         # two commit buttons.
         self.cancel = QPushButton('Cancel')
         self.confirm = QPushButton('Confirm')
         # icons
         self.error_icon = QPixmap(icon['EXPORT_ERR'])
 
-        # recording
+        # recording inputs
         self.src_loc = src_loc
-        self.dst_loc: str = None
-        self.model_name: str = None
-        self.model_author: str = None
-        self.model_comment: str = None
+        self.dst_loc: str = last_location
+        self.model_name: str = model_name
+        self.model_author: str = last_author
+        self.model_comment: str = last_comment
 
         self.prepare()
         self.setup_body()
@@ -51,6 +59,7 @@ class ExportFormDialog(QDialog):
         self.comments.setMaximumSize(170, 100)
         self.comments.setPlaceholderText('Optional')
         self.location.setMinimumSize(185, 25)
+        self.location.setToolTip(self.dst_loc)
         # for combobox
         self.format.addItems(EXPORT_SUPPORT)
         self.format.setMinimumSize(180, 25)
@@ -80,6 +89,7 @@ class ExportFormDialog(QDialog):
         if path:
             self.dst_loc = path
             self.location.setText('...' + self.dst_loc[-20: -1])
+            self.setToolTip(self.dst_loc)
 
     def commit(self):
         state = self.check_integrity()
@@ -134,6 +144,10 @@ class ExportFormDialog(QDialog):
             state = False
 
         return state, msg_box
+
+    def get_inputs(self):
+        # get current form's inputs.
+        return self.model_author, self.model_comment, self.dst_loc
 
 
 class ImportFormDialog(QDialog):

@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import (QMainWindow, QLabel, QAction,
                              QFileDialog, QMessageBox)
 from PyQt5.QtGui import QIcon
 
+from editor.widgets.about import AboutKMB
 from editor.widgets.forms import ExportFormDialog
 from editor.widgets.node_editor import MainNodeEditor
 from lib.parser import Saver
@@ -13,6 +14,9 @@ class KMBMainWindow(QMainWindow):
     def __init__(self, screen_size):
         super().__init__()
         self.save_path: str = None
+        self.last_author: str = None
+        self.last_comment: str = None
+        self.last_location: str = None
 
         # init widget
         self.node_editor = MainNodeEditor(self)
@@ -167,7 +171,8 @@ class KMBMainWindow(QMainWindow):
         self.action_delete.triggered.connect(
             self.node_editor.nodes_view.set_delete_mode
         )
-        # self.action_about
+        # ------
+        self.action_about.triggered.connect(self.about_)
 
     # --------------------------------------
     #              OPERATIONS
@@ -243,8 +248,6 @@ class KMBMainWindow(QMainWindow):
         serialized = self.node_editor.serialize()
         save = Saver(serialized)
         save.save_file(dst=self.save_path)
-        # now export function is available
-        self.action_export.setEnabled(True)
         # change windows title to current project path.
         self.setWindowTitle(self.save_path.replace('*', ''))
         return True
@@ -257,9 +260,21 @@ class KMBMainWindow(QMainWindow):
         # export current project to a certain file.
         if self.save_(case='export'):
             model_name = self._get_model_name()
-            ExportFormDialog(self.save_path, self, model_name)()
+            export = ExportFormDialog(self.save_path,
+                                      self, model_name,
+                                      self.last_author,
+                                      self.last_comment,
+                                      self.last_location)
+            export.exec()
+            (self.last_author,
+             self.last_comment,
+             self.last_location) = export.get_inputs()
         else:
-            self._alert_msg_box('Export canceled.')
+            alert = self._alert_msg_box('Export canceled.')
+            alert.exec()
+
+    def about_(self):
+        AboutKMB(self)()
 
     # --------------------------------------
     #                  UTILS
