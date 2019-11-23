@@ -17,6 +17,7 @@ ST_EDGE_CURVES: "Create reference relationship between layer with other node (li
 ST_NOTE: "Take a note to help you understand something."
 ST_DEL: "Delete the node item or edge that you clicked on."
 
+ST_SEARCH: "Search something through current project."
 ST_ABOUT: "See more information about this software."
 
 # Tool Tips

@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QDialog, QLabel
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QFont
 from PyQt5.QtCore import Qt
 
 from cfg import icon
@@ -12,7 +12,7 @@ class AboutKMB(QDialog):
         super().__init__(parent)
         # init components.
         self.header = QLabel(self)
-        self.header_img = QPixmap(icon['WINICON'])
+        self.header_img = QPixmap(icon['COVER'])
         self.body = QLabel(self)
         self.foot = QLabel(self)
         self.git_link = QLabel(self)
@@ -21,6 +21,7 @@ class AboutKMB(QDialog):
         # init configures.
         self.width = 500
         self.height = 370
+        self.font = QFont('monospace')
         # init UI.
         self.setup_ui()
 
@@ -34,6 +35,7 @@ class AboutKMB(QDialog):
         self.header.setPixmap(self.header_img)
         # setup body context.
         self.body.setGeometry(60, 80, self.width, self.height-80)
+        self.body.setFont(self.font)
         self.body.setText(
             """
             <h1>Karken: KMB {}</h1>

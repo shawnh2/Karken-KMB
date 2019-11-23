@@ -4,6 +4,8 @@
 WINICON: 'lib/icon/kmb/kmb@winicon.png'
 # for splash screen
 SCREEN: 'lib/icon/kmb/kmb@launchscreen.png'
+# for software cover
+COVER: 'lib/icon/kmb/kmb@cover.png'
 
 # for Pins
 PIN_TAB: 'lib/icon/other/pin/pin_tab.png'
@@ -29,6 +31,7 @@ NOTE: 'lib/icon/tools/note.png'
 SLINE: 'lib/icon/tools/sline.png'
 CLINE: 'lib/icon/tools/cline.png'
 
+SEARCH: 'lib/icon/tools/search.png'
 ABOUT: 'lib/icon/tools/about.png'
 # for about github
 GIT: 'lib/icon/other/about.png'
