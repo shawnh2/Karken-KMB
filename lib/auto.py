@@ -29,7 +29,9 @@ class AutoInspector:
     def _inspect_string(self):
         """ Fill the empty char with '_'. """
         name = self._cur_value.strip().lower()
-        if name[0].isdigit():
+        if not name:
+            name = '_'
+        elif name[0].isdigit():
             name = '_' + name
         # get rid of all the invalid char
         for p in string.punctuation:

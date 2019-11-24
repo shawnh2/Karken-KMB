@@ -5,7 +5,7 @@ from PyQt5.QtGui import QIcon
 from editor.widgets.about import AboutKMB
 from editor.widgets.forms import ExportFormDialog
 from editor.widgets.node_editor import MainNodeEditor
-from lib.parser import Saver
+from editor.component.pthreads import SavingThread, LoadingThread
 from cfg import icon, tips
 
 
@@ -41,6 +41,8 @@ class KMBMainWindow(QMainWindow):
         self.action_edge_curve = QAction(QIcon(icon['CLINE']), '', self)
         self.action_note = QAction(QIcon(icon['NOTE']), '', self)
         # ------
+        self.action_search = QAction(QIcon(icon['SEARCH']), '', self)
+        self.action_search.setEnabled(False)
         self.action_about = QAction(QIcon(icon['ABOUT']), '', self)
         self.set_toolbar_tooltip()
         self.set_toolbar_actions()
@@ -102,8 +104,9 @@ class KMBMainWindow(QMainWindow):
         self.action_note.setStatusTip(tips['ST_NOTE'])
         self.action_delete.setStatusTip(tips['ST_DEL'])
         # ------
+        self.action_search.setToolTip("Search (Ctrl+F)")
+        self.action_search.setStatusTip(tips['ST_SEARCH'])
         self.action_about.setToolTip("About")
-
         self.action_about.setStatusTip(tips['ST_ABOUT'])
 
     def set_toolbar_actions(self):
@@ -119,15 +122,17 @@ class KMBMainWindow(QMainWindow):
         self.toolbar.addAction(self.action_export)
         self.action_export.setShortcut('Ctrl+E')
         self.toolbar.addSeparator()
-        # tool operation
+        # common operation
         self.toolbar.addAction(self.action_undo)
         self.action_undo.setShortcut('Ctrl+Z')
         self.toolbar.addAction(self.action_redo)
         self.action_redo.setShortcut('Alt+Z')
+        self.toolbar.addAction(self.action_search)
+        self.action_search.setShortcut('Ctrl+F')
+        self.toolbar.addSeparator()
+        # tool operation
         self.toolbar.addAction(self.action_select)
         self.toolbar.addAction(self.action_hand)
-        self.toolbar.addSeparator()
-        # edge operation
         self.toolbar.addAction(self.action_edge_direct)
         self.toolbar.addAction(self.action_edge_curve)
         self.toolbar.addAction(self.action_note)
@@ -152,13 +157,14 @@ class KMBMainWindow(QMainWindow):
         # ------
         # self.action_undo
         # self.action_redo
+        # self.action_search
+        # ------
         self.action_select.triggered.connect(
             self.node_editor.nodes_view.set_select_mode
         )
         self.action_hand.triggered.connect(
             self.node_editor.nodes_view.set_movable_mode
         )
-        # ------
         self.action_edge_direct.triggered.connect(
             self.node_editor.nodes_view.set_edge_direct_mode
         )
@@ -219,7 +225,7 @@ class KMBMainWindow(QMainWindow):
             state = msg_box.exec()
             if state == QMessageBox.Save:
                 if self.save_():
-                    self._drop_current_proj()
+                    self._open_current_proj()
                 else:
                     return
             elif state == QMessageBox.Discard:
@@ -245,9 +251,7 @@ class KMBMainWindow(QMainWindow):
             else:  # cancel
                 return False
         # continue saving.
-        serialized = self.node_editor.serialize()
-        save = Saver(serialized)
-        save.save_file(dst=self.save_path)
+        SavingThread(self.node_editor.serialize(), self.save_path)()
         # change windows title to current project path.
         self.setWindowTitle(self.save_path.replace('*', ''))
         return True
@@ -308,7 +312,16 @@ class KMBMainWindow(QMainWindow):
         self.setWindowTitle('')
 
     def _open_current_proj(self):
-        pass
+        # drop current before open project.
+        file_dialog = QFileDialog()
+        file = file_dialog.getOpenFileName(self,
+                                           "Karken: KMB Module File",
+                                           "/", "KMB Module (*.kmbm)")
+        if file[0]:
+            self._drop_current_proj()
+            LoadingThread(file[0], self.node_editor)()
+        else:
+            return
 
     def _current_proj_is_empty(self) -> bool:
         # check whether current project is empty.

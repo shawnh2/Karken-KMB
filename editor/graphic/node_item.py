@@ -321,7 +321,7 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
     def _popup_input_dialog(self):
         # get pin item custom name before save.
         name, ok = QInputDialog.getText(self.main_editor, "Please input Pin Node name",
-                                        "Note: This node will be added in Pin panel with its arguments.")
+                                        "This node will be added in Pins with its arguments.")
         return name if ok else False
 
     # TODO: node after adding in pins.
