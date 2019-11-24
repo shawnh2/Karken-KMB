@@ -3,14 +3,14 @@ from PyQt5.QtGui import QColor, QBrush
 from PyQt5.QtCore import Qt, QRectF
 
 from cfg import color
-from lib import debug
+from lib import debug, tagger
+from editor.wrapper.serializable import Serializable
 
 
-class KMBNote(QGraphicsTextItem):
+class KMBNote(QGraphicsTextItem, Serializable):
 
     def __init__(self, gr_scene, x, y, parent=None):
         super().__init__(parent)
-        self.id = id(self)
         self.gr_scene = gr_scene
         self.gr_scene.addItem(self)
         self.wrap_scene = gr_scene.scene
@@ -72,3 +72,15 @@ class KMBNote(QGraphicsTextItem):
         painter.drawRoundedRect(new_rect, self._radius, self._radius)
         # inherit
         super().paint(painter, item, widget)
+
+    def serialize(self):
+        return tagger(
+            tag='note',
+            id=self.id,
+            x=str(self.x()),
+            y=str(self.y()),
+            content=self.toPlainText()
+        )
+
+    def deserialize(self):
+        pass

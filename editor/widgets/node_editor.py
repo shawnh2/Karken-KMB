@@ -158,12 +158,20 @@ class MainNodeEditor(QWidget):
                cur_node['mode'] == 'AC':
                 ca = cur_args.get('layer')
                 if ca[0]:
-                    nodes_dict[ca[0]]['mode'] = 'CA'
+                    dst = nodes_dict[ca[0]].get('mode')
+                    if dst:
+                        nodes_dict[ca[0]]['mode'] = 'CA'
+                    # if got no CA layer, it must be a ph.
+                    # then set AC back to IO.
+                    else:
+                        cur_node['mode'] = 'IO'
 
         if DEBUG:
             for k, v in nodes_dict.items():
                 print(v)
         return nodes_dict
 
-    def deserialize(self):
+    def deserialize(self, feed_nodes: dict):
+        # todo: merge args and save into args_menu,
+        #       send other to scene to deserialize
         pass

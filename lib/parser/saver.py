@@ -14,6 +14,8 @@ class Saver:
     def _for_layer(self, feed: dict):
         layer = etree.SubElement(self.root, feed['tag'])
         layer.set('id', feed['id'])
+        layer.set('x', feed['x'])
+        layer.set('y', feed['y'])
         # set enter point on Input.
         if feed['class_'] == 'Input':
             layer.set('head', 'head')
@@ -30,6 +32,8 @@ class Saver:
     def _for_model(self, feed):
         model = etree.SubElement(self.root, feed['tag'])
         model.set('id', feed['id'])
+        model.set('x', feed['x'])
+        model.set('y', feed['y'])
         # = = #
         etree.SubElement(model, 'var').text = feed['var']
         etree.SubElement(model, 'class').text = feed['class_']
@@ -41,6 +45,8 @@ class Saver:
     def _for_unit(self, feed):
         unit = etree.SubElement(self.root, feed['tag'])
         unit.set('id', feed['id'])
+        unit.set('x', feed['x'])
+        unit.set('y', feed['y'])
         unit.set('u', feed['type'])
         # = = #
         etree.SubElement(unit, 'var').text = feed['var']
@@ -54,6 +60,15 @@ class Saver:
         ph = etree.SubElement(self.root, feed['tag'])
         ph.text = feed['var']
         ph.set('id', feed['id'])
+        ph.set('x', feed['x'])
+        ph.set('y', feed['y'])
+
+    def _for_note(self, feed):
+        note = etree.SubElement(self.root, feed['tag'])
+        note.text = feed['content']
+        note.set('id', feed['id'])
+        note.set('x', feed['x'])
+        note.set('y', feed['y'])
 
     def _save(self):
         for raw in self.serialized.values():
@@ -66,6 +81,8 @@ class Saver:
                 self._for_unit(raw)
             elif tag == 'ph':
                 self._for_ph(raw)
+            elif tag == 'note':
+                self._for_note(raw)
             # else ...
 
     def save_file(self, dst: str):
@@ -76,8 +93,8 @@ class Saver:
     # ----------UTILS----------
 
     @classmethod
-    def seq2str(cls, seq: [list, tuple]):
-        return ';'.join(seq) if seq else 'null'
+    def seq2str(cls, seq: [list, tuple], repair_req=False):
+        return ';'.join(seq) if seq else ('!REQ' if repair_req else 'null')
 
     @classmethod
     def _args_wheel(cls, root, args: dict, io_convert=False):
@@ -87,8 +104,8 @@ class Saver:
             arg_item = etree.SubElement(root, arg_name)
             if io_convert and arg_name in ('inputs', 'outputs'):
                 # convert io sequence to string, split by `;`.
-                arg_item.text = cls.seq2str(arg_field[0])
-            elif arg_value is None:
+                arg_item.text = cls.seq2str(arg_field[0], repair_req=True)
+            elif arg_value is None or not arg_value:
                 # required value but got None instead.
                 # then set a mark, means this args is required.
                 arg_item.text = '!REQ'

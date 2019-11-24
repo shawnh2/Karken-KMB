@@ -1,11 +1,9 @@
 from PyQt5.QtWidgets import (QFormLayout, QDialog, QHBoxLayout, QMessageBox, QFileDialog,
                              QLineEdit, QPushButton, QComboBox, QLabel, QTextEdit)
-from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
 
-from cfg import EXPORT_SUPPORT, icon
-from lib import debug
-from lib.parser import PyHandler, PyParser, PyParsingError
+from cfg import EXPORT_SUPPORT
+from editor.component.pthreads import PyParsingThread
 
 
 class ExportFormDialog(QDialog):
@@ -34,8 +32,6 @@ class ExportFormDialog(QDialog):
         # two commit buttons.
         self.cancel = QPushButton('Cancel')
         self.confirm = QPushButton('Confirm')
-        # icons
-        self.error_icon = QPixmap(icon['EXPORT_ERR'])
 
         # recording inputs
         self.src_loc = src_loc
@@ -98,22 +94,12 @@ class ExportFormDialog(QDialog):
             state[1].exec()
         # completed form.
         else:
-            try:
-                parser = PyParser(self.src_loc)
-                handler = PyHandler(parser,
-                                    model_name=self.model_name,
-                                    author=self.model_author,
-                                    comment=self.model_comment)
-                handler.export(self.dst_loc)
-                debug('[EXPORT] successfully!')
-            except PyParsingError as err:
-                msg = QMessageBox()
-                msg.setText(str(err))
-                msg.setIconPixmap(self.error_icon)
-                msg.setStandardButtons(QMessageBox.Close)
-                msg.exec()
-            finally:
-                self.close()
+            PyParsingThread(self.src_loc,
+                            self.dst_loc,
+                            self.model_name,
+                            self.model_author,
+                            self.model_comment,
+                            self)()
 
     # ----------UTILS----------
 

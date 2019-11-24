@@ -42,12 +42,6 @@ class PyMissingNecessaryConnectionError(PyParsingError):
         return "Failure:\nMissing necessary connection at\n{}".format(*self.args)
 
 
-class PyMissingModelIO(PyParsingError):
-    """ Missing Input or Output in Model. """
-    def __str__(self):
-        return "Failure:\nMissing I/O in Model."
-
-
 # ------ PyParser Type Warning------
 
 class PyParsingWarning(Exception):

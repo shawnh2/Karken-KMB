@@ -6,7 +6,7 @@ from editor.graphic.node_item import KMBNodeGraphicItem
 from editor.graphic.node_edge import KMBGraphicEdge
 from editor.graphic.node_note import KMBNote
 from editor.wrapper.wrap_item import KMBNodeItem
-from editor.wrapper.warp_edge import KMBEdge
+from editor.wrapper.wrap_edge import KMBEdge
 from editor.component.edge_type import KMBGraphicEdgeBezier, KMBGraphicEdgeDirect
 from cfg import icon, EDGE_CURVES, EDGE_DIRECT
 from lib import debug
