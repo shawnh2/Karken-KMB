@@ -31,4 +31,5 @@ class KMBArgsMenu(Serializable):
         return args_dict, var_names_dict
 
     def deserialize(self):
+        # todo: set pos here.
         pass

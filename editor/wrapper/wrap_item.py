@@ -5,7 +5,8 @@ from lib import tagger
 
 class KMBNodeItem(Serializable):
 
-    def __init__(self, scene,
+    def __init__(self,
+                 scene,
                  node_name: str,
                  node_type: str,
                  node_sort: str,
@@ -40,6 +41,8 @@ class KMBNodeItem(Serializable):
     def serialize(self):
         # common tag here:
         node_id = self.gr_node.id_str
+        x = str(self.gr_node.x())
+        y = str(self.gr_node.y())
 
         # None value key will assign later.
         if self.gr_name == 'PlaceHolder':
@@ -47,7 +50,10 @@ class KMBNodeItem(Serializable):
             tag = tagger(
                 tag='ph',
                 id=node_id,
-                var=None
+                var=None,
+                x=x, y=y,
+                tp=self.gr_type,
+                sort=self.gr_sort
             )
         elif self.gr_name == 'Model':
             # tag for Model:
@@ -56,7 +62,10 @@ class KMBNodeItem(Serializable):
                 id=node_id,
                 var=None,
                 class_=self.gr_name,
-                args=None
+                args=None,
+                x=x, y=y,
+                tp=self.gr_type,
+                sort=self.gr_sort
             )
         elif self.gr_type == 'Units':
             # tag for Units:
@@ -66,6 +75,9 @@ class KMBNodeItem(Serializable):
                 var=None,
                 class_=self.gr_name,
                 args=None,
+                x=x, y=y,
+                tp=self.gr_type,
+                sort=self.gr_sort,
                 # # #
                 type=self.gr_sort.lower()
             )
@@ -77,6 +89,9 @@ class KMBNodeItem(Serializable):
                 var=None,
                 class_=self.gr_name,
                 args=None,
+                x=x, y=y,
+                tp=self.gr_type,
+                sort=self.gr_sort,
                 # # #
                 # [mode] can be 'IO', 'CA' or 'AC', which stands for:
                 # Input/Output, Callable and Acceptable.
@@ -92,5 +107,5 @@ class KMBNodeItem(Serializable):
             )
         return tag
 
-    def deserialize(self):
-        pass
+    def deserialize(self, feed: tuple):
+        self.gr_node.setPos(feed[0], feed[1])

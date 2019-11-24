@@ -1,4 +1,6 @@
 from editor.graphic.node_scene import KMBNodeGraphicScene
+from editor.graphic.node_note import KMBNote
+from editor.wrapper.wrap_item import KMBNodeItem
 from editor.wrapper.serializable import Serializable
 from cfg import EDGE_DIRECT, EDGE_CURVES, color
 from lib import Counter, debug
@@ -191,13 +193,17 @@ class KMBNodeScene(Serializable):
 
     def serialize(self):
         # serialize node and edge here.
-        # fill with node's <input> and <output> tags.
         nodes = {}
         for node in self.nodes.values():
             ns = node.serialize()
             nodes[ns["id"]] = ns
+        # serialize note here.
+        for note in self.notes.values():
+            ts = note.serialize()
+            nodes[ts["id"]] = ts
         # organize edge's relationship here.
-        # only for <layer> node.
+        # fill with node's <input> and <output> tags,
+        # and it's only for <layer> node.
         for edge in self.edges.values():
             edge_type, edge_from, edge_to = edge.serialize()
             if edge_type != EDGE_DIRECT:
@@ -213,5 +219,22 @@ class KMBNodeScene(Serializable):
                     nodes[edge_from]['output'].append(edge_to)
         return nodes
 
-    def deserialize(self):
-        pass
+    def deserialize(self, feeds: dict):
+        # todo: create node, note, edge here.
+        for node in feeds.values():
+            if node['recover'] == 'node':
+                new_node = KMBNodeItem(self.graphic_scene,
+                                       node_name=node['cls'],
+                                       node_type=node['type'],
+                                       node_sort=node['sort'],
+                                       pin_id=None,
+                                       parent=self.parent)
+                new_node.deserialize((node['x'], node['y']))
+                self.add_node(new_node)
+            elif node['recover'] == 'note':
+                new_note = KMBNote(self.graphic_scene,
+                                   x=node['x'],
+                                   y=node['y'],
+                                   with_focus=False)
+                new_note.deserialize(node['text'])
+                self.add_note(new_note)

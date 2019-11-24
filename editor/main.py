@@ -319,7 +319,9 @@ class KMBMainWindow(QMainWindow):
                                            "/", "KMB Module (*.kmbm)")
         if file[0]:
             self._drop_current_proj()
-            LoadingThread(file[0], self.node_editor)()
+            self.save_path = file[0]  # change save path to current.
+            LoadingThread(self.save_path, self.node_editor)()
+            self.setWindowTitle(self.save_path)
         else:
             return
 

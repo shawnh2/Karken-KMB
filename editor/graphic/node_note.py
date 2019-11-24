@@ -9,7 +9,7 @@ from editor.wrapper.serializable import Serializable
 
 class KMBNote(QGraphicsTextItem, Serializable):
 
-    def __init__(self, gr_scene, x, y, parent=None):
+    def __init__(self, gr_scene, x, y, parent=None, with_focus=True):
         super().__init__(parent)
         self.gr_scene = gr_scene
         self.gr_scene.addItem(self)
@@ -19,7 +19,8 @@ class KMBNote(QGraphicsTextItem, Serializable):
         self.setDefaultTextColor(Qt.black)
         self.setAcceptHoverEvents(True)
         self.setPos(x + 12, y - 12)
-        self.into_editor()
+        if with_focus:
+            self.into_editor()
 
         self._padding = 5.0
         self._radius = 5.0
@@ -32,6 +33,10 @@ class KMBNote(QGraphicsTextItem, Serializable):
 
     def __repr__(self):
         return "<NoteItem at {}>".format(self.id)
+
+    def is_modified(self):
+        # send self modified state.
+        self.gr_scene.scene.parent.send_modify_state_to_main()
 
     def into_editor(self):
         # call this whenever want to edit text.
@@ -53,6 +58,7 @@ class KMBNote(QGraphicsTextItem, Serializable):
             debug('*[REMOVE] gotta empty note.')
             self.deleteLater()
         else:
+            self.is_modified()
             self.adjustSize()  # adjust size for text
             self.setTextInteractionFlags(Qt.NoTextInteraction)
             self.wrap_scene.add_note(self)
@@ -60,6 +66,10 @@ class KMBNote(QGraphicsTextItem, Serializable):
     def mouseDoubleClickEvent(self, event):
         # double click to edit text.
         self.into_editor()
+
+    def mouseMoveEvent(self, event):
+        self.is_modified()
+        super().mouseMoveEvent(event)
 
     def paint(self, painter, item, widget):
         rect = self.shape().boundingRect()
@@ -82,5 +92,5 @@ class KMBNote(QGraphicsTextItem, Serializable):
             content=self.toPlainText()
         )
 
-    def deserialize(self):
-        pass
+    def deserialize(self, text):
+        self.setPlainText(text)

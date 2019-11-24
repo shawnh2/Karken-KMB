@@ -171,7 +171,8 @@ class MainNodeEditor(QWidget):
                 print(v)
         return nodes_dict
 
-    def deserialize(self, feed_nodes: dict):
+    def deserialize(self, feeds: dict):
         # todo: merge args and save into args_menu,
         #       send other to scene to deserialize
-        pass
+        print(feeds)
+        self.nodes_scene.deserialize(feeds)

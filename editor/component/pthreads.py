@@ -5,7 +5,7 @@ from PyQt5.QtCore import QThread
 from PyQt5.QtWidgets import QMessageBox
 
 from cfg import icon
-from lib.parser import Saver
+from lib.parser import Saver, Loader
 from lib.parser import PyParser, PyHandler, PyParsingError
 
 
@@ -13,24 +13,29 @@ class SavingThread(QThread):
 
     def __init__(self, serialized, dst: str):
         super().__init__()
-        self.serialized = serialized
-        self.dst = dst
+        self.saver = Saver(serialized, dst)
 
     def __call__(self, *args, **kwargs):
         self.run()
 
     def run(self):
-        saver = Saver(self.serialized)
-        saver.save_file(self.dst)
+        self.saver.save_file()
 
 
 class LoadingThread(QThread):
 
-    def __init__(self):
+    def __init__(self, src: str, editor):
         super().__init__()
+        print(src)
+        self.loader = Loader(src)
+        self.editor = editor
+
+    def __call__(self, *args, **kwargs):
+        self.run()
 
     def run(self):
-        pass
+        loads = self.loader.load_file()
+        self.editor.deserialize(loads)
 
 
 class PyParsingThread(QThread):
