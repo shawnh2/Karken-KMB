@@ -53,3 +53,5 @@ OUTPUTS: 'lib/icon/other/outputs.png'
 
 # for export error
 EXPORT_ERR: 'lib/icon/other/export_error.png'
+# for alert dialog
+ALERT: 'lib/icon/other/alert.png'

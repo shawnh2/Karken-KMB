@@ -9,7 +9,6 @@ class Loader:
 
     def __init__(self, src_path: str):
         self.src_path = src_path
-        print(self.src_path)
         self.content = etree.parse(self.src_path)
         self.nodes = {}  # collecting nodes
 

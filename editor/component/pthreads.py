@@ -26,7 +26,6 @@ class LoadingThread(QThread):
 
     def __init__(self, src: str, editor):
         super().__init__()
-        print(src)
         self.loader = Loader(src)
         self.editor = editor
 
