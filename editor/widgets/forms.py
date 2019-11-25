@@ -1,8 +1,9 @@
 from PyQt5.QtWidgets import (QFormLayout, QDialog, QHBoxLayout, QMessageBox, QFileDialog,
                              QLineEdit, QPushButton, QComboBox, QLabel, QTextEdit)
+from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import Qt
 
-from cfg import EXPORT_SUPPORT
+from cfg import EXPORT_SUPPORT, icon
 from editor.component.pthreads import PyParsingThread
 
 
@@ -32,6 +33,9 @@ class ExportFormDialog(QDialog):
         # two commit buttons.
         self.cancel = QPushButton('Cancel')
         self.confirm = QPushButton('Confirm')
+        # icons
+        self.win_icon = QIcon(icon['WINICON'])
+        self.warn_icon = QPixmap(icon['ALERT'])
 
         # recording inputs
         self.src_loc = src_loc
@@ -42,23 +46,21 @@ class ExportFormDialog(QDialog):
 
         self.prepare()
         self.setup_body()
-        self.setFixedSize(300, 370)
+        self.setFixedSize(400, 400)
+        self.setWindowTitle('Export')
 
     def __call__(self, *args, **kwargs):
         self.exec()
 
     def prepare(self):
         # for layout
-        self.layout.setVerticalSpacing(15)
-        self.name.setMinimumSize(170, 25)
-        self.author.setMinimumSize(170, 25)
-        self.comments.setMaximumSize(170, 100)
+        self.layout.setVerticalSpacing(20)
         self.comments.setPlaceholderText('Optional')
-        self.location.setMinimumSize(185, 25)
+        self.location.setMinimumHeight(27)
         self.location.setToolTip(self.dst_loc)
         # for combobox
         self.format.addItems(EXPORT_SUPPORT)
-        self.format.setMinimumSize(180, 25)
+        self.format.setMinimumHeight(25)
         # trigger
         self.location.clicked.connect(self.set_location)
         self.cancel.clicked.connect(self.close)
@@ -107,6 +109,9 @@ class ExportFormDialog(QDialog):
         msg_box = QMessageBox()
         msg_box.setStandardButtons(QMessageBox.Close)
         msg_box.setDefaultButton(QMessageBox.Close)
+        msg_box.setWindowTitle('Warning')
+        msg_box.setWindowIcon(self.win_icon)
+        msg_box.setIconPixmap(self.warn_icon)
         msg = 'Please assign the {} of this module.'
         state = True
         # model name

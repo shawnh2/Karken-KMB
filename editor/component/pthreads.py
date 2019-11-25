@@ -1,6 +1,6 @@
 """ Wrap parser into QThread. """
 
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtCore import QThread
 from PyQt5.QtWidgets import QMessageBox
 
@@ -61,6 +61,8 @@ class PyParsingThread(QThread):
             msg = QMessageBox()
             msg.setText(str(err))
             msg.setIconPixmap(self.error)
+            msg.setWindowTitle('Export Error')
+            msg.setWindowIcon(QIcon(icon['WINICON']))
             msg.setStandardButtons(QMessageBox.Close)
             msg.exec()
         finally:

@@ -82,6 +82,9 @@ QCheckBox {
 /* For line edit item and text field item */
 QLineEdit {
     border-radius: 5px;
+    font-size: 18px;
+    font-family: monospace;
+    height: 30px;
 }
 QTextEdit {
     border-style: none;
