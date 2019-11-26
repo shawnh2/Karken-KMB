@@ -28,8 +28,8 @@ UCP_LOC = 'user/'
 
 # Loading support export type
 EXPORT_SUPPORT = (
-    'Python Code(*.py)',
-    'Screenshots(*.png)',
+    'Python Code (*.py)',
+    'Screenshots (*.png)',
 )
 
 # Loading configure for debug.

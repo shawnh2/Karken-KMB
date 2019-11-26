@@ -14,8 +14,8 @@ class KMBNodeTextItem(QGraphicsTextItem):
         self.x = -4
         self.y = 80
         self.text = text
-        self._font = QFont()
-        self._font.setPointSize(11)
+        self._font = QFont('monospace')
+        self._font.setPointSize(9)
 
         # initial state is hidden
         self.setVisible(False)

@@ -36,6 +36,7 @@ QToolBox:tab:hover {
 QToolBoxButton {
     /*tool box button embedding in tool box.*/
     min-height: 25px;
+    font-family: monospace;
 }
 
 QGroupBox {
@@ -44,21 +45,35 @@ QGroupBox {
     padding-left: 11px;
 }
 
-/* For the combobox in node args menu. */
-ArgComboBox {
+/* For the combobox in node args menu.
+    &
+   For support type combobox in export dialog */
+ArgComboBox{
     background-color: whitesmoke;
     border-style: none;
 }
+SupportTypeComboBox{
+    background-color: white;
+    min-height: 30px;
+    border-style: none;
+    border-radius: 5px;
+    font-size: 14px;
+    font-family: monospace;
+    margin-bottom: 5px;
+    margin-top: 5px;
+    padding-left: 5px;
+}
+
 ArgComboBox:on{
     background: transparent;
 }
-ArgComboBox::drop-down{
+ArgComboBox::drop-down, SupportTypeComboBox::drop-down{
     border-style: none;
 }
-ArgComboBox::down-arrow {
+ArgComboBox::down-arrow, SupportTypeComboBox::down-arrow {
     image: url('lib/icon/other/down.png');
 }
-ArgComboBox::down-arrow:on {
+ArgComboBox::down-arrow:on, SupportTypeComboBox::down-arrow:on {
     image: url('lib/icon/other/up.png');
 }
 
@@ -82,12 +97,32 @@ QCheckBox {
 /* For line edit item and text field item */
 QLineEdit {
     border-radius: 5px;
-    font-size: 18px;
+    border: none white;
+    font-size: 16px;
     font-family: monospace;
-    height: 30px;
+    min-height: 30px;
+    margin-bottom: 5px;
+    padding-left: 5px;
 }
+
 QTextEdit {
     border-style: none;
     border-radius: 5px;
     background: white;
+    font-family: monospace;
+    padding-left: 5px;
+}
+
+/* For PushButton */
+QPushButton {
+    border: 1px solid gray;
+    border-radius: 5px;
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 #f6f7fa, stop: 1 #dadbde);
+    min-width: 80px;
+    min-height: 23px;
+}
+QPushButton:pressed {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 #dadbde, stop: 1 #f6f7fa);
 }

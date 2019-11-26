@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QGraphicsTextItem
-from PyQt5.QtGui import QColor, QBrush
+from PyQt5.QtGui import QColor, QBrush, QFont
 from PyQt5.QtCore import Qt, QRectF
 
 from cfg import color
@@ -15,13 +15,7 @@ class KMBNote(QGraphicsTextItem, Serializable):
         self.gr_scene.addItem(self)
         self.wrap_scene = gr_scene.scene
 
-        self.setFlags(QGraphicsTextItem.ItemIsSelectable | QGraphicsTextItem.ItemIsMovable)
-        self.setDefaultTextColor(Qt.black)
-        self.setAcceptHoverEvents(True)
-        self.setPos(x + 12, y - 12)
-        if with_focus:
-            self.into_editor()
-
+        self.width = 200
         self._padding = 5.0
         self._radius = 5.0
         self._color_bg = QColor(color['NOTE_BG'])
@@ -30,6 +24,17 @@ class KMBNote(QGraphicsTextItem, Serializable):
         self._brush = QBrush()
         self._brush.setStyle(Qt.SolidPattern)
         self._brush.setColor(self._color_bg)
+        # font for itself
+        self._font = QFont('monospace')
+        self._font.setPointSize(12)
+        self.setFont(self._font)
+
+        self.setFlags(QGraphicsTextItem.ItemIsSelectable | QGraphicsTextItem.ItemIsMovable)
+        self.setDefaultTextColor(Qt.black)
+        self.setAcceptHoverEvents(True)
+        self.setPos(x + 12, y - 12)
+        if with_focus:
+            self.into_editor()
 
     def __repr__(self):
         return "<NoteItem at {}>".format(self.id)
@@ -42,7 +47,7 @@ class KMBNote(QGraphicsTextItem, Serializable):
         # call this whenever want to edit text.
         # prepare editor.
         self.setTextInteractionFlags(Qt.TextEditorInteraction)
-        self.setTextWidth(150)
+        self.setTextWidth(self.width)
         self.setFocus()
 
     def hoverEnterEvent(self, event):

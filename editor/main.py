@@ -27,8 +27,7 @@ class KMBMainWindow(QMainWindow):
         self.win_title = 'Karken: KMB'
         self.win_icon = QIcon(icon['WINICON'])
         # init common msg box
-        self.new_msg = PopMessageBox(self.win_title, self)
-        self.new_msg.make("Current project is the newest.")
+        self.pop_msg = PopMessageBox(self.win_title, self, run=True)
         self.save_msg = PopMessageBox(self.win_title, self)
         self.save_msg.make("What are you going to do with current project?",
                            PopMessageBox.TYPE_SAVE_OR_NOT)
@@ -229,7 +228,7 @@ class KMBMainWindow(QMainWindow):
                 return
         else:
             # current project is the newest.
-            self.new_msg.exec()
+            self.pop_msg.make("Current project is the newest.")
 
     def open_(self):
         # load a module to current project.
@@ -251,11 +250,10 @@ class KMBMainWindow(QMainWindow):
         # saving for the first time.
         # check current state
         if self._cur_proj_is_empty():
-            msg = PopMessageBox(self.win_title, self, run=True)
             if otherwise:
-                msg.make("Current project has nothing to {}.".format(otherwise))
+                self.pop_msg.make("Current project has nothing to {}.".format(otherwise))
             else:
-                msg.make("Current project has nothing to save.")
+                self.pop_msg.make("Current project has nothing to save.")
             # if merge these two lines, the word in {} may be 'False' sometimes on Windows.
             return False
         if self.save_path is None:
@@ -292,8 +290,7 @@ class KMBMainWindow(QMainWindow):
              self.last_comment,
              self.last_location) = export.get_inputs()
         else:
-            alert = self._alert_msg_box('Export has been canceled.')
-            alert.exec()
+            self.pop_msg.make('Export has been canceled.')
 
     def about_(self):
         AboutKMB(self)()

@@ -1,10 +1,17 @@
 from PyQt5.QtWidgets import (QFormLayout, QDialog, QHBoxLayout, QMessageBox, QFileDialog,
-                             QLineEdit, QPushButton, QComboBox, QLabel, QTextEdit)
-from PyQt5.QtGui import QIcon, QPixmap
+                             QLineEdit, QPushButton, QComboBox, QLabel, QTextEdit, QListView)
+from PyQt5.QtGui import QIcon, QPixmap, QFont
 from PyQt5.QtCore import Qt
 
 from cfg import EXPORT_SUPPORT, icon
 from editor.component.pthreads import PyParsingThread
+
+
+class SupportTypeComboBox(QComboBox):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.addItems(EXPORT_SUPPORT)
+        self.setView(QListView())  # set style later.
 
 
 class ExportFormDialog(QDialog):
@@ -20,12 +27,12 @@ class ExportFormDialog(QDialog):
         super().__init__(parent)
         self.layout = QFormLayout(self)
         self.commit_layout = QHBoxLayout()
-        self.title = QLabel('<h1>Export settings</h1>')
+        self.title = QLabel('<h1>Export Settings</h1>')
         # all the input form items.
         self.name = QLineEdit(model_name)
         self.author = QLineEdit(last_author)
         self.comments = QTextEdit(last_comment)
-        self.format = QComboBox()
+        self.format = SupportTypeComboBox(self)
         self.location = QPushButton('Choose a location'
                                     if not last_location
                                     else '...' + last_location[-20:])
@@ -35,6 +42,8 @@ class ExportFormDialog(QDialog):
         # icons
         self.win_icon = QIcon(icon['WINICON'])
         self.warn_icon = QPixmap(icon['ALERT'])
+        # fonts
+        self._title_font = QFont('Times New Roman')
 
         # recording inputs
         self.src_loc = src_loc
@@ -43,7 +52,7 @@ class ExportFormDialog(QDialog):
         self.model_author: str = last_author
         self.model_comment: str = last_comment
 
-        self.prepare()
+        self.init_ui()
         self.setup_body()
         self.setFixedSize(300, 400)
         self.setWindowTitle('Export')
@@ -51,18 +60,18 @@ class ExportFormDialog(QDialog):
     def __call__(self, *args, **kwargs):
         self.exec()
 
-    def prepare(self):
+    def init_ui(self):
         # for layout
-        self.layout.setVerticalSpacing(15)
-        # for line and button
+        self.layout.setVerticalSpacing(12)
+        # for line edit size
+        self.comments.setFixedHeight(100)
+        # for placeholder text or tooltips.
         self.name.setPlaceholderText('Model Name')
         self.author.setPlaceholderText('Author')
         self.comments.setPlaceholderText('Annotation [Optional]')
-        self.comments.setFixedHeight(100)
         self.location.setToolTip(self.dst_loc)
-        # for combobox
-        self.format.addItems(EXPORT_SUPPORT)
-        self.format.setFixedWidth(180)
+        # for font
+        self.title.setFont(self._title_font)
         # trigger
         self.location.clicked.connect(self.set_location)
         self.cancel.clicked.connect(self.close)
@@ -73,7 +82,7 @@ class ExportFormDialog(QDialog):
         self.layout.addRow(self.name)
         self.layout.addRow(self.author)
         self.layout.addRow(self.comments)
-        self.layout.addRow('Format', self.format)
+        self.layout.addRow(self.format)
         self.layout.addRow(self.location)
         # two commit buttons
         self.commit_layout.addWidget(self.cancel, alignment=Qt.AlignLeft)
@@ -98,12 +107,17 @@ class ExportFormDialog(QDialog):
             state[1].exec()
         # completed form.
         else:
-            PyParsingThread(self.src_loc,
-                            self.dst_loc,
-                            self.model_name,
-                            self.model_author,
-                            self.model_comment,
-                            self)()
+            fmt = self.format.currentIndex()
+            if  fmt == 0:
+                PyParsingThread(self.src_loc,
+                                self.dst_loc,
+                                self.model_name,
+                                self.model_author,
+                                self.model_comment,
+                                self)()
+            elif fmt == 1:
+                pass
+            # else ...
 
     # ----------UTILS----------
 
