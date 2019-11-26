@@ -1,9 +1,10 @@
 from PyQt5.QtWidgets import QMainWindow, QLabel, QAction, QFileDialog, QMessageBox
-from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtGui import QIcon
 
 from editor.widgets.about import AboutKMB
 from editor.widgets.forms import ExportFormDialog
 from editor.widgets.node_editor import MainNodeEditor
+from editor.component.messages import PopMessageBox
 from editor.component.pthreads import SavingThread, LoadingThread
 from cfg import icon, tips
 
@@ -25,7 +26,15 @@ class KMBMainWindow(QMainWindow):
         # init attrs
         self.win_title = 'Karken: KMB'
         self.win_icon = QIcon(icon['WINICON'])
-        self.alert_icon = QPixmap(icon['ALERT'])
+        # init common msg box
+        self.new_msg = PopMessageBox(self.win_title, self)
+        self.new_msg.make("Current project is the newest.")
+        self.save_msg = PopMessageBox(self.win_title, self)
+        self.save_msg.make("What are you going to do with current project?",
+                           PopMessageBox.TYPE_SAVE_OR_NOT)
+        self.close_msg = PopMessageBox(self.win_title, self)
+        self.close_msg.make("Project has been modified, do you want to save it?",
+                            PopMessageBox.TYPE_YES_OR_NO)
 
         # register actions in toolbar
         # ------
@@ -206,28 +215,27 @@ class KMBMainWindow(QMainWindow):
         # create a new module project.
         if not self._cur_proj_is_empty():
             # current project exists.
-            msg_box = self._save_or_not_msg_box()
-        else:
-            # current project is the newest.
-            msg_box = self._alert_msg_box("Current project is the newest.")
-        state = msg_box.exec()
-        # actions on different buttons
-        if state == QMessageBox.Save:
-            # call save method.
-            if self.save_():
+            state = self.save_msg.exec()
+            # actions on different buttons
+            if state == QMessageBox.Save:
+                # call save method.
+                if self.save_():
+                    self._drop_cur_proj()
+                else:
+                    return
+            elif state == QMessageBox.Discard:
                 self._drop_cur_proj()
             else:
                 return
-        elif state == QMessageBox.Discard:
-            self._drop_cur_proj()
-        # else: ...
+        else:
+            # current project is the newest.
+            self.new_msg.exec()
 
     def open_(self):
         # load a module to current project.
         if not self._cur_proj_is_empty():
             # current project exists.
-            msg_box = self._save_or_not_msg_box()
-            state = msg_box.exec()
+            state = self.save_msg.exec()
             if state == QMessageBox.Save:
                 if self.save_():
                     self._open_cur_proj()
@@ -243,12 +251,12 @@ class KMBMainWindow(QMainWindow):
         # saving for the first time.
         # check current state
         if self._cur_proj_is_empty():
+            msg = PopMessageBox(self.win_title, self, run=True)
             if otherwise:
-                msg = self._alert_msg_box("Current project has nothing to {}.".format(otherwise))
+                msg.make("Current project has nothing to {}.".format(otherwise))
             else:
-                msg = self._alert_msg_box("Current project has nothing to save.")
+                msg.make("Current project has nothing to save.")
             # if merge these two lines, the word in {} may be 'False' sometimes on Windows.
-            msg.exec()
             return False
         if self.save_path is None:
             file_dialog = QFileDialog()
@@ -263,6 +271,7 @@ class KMBMainWindow(QMainWindow):
         SavingThread(self.node_editor.serialize(), self.save_path)()
         # change windows title to current project path.
         self.setWindowTitle(self.save_path.replace('*', ''))
+        self.is_modified = False
         return True
 
     def import_(self):
@@ -291,14 +300,13 @@ class KMBMainWindow(QMainWindow):
 
     def closeEvent(self, event):
         if self.is_modified:
-            msg = self._save_or_not_msg_box()
-            state = msg.exec()
-            if state == QMessageBox.Save:
+            state = self.close_msg.exec()
+            if state == QMessageBox.Yes:
                 if self.save_():
                     event.accept()
                 else:
                     event.ignore()
-            elif state == QMessageBox.Discard:
+            elif state == QMessageBox.No:
                 event.accept()
             else:
                 event.ignore()
@@ -308,27 +316,6 @@ class KMBMainWindow(QMainWindow):
     # --------------------------------------
     #                  UTILS
     # --------------------------------------
-
-    def _alert_msg_box(self, text: str):
-        msg = QMessageBox()
-        msg.setText(text)
-        msg.setInformativeText('<i>Press ok to go back.</i>')
-        msg.setIconPixmap(self.alert_icon)
-        msg.setStandardButtons(QMessageBox.Ok)
-        msg.setDefaultButton(QMessageBox.Ok)
-        msg.setWindowTitle(self.win_title)
-        msg.setWindowIcon(self.win_icon)
-        return msg
-
-    def _save_or_not_msg_box(self):
-        msg = QMessageBox()
-        msg.setText("What are you going to do with current project?")
-        msg.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
-        msg.setDefaultButton(QMessageBox.Save)
-        msg.setIconPixmap(self.alert_icon)
-        msg.setWindowTitle(self.win_title)
-        msg.setWindowIcon(self.win_icon)
-        return msg
 
     def _get_model_name(self):
         return self.save_path.split('/')[-1].split('.')[0].capitalize() \

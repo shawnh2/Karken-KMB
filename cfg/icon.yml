@@ -52,6 +52,8 @@ INPUTS: 'lib/icon/other/inputs.png'
 OUTPUTS: 'lib/icon/other/outputs.png'
 
 # for export error
-EXPORT_ERR: 'lib/icon/other/export_error.png'
-# for alert dialog
-ALERT: 'lib/icon/other/alert.png'
+EXPORT_ERR: 'lib/icon/other/msgbox/export_error.png'
+EXPORT_OK: 'lib/icon/other/msgbox/export_ok.png'
+# for message box
+ALERT: 'lib/icon/other/msgbox/alert.png'
+QUESTION: 'lib/icon/other/msgbox/question.png'

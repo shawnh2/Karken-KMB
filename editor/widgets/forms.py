@@ -20,8 +20,7 @@ class ExportFormDialog(QDialog):
         super().__init__(parent)
         self.layout = QFormLayout(self)
         self.commit_layout = QHBoxLayout()
-
-        self.title = QLabel('<h2>Export settings</h2>')
+        self.title = QLabel('<h1>Export settings</h1>')
         # all the input form items.
         self.name = QLineEdit(model_name)
         self.author = QLineEdit(last_author)
@@ -29,7 +28,7 @@ class ExportFormDialog(QDialog):
         self.format = QComboBox()
         self.location = QPushButton('Choose a location'
                                     if not last_location
-                                    else '...' + last_location[-20: -1])
+                                    else '...' + last_location[-20:])
         # two commit buttons.
         self.cancel = QPushButton('Cancel')
         self.confirm = QPushButton('Confirm')
@@ -46,7 +45,7 @@ class ExportFormDialog(QDialog):
 
         self.prepare()
         self.setup_body()
-        self.setFixedSize(400, 400)
+        self.setFixedSize(300, 400)
         self.setWindowTitle('Export')
 
     def __call__(self, *args, **kwargs):
@@ -54,13 +53,16 @@ class ExportFormDialog(QDialog):
 
     def prepare(self):
         # for layout
-        self.layout.setVerticalSpacing(20)
-        self.comments.setPlaceholderText('Optional')
-        self.location.setMinimumHeight(27)
+        self.layout.setVerticalSpacing(15)
+        # for line and button
+        self.name.setPlaceholderText('Model Name')
+        self.author.setPlaceholderText('Author')
+        self.comments.setPlaceholderText('Annotation [Optional]')
+        self.comments.setFixedHeight(100)
         self.location.setToolTip(self.dst_loc)
         # for combobox
         self.format.addItems(EXPORT_SUPPORT)
-        self.format.setMinimumHeight(25)
+        self.format.setFixedWidth(180)
         # trigger
         self.location.clicked.connect(self.set_location)
         self.cancel.clicked.connect(self.close)
@@ -68,15 +70,15 @@ class ExportFormDialog(QDialog):
 
     def setup_body(self):
         self.layout.addRow(self.title)
-        self.layout.addRow('Model Name', self.name)
-        self.layout.addRow('Author', self.author)
-        self.layout.addRow('Comments', self.comments)
+        self.layout.addRow(self.name)
+        self.layout.addRow(self.author)
+        self.layout.addRow(self.comments)
         self.layout.addRow('Format', self.format)
-        self.layout.addRow('Location', self.location)
+        self.layout.addRow(self.location)
         # two commit buttons
         self.commit_layout.addWidget(self.cancel, alignment=Qt.AlignLeft)
         self.commit_layout.addWidget(self.confirm, alignment=Qt.AlignRight)
-        self.layout.addRow('', self.commit_layout)
+        self.layout.addRow(self.commit_layout)
 
     # ----------FUNCTIONS----------
 
@@ -86,7 +88,7 @@ class ExportFormDialog(QDialog):
                                          QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
         if path:
             self.dst_loc = path
-            self.location.setText('...' + self.dst_loc[-20: -1])
+            self.location.setText('...' + self.dst_loc[-22:])
             self.setToolTip(self.dst_loc)
 
     def commit(self):

@@ -1,3 +1,4 @@
+import os
 import time
 
 import lxml.html
@@ -182,6 +183,10 @@ class PyLines:
 
     def __init__(self):
         self.lines = []
+        self._counts = set()
+
+    def __len__(self):
+        return len(self.lines)
 
     def add(self,
             var=None, src=None,
@@ -196,6 +201,12 @@ class PyLines:
         if call:
             line += f'({call})'
         self.lines.append(line)
+        self._counts.add(f'{cls}:{var}')
+
+    def contains(self, elm: str) -> bool:
+        if self._counts.__contains__(elm):
+            return True
+        return False
 
     def get(self):
         # Make lines to a context.
@@ -213,6 +224,8 @@ class PyParser:
         self.rtn_mod = []
         self.src_dir = set()
         self.lines = PyLines()
+        # Collect all the warnings.
+        self.warnings = []
         # May have multi-entrance.
         entrance = self.get_elm_by_attr(ATTR_START,
                                         ATTR_START_VALUE)
@@ -230,7 +243,20 @@ class PyParser:
             self.line_handler()
 
     def commit(self):
-        return self.lines.get(), self.phs_tag, self.src_dir, self.rtn_mod
+        # Check whether have any unused Layer node.
+        for i, node in self.gen_elm_by_tag('layer', 'model'):
+            elm = '{}:{}'.format(self.get_tag_by_elm(node, 'class')[0],
+                                 self.get_tag_by_elm(node, 'var')[0])
+            if not self.lines.contains(elm):
+                if i == 0:
+                    self.warnings.append(PyUnusedLayerWarning(elm))
+                elif i == 1:
+                    self.warnings.append(PyUnreleasedModelWarning(elm))
+                # else ...
+        # Finally commit.
+        return (self.lines.get(),
+                self.phs_tag, self.src_dir,
+                self.rtn_mod, self.warnings)
 
     # ------------------------------------
     #           Basic Operation
@@ -248,8 +274,15 @@ class PyParser:
         return res
 
     @classmethod
-    def get_elm_by_tag(cls, element, tag):
+    def get_tag_by_elm(cls, element, tag):
         return element.xpath(f'{tag}/text()')
+
+    def gen_elm_by_tag(self, *tags: str):
+        # Generate elements that match the tag.
+        # i is the index of tag in tags.
+        for i, tag in enumerate(tags):
+            for elm in self.content.xpath(tag):
+                yield i, elm
 
     @classmethod
     def get_node_value_in_elm(cls, element, node, raw=False):
@@ -301,8 +334,8 @@ class PyParser:
         for n, c, v in zip(attrs_n, attrs_c, attrs_v):
             # Raise missing required arg value.
             if v == ATTR_REQUIRED_PH:
-                src = cls.get_elm_by_tag(element, "class")[0]
-                var = cls.get_elm_by_tag(element, "var")[0]
+                src = cls.get_tag_by_elm(element, "class")[0]
+                var = cls.get_tag_by_elm(element, "var")[0]
                 raise PyMissingRequiredArgumentError(
                     f'{src}: {var} - {n.tag}({c})'
                 )
@@ -358,7 +391,7 @@ class PyParser:
             try:
                 nxt_elm = self.get_elm_by_attr(ATTR_ID, output_id)[0]
             except IndexError:
-                src = self.get_elm_by_tag(element, 'class')[0]
+                src = self.get_tag_by_elm(element, 'class')[0]
                 raise PyMissingNecessaryConnectionError(src)
 
             nxt_var, nxt_cls = self.get_batch_node_value(nxt_elm,
@@ -580,7 +613,8 @@ class PyHandler:
         (self.lines,
          self.phs,
          self.src,
-         self.rtn) = self.parser.commit()
+         self.rtn,
+         self.warnings) = self.parser.commit()
         # record .py code content.
         self.contents = []
 
@@ -638,6 +672,11 @@ class PyHandler:
         self.add(self.tab(2) +
                  f"return {', '.join(m for m in self.rtn)}")
 
+    def make_warnings(self):
+        # Make all the warnings to string.
+        return ";\n".join([f'Warning {i}: {str(err)}'
+                           for i, err in enumerate(self.warnings, start=1)])
+
     def wrapper_lines(self):
         # Warp the line inside SAFE zone.
         for i, line in enumerate(self.contents):
@@ -651,10 +690,18 @@ class PyHandler:
         self.make_build()
         # self.wrapper_lines()
 
+    def check_path(self, path):
+        # Existed file got covered with new one.
+        if os.path.exists(path):
+            self.warnings.append(PyExistedFileCoveredWarning(path))
+
     def export(self, dst):
+        file = '{}/{}.py'.format(dst, self.title.lower())
         self.organize()
-        with open('{}/{}.py'.format(dst, self.title.lower()), 'w') as py:
+        self.check_path(file)
+        with open(file, 'w') as py:
             cnt = ''
             for line in self.contents:
                 cnt += (line + '\n')
             py.write(cnt)
+        return self.make_warnings(), len(self.warnings)
