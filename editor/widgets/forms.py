@@ -4,14 +4,16 @@ from PyQt5.QtGui import QIcon, QPixmap, QFont
 from PyQt5.QtCore import Qt
 
 from cfg import EXPORT_SUPPORT, icon
-from editor.component.pthreads import PyParsingThread
+from editor.component.pthreads import ExportThread
+from editor.component.messages import PopMessageBox
 
 
 class SupportTypeComboBox(QComboBox):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.addItems(EXPORT_SUPPORT)
-        self.setView(QListView())  # set style later.
+        self.setFixedHeight(30)
+        self.setMinimumWidth(200)
 
 
 class ExportFormDialog(QDialog):
@@ -82,7 +84,7 @@ class ExportFormDialog(QDialog):
         self.layout.addRow(self.name)
         self.layout.addRow(self.author)
         self.layout.addRow(self.comments)
-        self.layout.addRow(self.format)
+        self.layout.addRow('Format', self.format)
         self.layout.addRow(self.location)
         # two commit buttons
         self.commit_layout.addWidget(self.cancel, alignment=Qt.AlignLeft)
@@ -98,7 +100,7 @@ class ExportFormDialog(QDialog):
         if path:
             self.dst_loc = path
             self.location.setText('...' + self.dst_loc[-22:])
-            self.setToolTip(self.dst_loc)
+            self.location.setToolTip(self.dst_loc)
 
     def commit(self):
         state = self.check_integrity()
@@ -108,37 +110,29 @@ class ExportFormDialog(QDialog):
         # completed form.
         else:
             fmt = self.format.currentIndex()
-            if  fmt == 0:
-                PyParsingThread(self.src_loc,
-                                self.dst_loc,
-                                self.model_name,
-                                self.model_author,
-                                self.model_comment,
-                                self)()
-            elif fmt == 1:
-                pass
-            # else ...
+            ExportThread(fmt,
+                         self.src_loc,
+                         self.dst_loc,
+                         self.model_name,
+                         self.model_author,
+                         self.model_comment,
+                         parent=self)()
 
     # ----------UTILS----------
 
     def check_integrity(self) -> (bool, QMessageBox):
-        msg_box = QMessageBox()
-        msg_box.setStandardButtons(QMessageBox.Close)
-        msg_box.setDefaultButton(QMessageBox.Close)
-        msg_box.setWindowTitle('Warning')
-        msg_box.setWindowIcon(self.win_icon)
-        msg_box.setIconPixmap(self.warn_icon)
+        msg_box = PopMessageBox('Warning', self)
         msg = 'Please assign the {} of this module.'
         state = True
         # model name
         if not self.name.text():
-            msg_box.setText(msg.format('name'))
+            msg_box.make(msg.format('name'))
             state = False
         else:
             self.model_name = self.name.text().replace(' ', '_')
         # model author
         if not self.author.text():
-            msg_box.setText(msg.format('author'))
+            msg_box.make(msg.format('author'))
             state = False
         else:
             self.model_author = self.author.text()
@@ -147,7 +141,7 @@ class ExportFormDialog(QDialog):
             self.model_comment = self.comments.toPlainText()
         # export location
         if not self.dst_loc:
-            msg_box.setText(msg.format('location'))
+            msg_box.make(msg.format('location'))
             state = False
 
         return state, msg_box

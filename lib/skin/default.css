@@ -52,28 +52,16 @@ ArgComboBox{
     background-color: whitesmoke;
     border-style: none;
 }
-SupportTypeComboBox{
-    background-color: white;
-    min-height: 30px;
-    border-style: none;
-    border-radius: 5px;
-    font-size: 14px;
-    font-family: monospace;
-    margin-bottom: 5px;
-    margin-top: 5px;
-    padding-left: 5px;
-}
-
 ArgComboBox:on{
     background: transparent;
 }
-ArgComboBox::drop-down, SupportTypeComboBox::drop-down{
+ArgComboBox::drop-down {
     border-style: none;
 }
-ArgComboBox::down-arrow, SupportTypeComboBox::down-arrow {
+ArgComboBox::down-arrow {
     image: url('lib/icon/other/down.png');
 }
-ArgComboBox::down-arrow:on, SupportTypeComboBox::down-arrow:on {
+ArgComboBox::down-arrow:on {
     image: url('lib/icon/other/up.png');
 }
 
@@ -85,7 +73,7 @@ ArgComboBox QAbstractItemView::item {
 }
 
 ArgComboBox QAbstractItemView::item:selected {
-	color: #FFFFFF;
+	color: none;
 	background-color: #60c5ba;
 }
 
@@ -101,7 +89,7 @@ QLineEdit {
     font-size: 16px;
     font-family: monospace;
     min-height: 30px;
-    margin-bottom: 5px;
+    /*margin-bottom: 5px;*/
     padding-left: 5px;
 }
 
@@ -119,7 +107,7 @@ QPushButton {
     border-radius: 5px;
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                       stop: 0 #f6f7fa, stop: 1 #dadbde);
-    min-width: 80px;
+    min-width: 100px;
     min-height: 23px;
 }
 QPushButton:pressed {

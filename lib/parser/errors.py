@@ -1,16 +1,20 @@
 """ All kinds of Errors that may happen during parsing. """
 
 
+class ExportError(Exception):
+    """ All export error will inherit it. """
+    def __init__(self, *args):
+        self.args = args
+
+
 # ------ PyParser Type Error------
 
-class PyParsingError(Exception):
+class PyParsingError(ExportError):
     """ All the errors that happen during parsing to [.py],
         should inherit this Exception.
 
         Error will be popped on message box. """
-    def __init__(self, *args):
-        self.args = args
-
+    pass
 
 class PyMissingInputError(PyParsingError):
     """ Occur when the parser doesn't get any entrance.
@@ -40,13 +44,12 @@ class PyMissingNecessaryConnectionError(PyParsingError):
 
 # ------ PyParser Type Warning------
 
-class PyParsingWarning(Exception):
+class PyParsingWarning(ExportError):
     """ All the warnings that happen during parsing to [.py],
         should inherit this Exception.
 
         Warnings will be collected and show it as details on message box. """
-    def __init__(self, *args):
-        self.args = args
+    pass
 
 
 class PyExistedFileCoveredWarning(PyParsingWarning):
