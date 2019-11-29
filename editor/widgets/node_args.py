@@ -110,25 +110,21 @@ class KMBNodesArgsMenu(QTableView):
     # ------Operations on Model Arg Item------
 
     def modify_item(self, item):
-        value = item.text()
+        old_value = item.text()
         if item.is_referenced:
             # avoid referenced item here nor bug.
             pass
         else:
-            checked_value = self.inspector.auto_type_check(value, item.dtype)
-            item.value = checked_value
-            if item.check_changed(value):
-                item.has_changed()
+            checked_value = self.inspector.auto_type_check(old_value, item.dtype)
+            if self.current_model.reassign_value(item, checked_value):
                 self.is_modified()
-            else:
-                item.undo_change()
         # if this is where var_name got changed,
         # also change value where nodes referenced with.
-        self.current_model.rb_semaphore.update(value)
+        self.current_model.rb_semaphore.update(old_value)
 
     def modify_args(self, value):
         self.is_modified()
-        self.current_model.reassign_value(self.sender().at, value)
+        self.current_model.reassign_item(self.sender().at, value)
 
     def modify_state(self, state):
         self.is_modified()
@@ -166,7 +162,7 @@ class KMBNodesArgsMenu(QTableView):
     def commit_node(self,
                     node_name, node_type,
                     node_id: str, count: int,
-                    pin_args: str):
+                    pin_args: str = 'None'):
         # after adding node in canvas
         # first time make new model.
         id_string, inherit = self.db_link.get_args_id(node_name)

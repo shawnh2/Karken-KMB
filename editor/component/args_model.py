@@ -44,7 +44,7 @@ class ArgsSuperModel(QStandardItemModel):
                            'The variable name of this node.',
                            'var_name')
         init_value = self.node_name.lower()
-        value = ArgEditItem(init_value if count == 1
+        value = ArgEditItem(init_value if count <= 1
                             else init_value + '_' + str(count),
                             'String', 'var_name')
         self.set_col_items(self.n, name, value)
@@ -80,6 +80,13 @@ class ArgsSuperModel(QStandardItemModel):
             arg_value_item = self.item(idx, 1)
             yield idx, arg_name_item, arg_value_item
             idx += 1
+
+    def get_item_by_name(self, name: str):
+        # get the first item by name.
+        for idx, name_item, value_item in self.items():
+            if name_item.text() == name:
+                return idx, value_item
+        return None
 
 
 class ArgsPreviewModel(ArgsSuperModel):
@@ -171,8 +178,20 @@ class ArgsEditableModel(ArgsSuperModel):
 
     # -----------------------------
 
-    def reassign_value(self, idx, value: str):
-        # reassign the value in args combobox.
+    @classmethod
+    def reassign_value(cls, item, value: str) -> bool:
+        # reassign item's value and
+        # return whether value has been changed.
+        item.value = value
+        if item.check_changed(value):
+            item.has_changed()
+            return True
+        else:
+            item.undo_change()
+            return False
+
+    def reassign_item(self, idx, value: str):
+        # reassign the item in args combobox.
         arg_item = self.item(idx, 1)
         arg_item.value = value
         arg_item.has_changed()

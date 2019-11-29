@@ -9,9 +9,9 @@ class PopMessageBox(QMessageBox):
 
     TYPE_OK = 0
     TYPE_ALERT = 2
-    TYPE_YES_OR_NO = 4
-    TYPE_SAVE_OR_NOT = 8
-    TYPE_EXPORT_ERROR = 16
+    TYPE_ERROR = 4
+    TYPE_YES_OR_NO = 8
+    TYPE_SAVE_OR_NOT = 16
     TYPE_EXPORT_WARNING = 32
 
     def __init__(self, title: str, parent=None, run=False):
@@ -38,12 +38,12 @@ class PopMessageBox(QMessageBox):
             self._make_ok()
         elif pop_message_type == self.TYPE_ALERT:
             self._make_alert()
+        elif pop_message_type == self.TYPE_ERROR:
+            self._make_export_error()
         elif pop_message_type == self.TYPE_YES_OR_NO:
             self._make_yes_or_no()
         elif pop_message_type == self.TYPE_SAVE_OR_NOT:
             self._make_save_or_not()
-        elif pop_message_type == self.TYPE_EXPORT_ERROR:
-            self._make_export_error()
         elif pop_message_type == self.TYPE_EXPORT_WARNING:
             self._make_export_warning()
         else:  # default will be ALERT type.

@@ -1,8 +1,8 @@
 from PyQt5.QtWidgets import QComboBox, QCheckBox, QListView
 from PyQt5.QtGui import QStandardItem, QColor, QIcon
 
-from cfg import color, icon
-from lib import type_color_map
+from cfg import color, icon, SS_ARGBOX
+from lib import type_color_map, load_stylesheet
 
 
 class ArgNameItem(QStandardItem):
@@ -170,6 +170,7 @@ class ArgComboBox(QComboBox):
 
         self.addItems(self.box_args)
         self.setCurrentText(default)
+        self.setStyleSheet(load_stylesheet(SS_ARGBOX))
         # set icon for all items.
         init_idx = self.box_args.index(default)
         for idx in range(len(self.box_args)):

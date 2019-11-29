@@ -103,8 +103,7 @@ class Loader:
 
     # ----------UTILS----------
 
-    @classmethod
-    def _common(cls, feed,
+    def _common(self, feed,
                 simplify=False,
                 include_var=True,
                 include_args=True,
@@ -126,5 +125,11 @@ class Loader:
         if include_class:
             common['cls'] = feed.xpath('class/text()')[0]
         if include_args:
-            common['arg'] = feed.xpath('args')
+            common['arg'] = self._unwrap_args(feed.xpath('args')[0])
         return common
+
+    def _unwrap_args(self, arg_node):
+        args = {}
+        for arg in arg_node.xpath('*'):
+            args[arg.tag] = (arg.xpath('./text()')[0], arg.xpath('./@c')[0])
+        return args

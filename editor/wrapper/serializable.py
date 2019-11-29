@@ -7,5 +7,5 @@ class Serializable:
     def serialize(self):
         raise NotImplemented
 
-    def deserialize(self, feeds: dict):
+    def deserialize(self, *args, **kwargs):
         raise NotImplemented

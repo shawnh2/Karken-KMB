@@ -324,7 +324,7 @@ class KMBMainWindow(QMainWindow):
         self.node_editor.nodes_scene.clear()
         self.is_modified = False
         self.save_path = None
-        self.setWindowTitle('')
+        self.setWindowTitle('New Project')
 
     def _open_cur_proj(self):
         # drop current before open project.
@@ -333,10 +333,13 @@ class KMBMainWindow(QMainWindow):
                                            "Karken: KMB Module File",
                                            "/", "KMB Module (*.kmbm)")
         if file[0]:
-            self._drop_cur_proj()
-            self.save_path = file[0]  # change save path to current.
-            LoadingThread(self.save_path, self.node_editor)()
-            self.setWindowTitle(self.save_path)
+            if self.save_path == file[0]:
+                self.pop_msg.make('That project is opening now.')
+            else:
+                self._drop_cur_proj()
+                self.save_path = file[0]  # change save path to current.
+                LoadingThread(self.save_path, self.node_editor)()
+                self.setWindowTitle(self.save_path)
         else:
             return
 

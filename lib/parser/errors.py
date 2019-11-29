@@ -7,14 +7,34 @@ class ExportError(Exception):
         self.args = args
 
 
-# ------ PyParser Type Error------
+class LoadingError(Exception):
+    """ All loading errors define in it. """
 
+    GOT_UNFAMILIAR_ARG = 0
+    GOT_DAMAGED = 88
+    GOT_TEMPER = 99  # only use for test.
+
+    def __init__(self, *args, code: int):
+        self.args = args
+        self.code = code
+
+    def __str__(self):
+        if self.code == self.GOT_UNFAMILIAR_ARG:
+            return "Got an unfamiliar argument: {} in {}".format(*self.args)
+        elif self.code == self.GOT_DAMAGED:
+            return "This project is damaged for some reason."
+        else:
+            return "Fail to open this project."
+
+
+# ------ PyParser Type Error------
 class PyParsingError(ExportError):
     """ All the errors that happen during parsing to [.py],
         should inherit this Exception.
 
         Error will be popped on message box. """
     pass
+
 
 class PyMissingInputError(PyParsingError):
     """ Occur when the parser doesn't get any entrance.
@@ -43,7 +63,6 @@ class PyMissingNecessaryConnectionError(PyParsingError):
 
 
 # ------ PyParser Type Warning------
-
 class PyParsingWarning(ExportError):
     """ All the warnings that happen during parsing to [.py],
         should inherit this Exception.

@@ -2,7 +2,7 @@
 from PyQt5.QtCore import QThread
 
 from editor.component.messages import PopMessageBox
-from lib.parser import ExportError
+from lib.parser import ExportError, LoadingError
 from lib.parser import Saver, Loader
 from lib.parser import PyParser, PyHandler
 
@@ -26,13 +26,17 @@ class LoadingThread(QThread):
         super().__init__()
         self.loader = Loader(src)
         self.editor = editor
+        self.msg_err = PopMessageBox('Open Error', run=True)
 
     def __call__(self, *args, **kwargs):
         self.run()
 
     def run(self):
-        loads = self.loader.load_file()
-        self.editor.deserialize(loads)
+        try:
+            loads = self.loader.load_file()
+            self.editor.deserialize(loads)
+        except LoadingError as err:
+            self.msg_err.make(str(err), PopMessageBox.TYPE_ERROR)
 
 
 class ExportThread(QThread):
@@ -68,7 +72,7 @@ class ExportThread(QThread):
             else:
                 self.msg_ok.make('Export complete.', PopMessageBox.TYPE_OK)
         except ExportError as err:
-            self.msg_err.make(str(err), PopMessageBox.TYPE_EXPORT_ERROR)
+            self.msg_err.make(str(err), PopMessageBox.TYPE_ERROR)
         finally:
             self.parent.close()
 
