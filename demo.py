@@ -4,7 +4,7 @@ import cgitb
 from PyQt5.QtWidgets import QApplication, QSplashScreen, qApp
 from PyQt5.QtGui import QPixmap
 
-from cfg import icon
+from cfg import icon, SS_COMMON
 from lib import load_stylesheet
 from editor.main import KMBMainWindow
 
@@ -26,7 +26,7 @@ def demo_run():
     # setting up main window.
     size = (width * 0.8, height * 0.8)
     win = KMBMainWindow(size)
-    stylesheet = load_stylesheet('lib/skin/default.css')
+    stylesheet = load_stylesheet(SS_COMMON)
     app.setStyleSheet(stylesheet)
     win.show()
     # stay one more second then close.

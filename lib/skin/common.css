@@ -45,38 +45,6 @@ QGroupBox {
     padding-left: 11px;
 }
 
-/* For the combobox in node args menu.
-    &
-   For support type combobox in export dialog */
-ArgComboBox{
-    background-color: whitesmoke;
-    border-style: none;
-}
-ArgComboBox:on{
-    background: transparent;
-}
-ArgComboBox::drop-down {
-    border-style: none;
-}
-ArgComboBox::down-arrow {
-    image: url('lib/icon/other/down.png');
-}
-ArgComboBox::down-arrow:on {
-    image: url('lib/icon/other/up.png');
-}
-
-/* items in combobox. */
-ArgComboBox QAbstractItemView::item {
-	height: 25px;
-	color: #555555;
-	background-color: transparent;
-}
-
-ArgComboBox QAbstractItemView::item:selected {
-	color: none;
-	background-color: #60c5ba;
-}
-
 /* For the checkbox in node args menu. */
 QCheckBox {
     padding-left: 5px;

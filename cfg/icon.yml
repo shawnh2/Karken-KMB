@@ -41,15 +41,15 @@ CROSS: 'lib/icon/cursor/cross.png'
 TRASH: 'lib/icon/cursor/trash.png'
 
 # for default combo box item
-COMBO: 'lib/icon/other/default.png'
-COMBO_EMPTY: 'lib/icon/other/empty.png'
-COMBO_REF: 'lib/icon/other/combo_ref.png'
+COMBO: 'lib/icon/other/argsmenu/default.png'
+COMBO_EMPTY: 'lib/icon/other/argsmenu/empty.png'
+COMBO_REF: 'lib/icon/other/argsmenu/combo_ref.png'
 # for items in node's right menu
-TOKEN: 'lib/icon/other/token.png'
-FREE: 'lib/icon/other/free.png'
+TOKEN: 'lib/icon/other/rightmenu/token.png'
+FREE: 'lib/icon/other/rightmenu/free.png'
 # for model's I/O in its right menu
-INPUTS: 'lib/icon/other/inputs.png'
-OUTPUTS: 'lib/icon/other/outputs.png'
+INPUTS: 'lib/icon/other/rightmenu/inputs.png'
+OUTPUTS: 'lib/icon/other/rightmenu/outputs.png'
 
 # for export error
 EXPORT_ERR: 'lib/icon/other/msgbox/export_error.png'
@@ -57,3 +57,9 @@ EXPORT_OK: 'lib/icon/other/msgbox/export_ok.png'
 # for message box
 ALERT: 'lib/icon/other/msgbox/alert.png'
 QUESTION: 'lib/icon/other/msgbox/question.png'
+
+# for sidebar icon
+SB_LOCK: 'lib/icon/other/sidebar/lockwheel.png'
+SB_ZOOM_IN: 'lib/icon/other/sidebar/zoomin.png'
+SB_ZOOM_OUT: 'lib/icon/other/sidebar/zoomout.png'
+SB_LOCATE: 'lib/icon/other/sidebar/locate.png'

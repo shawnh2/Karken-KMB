@@ -1,0 +1,15 @@
+/* For SideBarButton */
+border: 0px solid white;
+min-height: 40px;
+min-width: 40px;
+background-color: transparent;
+image: url({});
+
+/*
+this line will add it later.
+this is placeholder for above line.
+If you use some pro IDE to view this file,
+may get a lot syntax error, but finally
+this file will only be load as str.
+can tell IDE to turn off the highlighting level.
+*/
