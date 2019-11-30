@@ -59,7 +59,7 @@ class PyMissingRequiredArgumentError(PyParsingError):
 class PyMissingNecessaryConnectionError(PyParsingError):
     """ Missing necessary connection edge. """
     def __str__(self):
-        return "Failure:\nMissing necessary connection at\n{}".format(*self.args)
+        return "Failure:\nMissing necessary connection at\n{}:{}".format(*self.args)
 
 
 # ------ PyParser Type Warning------

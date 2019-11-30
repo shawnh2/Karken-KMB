@@ -1,4 +1,5 @@
 import os
+import re
 import time
 
 import lxml.html
@@ -220,7 +221,7 @@ class PyParser:
         self.content = etree.parse(src_path)
         self.phs_hub = PlaceHolderHub()
         # This is the tag <ph>, not same as the one above.
-        self.phs_tag = []
+        self.phs_tag = set()
         self.rtn_mod = []
         self.src_dir = set()
         self.lines = PyLines()
@@ -392,7 +393,8 @@ class PyParser:
                 nxt_elm = self.get_elm_by_attr(ATTR_ID, output_id)[0]
             except IndexError:
                 src = self.get_tag_by_elm(element, 'class')[0]
-                raise PyMissingNecessaryConnectionError(src)
+                var = self.get_tag_by_elm(element, 'var')[0]
+                raise PyMissingNecessaryConnectionError(src, var)
 
             nxt_var, nxt_cls = self.get_batch_node_value(nxt_elm,
                                                          TAG_VNM, TAG_CLS)
@@ -572,7 +574,7 @@ class PyParser:
         _, value = self.get_tag_by_id(id_, value=True)
         # The tag finally goes into test_p,
         # it will be parse to the attr of class.
-        self.phs_tag.append(value)
+        self.phs_tag.add(value)
         collector.append(f'self.{value}')
 
     def layer_type_support(self, id_, collector: list):
@@ -604,7 +606,7 @@ class PyHandler:
                  author: str = None,
                  comment: str = None):
         self.parser = parser
-        self.title = model_name.capitalize()
+        self.title = self.check_title(model_name)
         self.author = author.capitalize()
         self.comment = comment
         self.time = time.strftime('%y/%m/%d',
@@ -648,6 +650,7 @@ class PyHandler:
     def make_class(self):
         # Make the lines about class and __init__.
         self.add(f'class {self.title}:')
+        self.make_comment()
         self.brk()
         self.add(self.tab(1) +
                  f'def __init__(self, '
@@ -661,6 +664,31 @@ class PyHandler:
             self.add(self.tab(2) + 'pass')
         # Make a break line.
         self.brk()
+
+    def make_comment(self):
+        # Make comment, it's optional.
+        if self.comment:
+            content = ""
+            sums = 0
+            for clip in self.comment.replace('\n', ' ').split(' '):
+                # Pass the invalid text.
+                if not clip:
+                    continue
+                # Warp one clip's left field.
+                if sums == 0:
+                    clip = self.tab(1) + clip
+                else:
+                    clip = ' ' + clip
+                # Warp one clip's right field.
+                if sums + len(clip) > self.SAFE:
+                    clip += ' \n'
+                    sums = 0
+                else:
+                    sums += (len(clip) + 1)
+                content += clip
+            self.add(self.tab(1) + f'"""{content.strip()}"""')
+        else:
+            pass
 
     def make_build(self):
         # Make the build method for model.
@@ -677,23 +705,28 @@ class PyHandler:
         return ";\n".join([f'Warning {i}: {str(err)}'
                            for i, err in enumerate(self.warnings, start=1)])
 
-    def wrapper_lines(self):
-        # Warp the line inside SAFE zone.
-        for i, line in enumerate(self.contents):
-            if len(line) <= self.SAFE:
-                continue
-
     def organize(self):
         self.make_declare()
         self.make_import()
         self.make_class()
         self.make_build()
-        # self.wrapper_lines()
 
     def check_path(self, path):
         # Existed file got covered with new one.
         if os.path.exists(path):
             self.warnings.append(PyExistedFileCoveredWarning(path))
+
+    @classmethod
+    def check_title(cls, title: str):
+        # Make title to a valid classname.
+        pattern = re.compile(r'\w')
+        split = ''.join(pattern.findall(title.capitalize()))
+        if split:
+            if split[0].isdigit():
+                return '_' + split
+            return split
+        else:
+            return 'Model'
 
     def export(self, dst):
         file = '{}/{}.py'.format(dst, self.title.lower())

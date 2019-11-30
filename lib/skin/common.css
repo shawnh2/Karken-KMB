@@ -71,14 +71,24 @@ QTextEdit {
 
 /* For PushButton */
 QPushButton {
-    border: 1px solid gray;
+    border: 1px solid #dedbd9;
     border-radius: 5px;
-    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                      stop: 0 #f6f7fa, stop: 1 #dadbde);
+    background-color: whitesmoke;
     min-width: 100px;
     min-height: 23px;
 }
+
+QPushButton:default {
+    color: white;
+    border: 1px solid #ff7559;
+    background-color: #ff4b2b;
+}
+
 QPushButton:pressed {
-    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                      stop: 0 #dadbde, stop: 1 #f6f7fa);
+    border: 2px solid #ff8874;
+}
+
+QPushButton:default:pressed {
+    border: 2px solid #ff5336;
+    background-color: #e74427;
 }
