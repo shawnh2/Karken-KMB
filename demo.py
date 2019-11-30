@@ -3,6 +3,7 @@ import cgitb
 
 from PyQt5.QtWidgets import QApplication, QSplashScreen, qApp
 from PyQt5.QtGui import QPixmap
+from PyQt5.QtCore import Qt
 
 from cfg import icon, SS_COMMON
 from lib import load_stylesheet
@@ -25,12 +26,18 @@ def demo_run():
     qApp.processEvents()
     # setting up main window.
     size = (width * 0.8, height * 0.8)
-    win = KMBMainWindow(size)
+    editor = KMBMainWindow(size)
     stylesheet = load_stylesheet(SS_COMMON)
     app.setStyleSheet(stylesheet)
-    win.show()
+    # Mac: set the icon in dock.
+    app.setWindowIcon(editor.win_icon)
+    # set Win & Mac compatible.
+    app.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+    app.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+
+    editor.show()
     # stay one more second then close.
-    splash.finish(win)
+    splash.finish(editor)
     sys.exit(app.exec_())
 
 

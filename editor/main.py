@@ -54,7 +54,6 @@ class KMBMainWindow(QMainWindow):
         self.action_note = QAction(QIcon(icon['NOTE']), '', self)
         # ------
         self.action_search = QAction(QIcon(icon['SEARCH']), '', self)
-        self.action_search.setEnabled(False)
         self.action_about = QAction(QIcon(icon['ABOUT']), '', self)
         self.set_toolbar_tooltip()
         self.set_toolbar_actions()
@@ -156,7 +155,7 @@ class KMBMainWindow(QMainWindow):
     def set_toolbar_style(self):
         for action in self.toolbar.actions():
             widget = self.toolbar.widgetForAction(action)
-            widget.setFixedSize(38, 35)
+            widget.setFixedSize(38, 38)
 
     def set_toolbar_trigger(self):
         # add triggered function

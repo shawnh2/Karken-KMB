@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QMessageBox, QApplication
 from PyQt5.QtGui import QPixmap, QIcon
 
 from cfg import icon
@@ -19,12 +19,20 @@ class PopMessageBox(QMessageBox):
 
         self.title = title
         self.run = run  # it will run after making.
+        # for Win & Mac: Retina compatible.
+        # the dpr of Normal(1) or Retina(2) screen.
+        self.ratio = QApplication.desktop().screen().devicePixelRatio()
         # icons
         self.win_icon = QIcon(icon['WINICON'])
         self.alert_icon = QPixmap(icon['ALERT'])
         self.quest_icon = QPixmap(icon['QUESTION'])
         self.ok_icon = QPixmap(icon['EXPORT_OK'])
         self.error_icon = QPixmap(icon['EXPORT_ERR'])
+        # set for dpr.
+        self.alert_icon.setDevicePixelRatio(self.ratio)
+        self.quest_icon.setDevicePixelRatio(self.ratio)
+        self.ok_icon.setDevicePixelRatio(self.ratio)
+        self.error_icon.setDevicePixelRatio(self.ratio)
         # init basic ui
         self.setWindowTitle(self.title)
         self.setWindowIcon(self.win_icon)
