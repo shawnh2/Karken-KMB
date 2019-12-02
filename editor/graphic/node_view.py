@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QGraphicsView, QApplication, QMessageBox
 from PyQt5.QtCore import Qt, QEvent, pyqtSignal
-from PyQt5.QtGui import QPainter, QMouseEvent, QCursor, QPixmap
+from PyQt5.QtGui import QPainter, QMouseEvent, QCursor, QPixmap, QWheelEvent
 
 from editor.graphic.node_item import KMBNodeGraphicItem
 from editor.graphic.node_edge import KMBGraphicEdge
@@ -8,6 +8,7 @@ from editor.graphic.node_note import KMBNote
 from editor.wrapper.wrap_item import KMBNodeItem
 from editor.wrapper.wrap_edge import KMBEdge
 from editor.component.edge_type import KMBGraphicEdgeBezier, KMBGraphicEdgeDirect
+from editor.component.sidebar import KMBViewSideBar
 from cfg import icon, EDGE_CURVES, EDGE_DIRECT
 from lib import debug
 
@@ -55,10 +56,13 @@ class KMBNodeGraphicView(QGraphicsView):
 
         self.gr_scene = graphic_scene
         self.status_bar_msg = status_bar_msg
+        self.sidebar = KMBViewSideBar(self)
         self.parent = parent
 
         self.mode = MOUSE_SELECT
         self.edge_type = None
+        # signals from sidebar
+        self.disable_wheel = False
         # signals from right menu.
         self.has_chosen_from_rm = False
         self.has_chosen_to_del_from_rm = False
@@ -84,6 +88,7 @@ class KMBNodeGraphicView(QGraphicsView):
         self.zoom_clamp = True
 
         self.init_ui()
+        self.init_slots()
 
     def init_ui(self):
         self.setScene(self.gr_scene)
@@ -100,6 +105,11 @@ class KMBNodeGraphicView(QGraphicsView):
         self.setDragMode(self.RubberBandDrag)
         # custom right menu
         self.setContextMenuPolicy(Qt.DefaultContextMenu)
+
+    def init_slots(self):
+        self.sidebar.LOCK_WHEEL.connect(self.set_wheel_disable)
+        self.sidebar.ZOOM_IN.connect(self.set_one_zoom_in)
+        self.sidebar.ZOOM_OUT.connect(self.set_one_zoom_out)
 
     # ------------------MODE--------------------
 
@@ -554,3 +564,16 @@ class KMBNodeGraphicView(QGraphicsView):
     def set_rest_ref_dst_items_count(self, count: int):
         # when count == 0, then shall remove the ref edge.
         self.rest_ref_items_count = count
+
+    def set_wheel_disable(self, state: bool):
+        # on Mac: touch pad may have bad exp if wheel is enable.
+        self.disable_wheel = state
+
+    def set_one_zoom_in(self):
+        # zoom in once.
+        fake_wheel_event = QWheelEvent()
+        pass
+
+    def set_one_zoom_out(self):
+        # zoom out once.
+        pass

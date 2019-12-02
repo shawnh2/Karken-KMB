@@ -107,5 +107,5 @@ class KMBNodeItem(Serializable):
             )
         return tag
 
-    def deserialize(self, feed: tuple):
-        self.gr_node.setPos(feed[0], feed[1])
+    def deserialize(self, x, y):
+        self.gr_node.setPos(x, y)
