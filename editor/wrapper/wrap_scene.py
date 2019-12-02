@@ -1,7 +1,9 @@
 from editor.graphic.node_scene import KMBNodeGraphicScene
 from editor.graphic.node_note import KMBNote
+from editor.wrapper.wrap_edge import KMBEdge
 from editor.wrapper.wrap_item import KMBNodeItem
 from editor.wrapper.serializable import Serializable
+
 from cfg import EDGE_DIRECT, EDGE_CURVES, color
 from lib import Counter, debug
 
@@ -219,22 +221,44 @@ class KMBNodeScene(Serializable):
                     nodes[edge_from]['output'].append(edge_to)
         return nodes
 
-    def deserialize(self, feeds: dict):
-        # todo: create node, note, edge here.
-        for node in feeds.values():
+    def deserialize(self, feeds: dict, args_menu):
+        # todo: create io edge, relation here.
+        io_map = {}  # map old node id to new id.
+        for old_id, node in feeds.items():
             if node['recover'] == 'node':
+                # deserialize Node
                 new_node = KMBNodeItem(self.graphic_scene,
                                        node_name=node['cls'],
                                        node_type=node['type'],
                                        node_sort=node['sort'],
                                        pin_id=None,
                                        parent=self.parent)
-                new_node.deserialize((node['x'], node['y']))
+                new_node.deserialize(node['x'], node['y'])
                 self.add_node(new_node)
+                io_map[old_id] = new_node.id
+                # deserialize Args
+                if node.get('arg') is not None:
+                    args_menu.deserialize(new_node, node['arg'])
             elif node['recover'] == 'note':
+                # deserialize Note
                 new_note = KMBNote(self.graphic_scene,
                                    x=node['x'],
                                    y=node['y'],
                                    with_focus=False)
                 new_note.deserialize(node['text'])
                 self.add_note(new_note)
+        # deserialize io Edge by io_map.
+        for old_id, node in feeds.items():
+            ipt = node.get('input')
+            opt = node.get('output')
+            if ipt is not None and opt is not None:
+                if opt != 'null':
+                    new_edge = KMBEdge(self,
+                                       start_item=self.nodes[io_map[old_id]],
+                                       end_item=self.nodes[io_map[opt]],
+                                       edge_type=EDGE_DIRECT)
+                    self.add_edge(new_edge)
+                else:
+                    # ipt != null and opt == null, is repeating.
+                    # ipt == null and opt == null, is nothing.
+                    pass

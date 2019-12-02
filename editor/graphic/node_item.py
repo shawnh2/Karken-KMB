@@ -1,10 +1,10 @@
 from PyQt5.QtWidgets import (QGraphicsItem, QGraphicsPixmapItem,
-                             QMenu, QAction, QInputDialog)
+                             QMenu, QAction, QInputDialog, QApplication)
 from PyQt5.QtGui import QPixmap, QCursor, QIcon
 
 from editor.graphic.node_text import KMBNodeTextItem
 from lib import debug, write_custom_pin, update_custom_pin
-from cfg import NODE_ICONx85_PATH, icon
+from cfg import NODE_ICONx85_PATH, NODE_ICONx120_PATH, icon
 
 
 class KMBNodeGraphicItem(QGraphicsPixmapItem):
@@ -15,26 +15,37 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         self.name = name
         self.sort = sort
         self.main_editor = main_editor
-        self.pix = QPixmap(NODE_ICONx85_PATH.format(self.sort, self.name))
         self.current_pos = None
-        self.text = KMBNodeTextItem(self.name, self)
-
-        self.width = 85
-        self.height = 85
         self.id_str = str(id(self))
+        self.z_value = 1
 
+        # compatible with Mac Retina screen.
+        self.ratio = QApplication.desktop().screen().devicePixelRatio()
+        if self.ratio == 2:
+            self.pix = QPixmap(NODE_ICONx120_PATH.format(self.sort, self.name))
+            self.width = 60
+            self.height = 60
+        else:
+            self.pix = QPixmap(NODE_ICONx85_PATH.format(self.sort, self.name))
+            self.width = 85
+            self.height = 85
+        self.pix.setDevicePixelRatio(self.ratio)
+
+        # right menu for pin
         self.right_menu = QMenu()
         self.rm_pin = QIcon(icon['PIN_RM'])
         self.rm_pin_up = QIcon(icon['PIN_UPDATE'])
-
+        # right menu for ref
         self.rm_token = QIcon(icon['TOKEN'])
         self.rm_free = QIcon(icon['FREE'])
         self._ref_item = None
-
+        # right menu for io
         self.rm_input = QIcon(icon['INPUTS'])
         self.rm_output = QIcon(icon['OUTPUTS'])
         self._io_item = None
         self._edge_id = None
+        # text around item
+        self.text = KMBNodeTextItem(self.name, self, self.height)
 
         self.setPixmap(self.pix)
         self.setFlag(QGraphicsItem.ItemIsSelectable)
@@ -69,6 +80,13 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         self._ref_item = None
         self._io_item = None
         self._edge_id = None
+
+    # ------------OVERRIDE METHODS--------------
+
+    def mousePressEvent(self, event):
+        super().mousePressEvent(event)
+        self.setZValue(self.z_value)
+        self.z_value += 1
 
     def mouseMoveEvent(self, event):
         super().mouseMoveEvent(event)

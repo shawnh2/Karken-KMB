@@ -41,8 +41,8 @@ QToolBoxButton {
 
 QGroupBox {
     background: #f5f5f5;
-    border-radius: 10px;
     padding-left: 11px;
+    border-style: none;
 }
 
 /* For the checkbox in node args menu. */

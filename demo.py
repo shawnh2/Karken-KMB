@@ -16,10 +16,18 @@ def demo_run():
     app = QApplication(sys.argv)
     # get screen size.
     desktop = QApplication.desktop().screenGeometry()
+    ratio = QApplication.desktop().screen().devicePixelRatio()
     width = desktop.width()
     height = desktop.height()
     # setting up welcome screen.
-    screen = QPixmap(icon["SCREEN"]).scaled(height * 0.5, height * 0.5)
+    screen = QPixmap(icon["SCREEN"])
+    screen.setDevicePixelRatio(ratio)
+    if ratio == 2:
+        # under Mac Retina
+        screen = screen.scaled(height * 0.9, height * 0.9)
+    else:
+        # under Windows and Linux
+        screen = screen.scaled(height * 0.5, height * 0.5)
     splash = QSplashScreen(screen)
     splash.show()
     # handle the main process event.
@@ -31,12 +39,11 @@ def demo_run():
     app.setStyleSheet(stylesheet)
     # Mac: set the icon in dock.
     app.setWindowIcon(editor.win_icon)
-    # set Win & Mac compatible.
+    # compatible with Mac Retina screen.
     app.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     app.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-
+    # editor show up
     editor.show()
-    # stay one more second then close.
     splash.finish(editor)
     sys.exit(app.exec_())
 

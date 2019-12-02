@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QDialog, QLabel
+from PyQt5.QtWidgets import QDialog, QLabel, QApplication
 from PyQt5.QtGui import QPixmap, QFont
 from PyQt5.QtCore import Qt
 
@@ -17,10 +17,13 @@ class AboutKMB(QDialog):
         self.foot = QLabel(self)
         self.git_link = QLabel(self)
         self.git_img = QLabel(self)
-        self.github = QPixmap(icon['GIT']).scaled(20, 20)
+        self.github = QPixmap(icon['GIT'])
         # init configures.
         self.width = 500
         self.height = 370
+        # compatible with Mac Retina screen.
+        self.ratio = QApplication.desktop().screen().devicePixelRatio()
+        self.github.setDevicePixelRatio(self.ratio)
         self.font = QFont('monospace')
         # init UI.
         self.setup_ui()
@@ -30,9 +33,8 @@ class AboutKMB(QDialog):
         self.setFixedSize(self.width, self.height)
         self.setWindowFlag(Qt.FramelessWindowHint)
         # setup header img.
-        self.header_img = self.header_img.scaled(self.width, self.width)
         self.header.setGeometry(0, 0, self.width, self.height // 3)
-        self.header.setPixmap(self.header_img)
+        self.header.setPixmap(self.header_img.scaled(self.width, self.width))
         # setup body context.
         self.body.setGeometry(60, 80, self.width, self.height-80)
         self.body.setFont(self.font)
@@ -60,7 +62,7 @@ class AboutKMB(QDialog):
         self.git_link.setText('<a href="https://github.com/ShawnHXH/Karken-KMB">'
                               'View on GitHub</a>')
         # setup icon for github.
-        self.git_img.setGeometry(420, 324, 20, 20)
+        self.git_img.setGeometry(420, 300, 64, 64)
         self.git_img.setPixmap(self.github)
 
     def __call__(self, *args, **kwargs):

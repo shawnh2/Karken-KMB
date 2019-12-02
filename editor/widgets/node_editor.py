@@ -143,6 +143,7 @@ class MainNodeEditor(QWidget):
         self.parent().update_modify_state()
 
     def serialize(self):
+        # call by Saving thread.
         # organize the nodes here,
         nodes_dict = self.nodes_scene.serialize()
         args_dict, vars_dict = self.args_menu.serialize()
@@ -172,7 +173,6 @@ class MainNodeEditor(QWidget):
         return nodes_dict
 
     def deserialize(self, feeds: dict):
-        # todo: merge args and save into args_menu,
-        #       send other to scene to deserialize
+        # call by Loading thread.
         print(feeds)
-        self.nodes_scene.deserialize(feeds)
+        self.nodes_scene.deserialize(feeds, self.args_menu)
