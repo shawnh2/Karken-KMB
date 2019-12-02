@@ -1,15 +1,16 @@
 /* For SideBarButton */
-border: 0px solid white;
-min-height: 40px;
-min-width: 40px;
-background-color: transparent;
-image: url({});
+SideBarButton {{
+    min-height: {b_size}px;
+    min-width: {b_size}px;
+    image: url({i_path});
+    background-color: transparent;
+    border: 0px solid white;
+}}
 
-/*
-this line will add it later.
-this is placeholder for above line.
-If you use some pro IDE to view this file,
-may get a lot syntax error, but finally
-this file will only be load as str.
-can tell IDE to turn off the highlighting level.
-*/
+SideBarButton:pressed {{
+    {press_block}
+}}
+
+SideBarButton:checked {{
+    {check_block}
+}}

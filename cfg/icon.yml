@@ -59,7 +59,11 @@ ALERT: 'lib/icon/other/msgbox/alert.png'
 QUESTION: 'lib/icon/other/msgbox/question.png'
 
 # for sidebar icon
-SB_LOCK: 'lib/icon/other/sidebar/lockwheel.png'
-SB_ZOOM_IN: 'lib/icon/other/sidebar/zoomin.png'
-SB_ZOOM_OUT: 'lib/icon/other/sidebar/zoomout.png'
-SB_LOCATE: 'lib/icon/other/sidebar/locate.png'
+S_LOCK: 'lib/icon/other/sidebar/lock_wheel.png'
+S_LOCK_CHECK: 'lib/icon/other/sidebar/lock_check.png'
+S_ZOOM_IN: 'lib/icon/other/sidebar/zoom_in.png'
+S_ZOOM_IN_PRESS: 'lib/icon/other/sidebar/zoom_in_press.png'
+S_ZOOM_OUT: 'lib/icon/other/sidebar/zoom_out.png'
+S_ZOOM_OUT_PRESS: lib/icon/other/sidebar/zoom_out_press.png
+S_LOCATE: 'lib/icon/other/sidebar/locate.png'
+S_LOCATE_PRESS: 'lib/icon/other/sidebar/locate_press.png'

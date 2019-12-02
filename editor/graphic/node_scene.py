@@ -81,7 +81,9 @@ class KMBNodeGraphicScene(QGraphicsScene):
 
         # draw the lines
         painter.setPen(self._pen_light)
-        painter.drawLines(*lines_light)
+        if lines_light:
+            painter.drawLines(*lines_light)
 
         painter.setPen(self._pen_dark)
-        painter.drawLines(*lines_dark)
+        if lines_dark:
+            painter.drawLines(*lines_dark)

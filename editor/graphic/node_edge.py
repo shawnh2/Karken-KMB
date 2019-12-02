@@ -1,10 +1,10 @@
 import math
 
-from PyQt5.QtWidgets import QGraphicsPathItem, QGraphicsItem
+from PyQt5.QtWidgets import QGraphicsPathItem, QGraphicsItem, QApplication
 from PyQt5.QtGui import QColor, QPen, QBrush
 from PyQt5.QtCore import Qt
 
-from cfg import EDGE_WIDTH, color, EDGE_DIRECT
+from cfg import EDGE_WIDTH, EDGE_DIRECT, color
 
 
 class KMBGraphicEdge(QGraphicsPathItem):
@@ -15,6 +15,8 @@ class KMBGraphicEdge(QGraphicsPathItem):
 
         self.edge = edge  # the wrapper of itself
         self.type = EDGE_DIRECT  # default
+        self.ratio = QApplication.desktop().screen().devicePixelRatio()
+        self.width = EDGE_WIDTH - self.ratio
         self.pos_src = [0, 0]
         self.pos_dst = [0, 0]
 
@@ -24,20 +26,20 @@ class KMBGraphicEdge(QGraphicsPathItem):
         self._color_hover = QColor(color['EDGE_HOVER'])
 
         self._pen_io = QPen(self._color_io)
-        self._pen_io.setWidthF(EDGE_WIDTH)
+        self._pen_io.setWidthF(self.width)
         self._pen_ref = QPen(self._color_ref)
-        self._pen_ref.setWidthF(EDGE_WIDTH)
+        self._pen_ref.setWidthF(self.width)
         self._pen_ref.setStyle(Qt.DotLine)
 
         self._pen_selected = QPen(self._color_selected)
-        self._pen_selected.setWidthF(EDGE_WIDTH)
+        self._pen_selected.setWidthF(self.width)
 
         self._pen_dragging = QPen(self._color_io)
         self._pen_dragging.setStyle(Qt.DashDotLine)
-        self._pen_dragging.setWidthF(EDGE_WIDTH)
+        self._pen_dragging.setWidthF(self.width)
 
         self._mark_pen = QPen(Qt.green)
-        self._mark_pen.setWidthF(EDGE_WIDTH)
+        self._mark_pen.setWidthF(self.width)
         self._mark_brush = QBrush()
         self._mark_brush.setColor(Qt.green)
         self._mark_brush.setStyle(Qt.SolidPattern)
@@ -83,11 +85,11 @@ class KMBGraphicEdge(QGraphicsPathItem):
                 # paint a output mark on the edge
                 x1, y1 = self.pos_src
                 x2, y2 = self.pos_dst
-                radius = 6   # marker radius
-                length = 55  # marker length
+                radius = 8 - 2 * self.ratio    # marker radius
+                length = 70 - 15 * self.ratio  # marker length
                 k = math.atan2(y2 - y1, x2 - x1)
-                new_x = x2 - length * math.cos(k) - EDGE_WIDTH
-                new_y = y2 - length * math.sin(k) - EDGE_WIDTH
+                new_x = x2 - length * math.cos(k) - self.width
+                new_y = y2 - length * math.sin(k) - self.width
                 # draw path line first
                 painter.setPen(self._pen_io if not self.isSelected() else self._pen_selected)
                 painter.drawPath(path)
