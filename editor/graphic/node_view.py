@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QGraphicsView, QApplication, QMessageBox
-from PyQt5.QtCore import Qt, QEvent, pyqtSignal
+from PyQt5.QtCore import Qt, QEvent, pyqtSignal, QPoint
 from PyQt5.QtGui import QPainter, QMouseEvent, QCursor, QPixmap, QWheelEvent
 
 from editor.graphic.node_item import KMBNodeGraphicItem
@@ -63,6 +63,7 @@ class KMBNodeGraphicView(QGraphicsView):
         self.edge_type = None
         # signals from sidebar
         self.disable_wheel = False
+        self.has_pressed_zoom_btn = False
         # signals from right menu.
         self.has_chosen_from_rm = False
         self.has_chosen_to_del_from_rm = False
@@ -203,6 +204,13 @@ class KMBNodeGraphicView(QGraphicsView):
         super().mouseMoveEvent(event)
 
     def wheelEvent(self, event):
+        # check whether should be end.
+        if self.disable_wheel:
+            if self.has_pressed_zoom_btn:
+                self.has_pressed_zoom_btn = False
+            else:
+                return
+
         zoom_out_factor = 1 / self.zoom_in_factor
 
         if event.angleDelta().y() > 0:
@@ -571,9 +579,33 @@ class KMBNodeGraphicView(QGraphicsView):
 
     def set_one_zoom_in(self):
         # zoom in once.
-        fake_wheel_event = QWheelEvent()
-        pass
+        fake_wheel_event = QWheelEvent(
+            # todo: zoom with certain center.
+            QPoint(100, 100),  # pos(fake)
+            QPoint(500, 200),  # global-pos(fake)
+            QPoint(0, 2),      # pixel-delta(fake)
+            QPoint(0, 120),    # angle-delta(fake)
+            0,                 # phase
+            Qt.Vertical,       # orientation
+            Qt.LeftButton,     # button
+            Qt.KeyboardModifierMask  # keyboard
+        )
+        # enable wheel, disable it after using.
+        self.has_pressed_zoom_btn = True
+        # feed it to wheel.
+        self.wheelEvent(fake_wheel_event)
 
     def set_one_zoom_out(self):
         # zoom out once.
-        pass
+        fake_wheel_event = QWheelEvent(
+            QPoint(100, 100),
+            QPoint(500, 200),
+            QPoint(0, -2),
+            QPoint(0, -120),
+            0,
+            Qt.Vertical,
+            Qt.LeftButton,
+            Qt.KeyboardModifierMask
+        )
+        self.has_pressed_zoom_btn = True
+        self.wheelEvent(fake_wheel_event)

@@ -1,7 +1,7 @@
-from PyQt5.QtWidgets import QWidget, QPushButton, QVBoxLayout, QApplication, QSlider
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtWidgets import QWidget, QPushButton, QVBoxLayout, QApplication
+from PyQt5.QtCore import pyqtSignal
 
-from cfg import icon, SS_SIDEBAR, SS_SIDEBTN
+from cfg import icon, SS_SIDEBTN
 from lib import load_stylesheet
 
 
@@ -32,30 +32,19 @@ class SideBarButton(QPushButton):
         ))
 
 
-class SideBarSlider(QSlider):
-    """ The slider to zoom in/out the view. """
-
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.setRange(0, 20)
-        self.setValue(15)
-        self.setOrientation(Qt.Vertical)
-        # self.valueChanged.connect(print)
-
-
 class KMBViewSideBar(QWidget):
     """ The side floating button of editor view. """
     # todo: function on button and progress bar.
     # todo: auto hide and show with animation.
 
     LOCK_WHEEL = pyqtSignal(bool)
-    ZOOM_IN = pyqtSignal(bool)
-    ZOOM_OUT = pyqtSignal(bool)
+    ZOOM_IN = pyqtSignal(bool)   # to view
+    ZOOM_OUT = pyqtSignal(bool)  # to view
 
     def __init__(self, parent):
         super().__init__(parent)
-        self.w = 70
-        self.h = 310
+        self.w = 65
+        self.h = 190
         # setup layout
         self.inner_layout = QVBoxLayout(self)
         # setup buttons in sidebar
@@ -75,17 +64,13 @@ class KMBViewSideBar(QWidget):
             icon['S_LOCATE'], 'Locating', self,
             btn_pressed_img=icon['S_LOCATE_PRESS']
         )
-        # setup slider in sidebar
-        self.zoom_progress = SideBarSlider(self)
         # setup sidebar body
         self.inner_layout.addWidget(self.lock_roll_btn)
         self.inner_layout.addWidget(self.zoom_in_btn)
-        self.inner_layout.addWidget(self.zoom_progress)
         self.inner_layout.addWidget(self.zoom_out_btn)
         self.inner_layout.addWidget(self.auto_locate_btn)
         # setup ui
         self.setFixedSize(self.w, self.h)
-        self.setStyleSheet(load_stylesheet(SS_SIDEBAR))
         # setup actions
         self.lock_roll_btn.setCheckable(True)
         self.lock_roll_btn.pressed.connect(self.lock_roll_pressed)

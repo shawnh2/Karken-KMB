@@ -36,7 +36,6 @@ EXPORT_SUPPORT = (
 # Loading configure for stylesheet
 SS_COMMON = 'lib/skin/common.css'
 SS_ARGBOX = 'lib/skin/argcombobox.css'
-SS_SIDEBAR = 'lib/skin/sidebar.css'
 SS_SIDEBTN = 'lib/skin/sidebarbtn.css'
 
 # Loading configure for debug.
