@@ -40,8 +40,8 @@ class Saver:
 
     def _for_ph(self, feed):
         ph = etree.SubElement(self.root, feed['tag'])
-        ph.text = feed['var']
         self._common_attrs(ph, feed)
+        self._common_tags(ph, feed, include_class=False)
 
     def _for_note(self, feed):
         note = etree.SubElement(self.root, feed['tag'])

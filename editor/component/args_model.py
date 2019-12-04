@@ -24,6 +24,17 @@ class ArgsSuperModel(QStandardItemModel):
         self.io_separator = 0  # where inherit and original args separated.
         self.var_name_idx = 0  # record idx where is arg: var_name
 
+    @property
+    def var_name(self):
+        return self.item(self.var_name_idx, 1).text()
+
+    @property
+    def var_name_item(self):
+        return self.item(self.var_name_idx, 1)
+
+    def set_var_name(self, var_name: str):
+        self.var_name_item.value = var_name
+
     def set_header_labels(self, header1: str, header2: str):
         # only two headers available
         self.setHorizontalHeaderLabels((header1, header2))
@@ -143,14 +154,6 @@ class ArgsEditableModel(ArgsSuperModel):
         # set header labels for this model
         self.set_header_labels("Name", "Argument Value")
 
-    @property
-    def var_name(self):
-        return self.item(self.var_name_idx, 1).text()
-
-    @property
-    def var_name_item(self):
-        return self.item(self.var_name_idx, 1)
-
     # ------MAINTAIN SEMAPHORE------
     # Maintain the rb_semaphore by property ref_by.
 
@@ -169,6 +172,7 @@ class ArgsEditableModel(ArgsSuperModel):
     # Maintain the io_semaphore by property io.
 
     def set_io(self, io: tuple):
+        # io: src_node_id, sign, src_node_var_name_item
         self.io_semaphore.add(io)
 
     def get_io(self):

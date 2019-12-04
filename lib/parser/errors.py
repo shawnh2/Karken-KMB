@@ -11,8 +11,10 @@ class LoadingError(Exception):
     """ All loading errors define in it. """
 
     GOT_UNFAMILIAR_ARG = 0
+    GOT_MEMORY_ERROR = 11
+    GOT_UNKNOWN_TAG = 22
     GOT_DAMAGED = 88
-    GOT_TEMPER = 99  # only use for test.
+    GOT_TEMPER = 99  # only used for test.
 
     def __init__(self, *args, code: int):
         self.args = args
@@ -21,6 +23,10 @@ class LoadingError(Exception):
     def __str__(self):
         if self.code == self.GOT_UNFAMILIAR_ARG:
             return "Got an unfamiliar argument: {} in {}".format(*self.args)
+        elif self.code == self.GOT_MEMORY_ERROR:
+            return "Fail to retrieve the node: {}".format(*self.args)
+        elif self.code == self.GOT_UNKNOWN_TAG:
+            return "Got an unknown tag: {}".format(*self.args)
         elif self.code == self.GOT_DAMAGED:
             return "This project is damaged for some reason."
         else:

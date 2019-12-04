@@ -51,6 +51,7 @@ class KMBNodeItem(Serializable):
                 tag='ph',
                 id=node_id,
                 var=None,
+                args=None,
                 x=x, y=y,
                 tp=self.gr_type,
                 sort=self.gr_sort

@@ -13,11 +13,18 @@ class AutoInspector:
     here with prefix `_inspect_ ` + `TYPE NAME`.
     """
 
+    WHITE_LIST = (
+        'Annotation',  # in PlaceHolder
+    )
+
     def __init__(self):
         self._cur_value = None
 
-    def auto_type_check(self, value: str, dtype: str):
+    def auto_type_check(self, value: str, dtype: str, name: str):
         self._cur_value = value
+        # check from whitelist
+        if name in self.WHITE_LIST:
+            return value
         # facing different cases.
         try:
             new_value = eval(f'self._inspect_{dtype.lower()}()')
@@ -49,7 +56,7 @@ class AutoInspector:
         This kind of char has interrupt function.
         `-XX.cXX`, this form works well(`-XX.XX`).
         """
-        nbr = re.compile('-?\d+\.?\d*')
+        nbr = re.compile(r'-?\d+\.?\d*')
         res = nbr.findall(self._cur_value)
         if len(res) == 0:
             return str(len(self._cur_value))
@@ -112,7 +119,7 @@ class AutoInspector:
         else:
             l_br = '('
             r_br = ')'
-        pattern = re.compile('-?\d+\.?\d*;?\d*')
+        pattern = re.compile(r'-?\d+\.?\d*;?\d*')
         separated = []
         for res in pattern.findall(self._cur_value):
             if res.__contains__(';'):

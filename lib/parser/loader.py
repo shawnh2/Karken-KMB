@@ -60,15 +60,15 @@ class Loader:
         }
 
     def _for_ph(self, feed):
-        com = self._common(feed, simplify=True)
-        text = feed.xpath('./text()')[0]
+        com = self._common(feed, include_class=False)
         self.nodes[com['id']] = {
             'x': com['x'],
             'y': com['y'],
+            'var': com['var'],
             'cls': 'PlaceHolder',
-            'type': 'Common',
-            'sort': 'Common',
-            'text': text,
+            'arg': com['arg'],
+            'type': com['type'],
+            'sort': com['sort'],
             'recover': 'node'
         }
 

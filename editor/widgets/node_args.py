@@ -115,7 +115,7 @@ class KMBNodesArgsMenu(QTableView):
             # avoid referenced item here nor bug.
             pass
         else:
-            checked_value = self.inspector.auto_type_check(old_value, item.dtype)
+            checked_value = self.inspector.auto_type_check(old_value, item.dtype, item.belong_to)
             if self.current_model.reassign_value(item, checked_value):
                 self.is_modified()
         # if this is where var_name got changed,
@@ -136,9 +136,8 @@ class KMBNodesArgsMenu(QTableView):
         dst_model = self.edit_model.get(dst_node_id)
         src_model = self.edit_model.get(src_node_id)
         dst_value_item = dst_model.item(idx, 1)
-        src_value_item = src_model.item(src_model.var_name_idx, 1)
         # save the relationship of ref and its node id.
-        dst_value_item.ref_to = (src_node_id, src_value_item)
+        dst_value_item.ref_to = (src_node_id, src_model.var_name_item)
         # dst node id, and dst value edit item,
         # and the item of dst model's var name.
         src_model.ref_by = (dst_node_id, dst_value_item,
@@ -153,9 +152,8 @@ class KMBNodesArgsMenu(QTableView):
         # only Model will collect I/O, other node won't.
         dst_model = self.edit_model.get(model_id)
         src_model = self.edit_model.get(src_node_id)
-        src_value_item = src_model.item(src_model.var_name_idx, 1)
         # load in IO semaphore by io.
-        dst_model.io = (src_node_id, io_sign, src_value_item)
+        dst_model.io = (src_node_id, io_sign, src_model.var_name_item)
 
     # ------Operations on Node Model------
 

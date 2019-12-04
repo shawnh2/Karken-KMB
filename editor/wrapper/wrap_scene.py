@@ -2,6 +2,7 @@ from editor.graphic.node_scene import KMBNodeGraphicScene
 from editor.graphic.node_note import KMBNote
 from editor.wrapper.wrap_edge import KMBEdge
 from editor.wrapper.wrap_item import KMBNodeItem
+from editor.wrapper.wrap_args import KMBArgsMenu
 from editor.wrapper.serializable import Serializable
 
 from cfg import EDGE_DIRECT, EDGE_CURVES, color
@@ -221,9 +222,11 @@ class KMBNodeScene(Serializable):
                     nodes[edge_from]['output'].append(edge_to)
         return nodes
 
-    def deserialize(self, feeds: dict, args_menu):
-        # todo: create io edge, relation here.
-        io_map = {}  # map old node id to new id.
+    def deserialize(self, feeds: dict, args_menu: KMBArgsMenu):
+        # map old node id to new id. (wrapper, graphic)
+        node_map = {}
+
+        # First Loop
         for old_id, node in feeds.items():
             if node['recover'] == 'node':
                 # deserialize Node
@@ -235,10 +238,14 @@ class KMBNodeScene(Serializable):
                                        parent=self.parent)
                 new_node.deserialize(node['x'], node['y'])
                 self.add_node(new_node)
-                io_map[old_id] = new_node.id
-                # deserialize Args
-                if node.get('arg') is not None:
-                    args_menu.deserialize(new_node, node['arg'])
+                node_map[old_id] = (new_node.id, new_node.gr_node.id_str)
+                # deserialize Args: for models
+                if node.__contains__('arg'):
+                    args_menu.deserialize(feed=node,
+                                          new_nodes=self.nodes,
+                                          node_map=node_map,
+                                          old_id=old_id,
+                                          include_args=False)
             elif node['recover'] == 'note':
                 # deserialize Note
                 new_note = KMBNote(self.graphic_scene,
@@ -247,18 +254,38 @@ class KMBNodeScene(Serializable):
                                    with_focus=False)
                 new_note.deserialize(node['text'])
                 self.add_note(new_note)
-        # deserialize io Edge by io_map.
+
+        # Second Loop
         for old_id, node in feeds.items():
+            # deserialize io Edge by node_map.
             ipt = node.get('input')
             opt = node.get('output')
             if ipt is not None and opt is not None:
                 if opt != 'null':
-                    new_edge = KMBEdge(self,
-                                       start_item=self.nodes[io_map[old_id]],
-                                       end_item=self.nodes[io_map[opt]],
-                                       edge_type=EDGE_DIRECT)
-                    self.add_edge(new_edge)
+                    end_id = node_map[opt][0]
+                    end_item = self.nodes[end_id]
+                    new_io_edge = KMBEdge(self,
+                                          start_item=self.nodes[node_map[old_id][0]],
+                                          end_item=end_item, edge_type=EDGE_DIRECT)
+                    self.add_edge(new_io_edge)
                 else:
                     # ipt != null and opt == null, is repeating.
                     # ipt == null and opt == null, is nothing.
                     pass
+            # deserialize Args: for args
+            if node.__contains__('arg'):
+                ref_edges = args_menu.deserialize(
+                    feed=node,
+                    new_nodes=self.nodes,
+                    node_map=node_map,
+                    old_id=old_id,
+                    include_args=True
+                )
+                # deserialize ref Edge by ref_edges.
+                if ref_edges:
+                    for src, dst in ref_edges.items():
+                        new_ref_edge = KMBEdge(self,
+                                               start_item=self.nodes[src],
+                                               end_item=self.nodes[dst],
+                                               edge_type=EDGE_CURVES)
+                        self.add_edge(new_ref_edge)
