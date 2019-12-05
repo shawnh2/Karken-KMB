@@ -23,7 +23,10 @@ class AboutKMB(QDialog):
         self.height = 370
         # compatible with Mac Retina screen.
         self.ratio = QApplication.desktop().screen().devicePixelRatio()
-        self.github.setDevicePixelRatio(self.ratio)
+        if self.ratio == 1:
+            self.github = self.github.scaled(32, 32)
+        else:
+            self.github.setDevicePixelRatio(self.ratio)
         self.font = QFont('monospace')
         # init UI.
         self.setup_ui()

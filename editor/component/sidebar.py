@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QPushButton, QVBoxLayout, QApplication
+from PyQt5.QtWidgets import QWidget, QPushButton, QVBoxLayout
 from PyQt5.QtCore import pyqtSignal
 
 from cfg import icon, SS_SIDEBTN
@@ -16,8 +16,7 @@ class SideBarButton(QPushButton):
                  btn_pressed_img: str = None):
         super().__init__(parent)
         # add support for both Normal and Retina screen.
-        self.ratio = QApplication.desktop().screen().devicePixelRatio()
-        self.btn_size = 64 // self.ratio
+        self.btn_size = 32
         # setup ui.
         self.setStatusTip(tooltip)
         press_block = ''
@@ -34,7 +33,7 @@ class SideBarButton(QPushButton):
 
 class KMBViewSideBar(QWidget):
     """ The side floating button of editor view. """
-    # todo: function on button and progress bar.
+    # todo: locate function.
     # todo: auto hide and show with animation.
 
     LOCK_WHEEL = pyqtSignal(bool)

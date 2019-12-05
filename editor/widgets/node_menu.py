@@ -39,7 +39,7 @@ class KMBNodesMenu(QTabWidget):
 
         self.setTabIcon(0, QIcon(icon['PIN_TAB']))
         self.setCurrentWidget(self.layer_nodes)
-        self.setMinimumWidth(280)
+        self.setMinimumWidth(290)
         self.setMaximumWidth(500)
 
     def set_toolbox(self):
