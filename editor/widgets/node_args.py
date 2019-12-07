@@ -188,7 +188,7 @@ class KMBNodesArgsMenu(QTableView):
         # sometimes layer can be the ref too.
         # but only del its ref by if its peer
         # node is one of TimeDistributed or Bidirectional.
-        elif model.node_type == 'Layers':
+        elif model.node_name in ('TimeDistributed', 'Bidirectional'):
             if model.ref_by:
                 del model.ref_by
         # remove entire node item,
@@ -200,8 +200,8 @@ class KMBNodesArgsMenu(QTableView):
                     src_model = self.edit_model.get(src_node_id)
                     src_model.rb_semaphore.popup(node_id,
                                                  value_item.id_str)
-        # finally clean it all.
-        self.edit_model.__delitem__(node_id)
+        # finally hide that model instead of deleting.
+        # self.edit_model.__delitem__(node_id)
         self.setModel(self.null_model)
 
     def fetch_node(self, node_id: str):

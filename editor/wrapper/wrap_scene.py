@@ -4,9 +4,9 @@ from editor.wrapper.wrap_edge import KMBEdge
 from editor.wrapper.wrap_item import KMBNodeItem
 from editor.wrapper.wrap_args import KMBArgsMenu
 from editor.wrapper.serializable import Serializable
+from editor.component.commands_stack import KMBHistoryStack
 
-from cfg import EDGE_DIRECT, EDGE_CURVES, color
-from lib import Counter, debug
+from cfg import EDGE_DIRECT, EDGE_CURVES, SCENE_WIDTH, SCENE_HEIGHT, color
 
 
 class KMBNodeScene(Serializable):
@@ -14,16 +14,13 @@ class KMBNodeScene(Serializable):
     def __init__(self, parent):
         super().__init__()
         self.parent = parent  # main editor widget
-        self.edges = {}  # saving wrapper edges
-        self.nodes = {}  # saving wrapper nodes
-        self.notes = {}  # saving the notes
-        self.nodes_counter = Counter()  # count the nodes
 
-        self.scene_width = 10000
-        self.scene_height = 10000
+        self.scene_width = SCENE_WIDTH
+        self.scene_height = SCENE_HEIGHT
         self.graphic_scene = KMBNodeGraphicScene(self)
         self.graphic_scene.set_graphic_scene(self.scene_width,
                                              self.scene_height)
+        self.history = KMBHistoryStack(self.graphic_scene)
 
     # -------------------------------
     #              CHECK
@@ -41,7 +38,12 @@ class KMBNodeScene(Serializable):
             if edge.end_item.gr_name == "Input":
                 return -1
             # 2. nodes that cannot be token as i/o.
-            if not edge.start_item.as_io or not edge.end_item.as_io:
+            if (
+                not edge.start_item.as_ipt or
+                not edge.end_item.as_ipt or
+                not edge.start_item.as_opt or
+                not edge.end_item.as_opt
+            ):
                 return -1
             # 3. Referenced type node doesn't involve in any IO(Direct) edge.
             if (
@@ -55,7 +57,7 @@ class KMBNodeScene(Serializable):
             if edge.start_item.gr_name == "Model":
                 return -1
             # 5. check the same edge in previous edges.
-            for e in self.edges.values():
+            for e in self.history.edges.values():
                 if (
                     (
                         e.start_item == edge.start_item and
@@ -86,14 +88,16 @@ class KMBNodeScene(Serializable):
                     edge.start_item.gr_sort == 'Recurrent' and
                     edge.start_item.as_arg
                 ):
-                    edge.start_item.as_io = False
+                    edge.start_item.as_ipt = False
+                    edge.start_item.as_opt = False
                     return 1
                 # TimeDistributed takes Keras layer.
                 if (
                     edge.end_item.gr_name == 'TimeDistributed' and
                     edge.start_item.as_arg
                 ):
-                    edge.start_item.as_io = False
+                    edge.start_item.as_ipt = False
+                    edge.start_item.as_opt = False
                     return 1
             #   common
             if (
@@ -110,7 +114,7 @@ class KMBNodeScene(Serializable):
             # 3. check through all the edges,
             # ref curve allow to repeat, but it's very unnecessary to
             # display the edge again, so just display the line once.
-            for e in self.edges.values():
+            for e in self.history.edges.values():
                 if (
                     e.start_item == edge.start_item and
                     e.end_item is edge.end_item
@@ -127,63 +131,36 @@ class KMBNodeScene(Serializable):
     # -------------------------------
 
     def add_edge(self, edge):
-        self.edges[edge.id] = edge
-        debug(f"*[EDGE {len(self.edges)}] + {edge}")
+        self.history.create_edge(edge)
 
     def remove_edge(self, edge):
-        try:
-            self.edges.pop(edge.id)
-            debug(f"*[EDGE {len(self.edges)}] - {edge}")
-        except KeyError:
-            debug(f"*[EDGE IGNORE] - {edge}")
+        self.history.remove_edge(edge)
 
     def add_node(self, node):
-        self.nodes[node.id] = node
-        self.nodes_counter.update(node.gr_name)
-        debug(f"*[NODE {len(self.nodes)}] + {node}")
+        self.history.create_node(node)
 
     def remove_node(self, node):
-        try:
-            self.nodes.pop(node.id)
-            self._remove_relative_edges(node)
-            debug(f"*[NODE {len(self.nodes)}] - {node}")
-        except KeyError:
-            debug(f"*[NODE IGNORE] - {node}")
+        self.history.remove_node(node)
 
     def add_note(self, note):
-        self.notes[note.id] = note
-        debug(f"*[NOTE {len(self.notes)}] + {note}")
+        self.history.create_note(note)
 
     def remove_note(self, note):
-        self.notes.pop(note.id)
-        debug(f"*[NOTE {len(self.notes)}] - {note}")
+        self.history.remove_note(note)
 
     def clear(self):
-        # clear all the items that stored.
-        self.nodes.clear()
-        self.edges.clear()
-        self.notes.clear()
-        self.nodes_counter.clear()
+        self.history.clear()
 
     # -------------------------------
     #              UTILS
     # -------------------------------
 
-    def _remove_relative_edges(self, node):
-        # removing node also remove edge that connected to it.
-        edges = self.edges.copy()
-        # cannot iter self.edges directly that's ...
-        for edge in edges.values():
-            if node == edge.start_item or node == edge.end_item:
-                self.graphic_scene.removeItem(edge.gr_edge)
-                self.remove_edge(edge)  # ... because of this.
-
-    def get_node_count(self, node):
-        return self.nodes_counter.get(node.gr_name)
+    def get_node_count(self, node_name):
+        return self.history.counter.get(node_name)
 
     def change_color_for_io(self, edge_id, io_type):
         """ The edge to Model has two different dot color. """
-        io_edge = self.edges.get(edge_id)
+        io_edge = self.history.edges.get(edge_id)
         if io_type == 'i':
             dot_color = color['DOT_IO_I']
         else:
@@ -197,17 +174,17 @@ class KMBNodeScene(Serializable):
     def serialize(self):
         # serialize node and edge here.
         nodes = {}
-        for node in self.nodes.values():
+        for node in self.history.nodes.values():
             ns = node.serialize()
             nodes[ns["id"]] = ns
         # serialize note here.
-        for note in self.notes.values():
+        for note in self.history.notes.values():
             ts = note.serialize()
             nodes[ts["id"]] = ts
         # organize edge's relationship here.
         # fill with node's <input> and <output> tags,
         # and it's only for <layer> node.
-        for edge in self.edges.values():
+        for edge in self.history.edges.values():
             edge_type, edge_from, edge_to = edge.serialize()
             if edge_type != EDGE_DIRECT:
                 continue
@@ -237,12 +214,12 @@ class KMBNodeScene(Serializable):
                                        pin_id=None,
                                        parent=self.parent)
                 new_node.deserialize(node['x'], node['y'])
-                self.add_node(new_node)
+                self.history.dump_node(new_node)
                 node_map[old_id] = (new_node.id, new_node.gr_node.id_str)
-                # deserialize Args: for models
+                # deserialize Args: for args models
                 if node.__contains__('arg'):
                     args_menu.deserialize(feed=node,
-                                          new_nodes=self.nodes,
+                                          new_nodes=self.history.nodes,
                                           node_map=node_map,
                                           old_id=old_id,
                                           include_args=False)
@@ -253,30 +230,32 @@ class KMBNodeScene(Serializable):
                                    y=node['y'],
                                    with_focus=False)
                 new_note.deserialize(node['text'])
-                self.add_note(new_note)
+                self.history.dump_note(new_note)
 
         # Second Loop
         for old_id, node in feeds.items():
             # deserialize io Edge by node_map.
-            ipt = node.get('input')
-            opt = node.get('output')
-            if ipt is not None and opt is not None:
-                if opt != 'null':
-                    end_id = node_map[opt][0]
-                    end_item = self.nodes[end_id]
-                    new_io_edge = KMBEdge(self,
-                                          start_item=self.nodes[node_map[old_id][0]],
-                                          end_item=end_item, edge_type=EDGE_DIRECT)
-                    self.add_edge(new_io_edge)
+            # todo: io edge dot color
+            ipts: str = node.get('input')
+            opts: str = node.get('output')
+            if ipts is not None and opts is not None:
+                if opts != 'null':
+                    for opt in opts.split(';'):
+                        end_id = node_map[opt][0]
+                        end_item = self.history.nodes[end_id]
+                        new_io_edge = KMBEdge(self,
+                                              start_item=self.history.nodes[node_map[old_id][0]],
+                                              end_item=end_item, edge_type=EDGE_DIRECT)
+                        self.history.dump_edge(new_io_edge)
                 else:
-                    # ipt != null and opt == null, is repeating.
-                    # ipt == null and opt == null, is nothing.
+                    # ipts != null and opts == null, is repeating.
+                    # ipts == null and opts == null, is nothing.
                     pass
             # deserialize Args: for args
             if node.__contains__('arg'):
                 ref_edges = args_menu.deserialize(
                     feed=node,
-                    new_nodes=self.nodes,
+                    new_nodes=self.history.nodes,
                     node_map=node_map,
                     old_id=old_id,
                     include_args=True
@@ -285,7 +264,7 @@ class KMBNodeScene(Serializable):
                 if ref_edges:
                     for src, dst in ref_edges.items():
                         new_ref_edge = KMBEdge(self,
-                                               start_item=self.nodes[src],
-                                               end_item=self.nodes[dst],
+                                               start_item=self.history.nodes[src],
+                                               end_item=self.history.nodes[dst],
                                                edge_type=EDGE_CURVES)
-                        self.add_edge(new_ref_edge)
+                        self.history.dump_edge(new_ref_edge)

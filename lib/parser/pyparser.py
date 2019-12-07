@@ -354,12 +354,12 @@ class PyParser:
         atr = self.get_args_by_elm(elm)
         return atr
 
-    def get_tag_by_id(self, id_, value=False):
+    def get_tag_by_id(self, id_, value: str = None):
         # Get the tag name by its id. If the element
         # have single value, activate value to get it.
         elm = self.get_elm_by_attr(ATTR_ID, id_)[0]
         if value:
-            val = elm.xpath('./text()')[0]
+            val = elm.xpath(f'{value}/text()')[0]
             return elm.tag, val
         return elm.tag
 
@@ -571,7 +571,7 @@ class PyParser:
         """ Support for <ph>(placeholder) in type handler. """
 
         # This <ph> is not same ph in this test_p, it's a tag.
-        _, value = self.get_tag_by_id(id_, value=True)
+        _, value = self.get_tag_by_id(id_, value=TAG_VNM)
         # The tag finally goes into test_p,
         # it will be parse to the attr of class.
         self.phs_tag.add(value)

@@ -23,7 +23,7 @@ class KMBMainWindow(QMainWindow):
         self.node_editor = MainNodeEditor(self)
         self.status_mouse_pos = QLabel("(x,y)")
         self.toolbar = self.addToolBar('Toolbar')
-        self.history = self.node_editor.nodes_scene.history
+        self.history = self.node_editor.history
         # init attrs
         self.win_title = 'Karken: KMB'
         self.win_icon = QIcon(icon['WINICON'])
