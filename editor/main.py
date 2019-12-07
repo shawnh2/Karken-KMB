@@ -23,6 +23,7 @@ class KMBMainWindow(QMainWindow):
         self.node_editor = MainNodeEditor(self)
         self.status_mouse_pos = QLabel("(x,y)")
         self.toolbar = self.addToolBar('Toolbar')
+        self.history = self.node_editor.nodes_scene.history
         # init attrs
         self.win_title = 'Karken: KMB'
         self.win_icon = QIcon(icon['WINICON'])
@@ -166,8 +167,8 @@ class KMBMainWindow(QMainWindow):
         self.action_import.triggered.connect(self.import_)
         self.action_export.triggered.connect(self.export_)
         # ------
-        # self.action_undo
-        # self.action_redo
+        self.action_undo.triggered.connect(self.undo_history)
+        self.action_redo.triggered.connect(self.redo_history)
         # self.action_search
         # ------
         self.action_select.triggered.connect(
@@ -204,6 +205,18 @@ class KMBMainWindow(QMainWindow):
         self.is_modified = True
         if self.save_path and not self.save_path.endswith('*'):
             self.setWindowTitle(self.save_path + '*')
+
+    def update_history_state(self):
+        self.action_redo.setEnabled(self.history.canRedo())
+        self.action_undo.setEnabled(self.history.canUndo())
+
+    def undo_history(self):
+        self.history.undo()
+        self.update_history_state()
+
+    def redo_history(self):
+        self.history.redo()
+        self.update_history_state()
 
     # --------------------------------------
     #                ACTIONS

@@ -9,6 +9,7 @@ from editor.wrapper.wrap_item import KMBNodeItem
 from editor.wrapper.wrap_edge import KMBEdge
 from editor.component.edge_type import KMBGraphicEdgeBezier, KMBGraphicEdgeDirect
 from editor.component.sidebar import KMBViewSideBar
+
 from cfg import icon, EDGE_CURVES, EDGE_DIRECT
 from lib import debug
 
@@ -31,19 +32,26 @@ class KMBNodeGraphicView(QGraphicsView):
 
     # show the changing position in status bar.
     SCENE_POS_CHANGED = pyqtSignal(int, int)            # x, y coord
-    # the necessary signal to add a new node in scene.
+
+    # send to node args for creating a new args model for this node.
     # name, type, id, count, pin_args ('None' means empty)
     ADD_NEW_NODE_ITEM = pyqtSignal(str, str, str, int, str)
-    # pass the id of selected node item to edit.
+
+    # pass the id of selected node item to node args for editing.
     SELECTED_NODE_ITEM = pyqtSignal(str)                # id or state
+
+    # send to node args for deleting its args model.
     SELECTED_DELETE_NODE = pyqtSignal(str)              # id
+
     # pop up the right menu of clicked node,
     # also emit the src node id along with.
     POP_UP_RIGHT_MENU = pyqtSignal(str)                 # dst id
+
     # del ref related items if one ref edge got deleted.
     DEL_REF_RELATED_ITEMS = pyqtSignal(str, str)        # referenced src id, dst id
     DEL_IO_EDGE_ITEM = pyqtSignal(str, str)             # io src id, dst id
-    # current project has been modified
+
+    # whether current project has been modified.
     IS_MODIFIED = pyqtSignal(bool)
 
     # ------------------INIT--------------------
@@ -61,7 +69,7 @@ class KMBNodeGraphicView(QGraphicsView):
 
         self.mode = MOUSE_SELECT
         self.edge_type = None
-        # signals from sidebar
+        # signals from sidebar.
         self.disable_wheel = False
         self.has_pressed_zoom_btn = False
         # signals from right menu.
@@ -79,8 +87,6 @@ class KMBNodeGraphicView(QGraphicsView):
         self.current_node_pin_id = None
         # record group selected items.
         self.rubber_select = []
-        # whether under note mode.
-        self.under_note = False
 
         self.zoom_in_factor = 1.25
         self.zoom = 10
@@ -269,11 +275,12 @@ class KMBNodeGraphicView(QGraphicsView):
     def left_mouse_button_pressed(self, event):
         item = self.get_item_at_click(event)
         if self.mode == MOUSE_EDIT:
-            self.add_selected_node_item()
+            self.add_node()
 
         elif self.mode == MOUSE_NOTE:
             if isinstance(item, KMBNote):
-                self.edit_note(item)
+                # edit the existing note item.
+                item.into_editor()
             else:
                 self.add_note()
 
@@ -297,7 +304,7 @@ class KMBNodeGraphicView(QGraphicsView):
                 self.edge_drag_start(item)
 
         else:
-            self.set_selected_node_item(item)
+            self.set_node(item)
 
             if hasattr(item, 'node') or item is None or issubclass(item.__class__, KMBGraphicEdge):
                 if event.modifiers() & Qt.ShiftModifier:
@@ -363,7 +370,7 @@ class KMBNodeGraphicView(QGraphicsView):
 
     # ------------------OPERATIONS--------------------
 
-    def add_selected_node_item(self):
+    def add_node(self):
         # add new node
         self.is_modified()
         x, y = self.get_last_xy()
@@ -375,24 +382,21 @@ class KMBNodeGraphicView(QGraphicsView):
                            self.parent)
         # add into scene and get count of nodes.
         self.gr_scene.scene.add_node(node)
-        count = self.gr_scene.scene.get_node_count(node)
-        self.ADD_NEW_NODE_ITEM.emit(node.gr_name,
-                                    node.gr_type,
+        count = self.gr_scene.scene.get_node_count(node.gr_name)
+        self.ADD_NEW_NODE_ITEM.emit(self.current_node_item_name,
+                                    self.current_node_item_type,
                                     node.gr_node.id_str,
-                                    count,
-                                    str(self.current_node_pin_args))
+                                    count, str(self.current_node_pin_args))
         self.status_bar_msg(f'Add: {self.current_node_item_name} node.')
         self.drop_received_pin()
         node.set_pos(x, y)
 
     def add_note(self):
         # add note in scene.
-        self.is_modified()
-        self.under_note = True
         x, y = self.get_last_xy()
         KMBNote(self.gr_scene, x, y)
 
-    def set_selected_node_item(self, item):
+    def set_node(self, item):
         # get args of node and edit it
         if item is not None and isinstance(item, KMBNodeGraphicItem):
             # if select obj, send its name.
@@ -401,11 +405,6 @@ class KMBNodeGraphicView(QGraphicsView):
         else:
             # if select no obj, send empty signal to clear arg panel.
             self.SELECTED_NODE_ITEM.emit('null')
-
-    def edit_note(self, item):
-        self.under_note = True
-        # edit the existing note item.
-        item.into_editor()
 
     def del_selected_item(self, item):
         # del selected node or edge
@@ -527,6 +526,8 @@ class KMBNodeGraphicView(QGraphicsView):
                 debug("[dropped] triggered no item in right menu.")
             else:
                 self.is_modified()
+        else:
+            self.is_modified()
 
     # ------------------UTILS--------------------
 

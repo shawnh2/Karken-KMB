@@ -61,9 +61,9 @@ class KMBArgsMenu(Serializable):
                 return
 
             for name, filed in feed['arg'].items():
-                value, dtype = filed
+                values, dtype = filed
                 # required but got nothing.
-                if value == '!REQ':
+                if values == '!REQ':
                     continue
 
                 query = model.get_item_by_name(name)
@@ -75,26 +75,27 @@ class KMBArgsMenu(Serializable):
                     # reassign the value by different dtype.
                     idx, item = query
                     if dtype == 'id':
-                        try:
-                            dst_id = node_map[value]
-                            dst_node = self.panel.fetch_node(dst_id[1])
-                        except KeyError:
-                            raise LoadingError(node.gr_name,
-                                               code=LoadingError.GOT_MEMORY_ERROR)
-                        else:
-                            if name in ('inputs', 'outputs'):  # io
-                                model.io = (dst_id[1], name[0], dst_node.var_name_item)
-                            else:  # ref
-                                item.ref_to = (dst_id[1], dst_node.var_name_item)
-                                dst_node.ref_by = (gr_node_id, item, model.var_name_item)
-                                ref_edges[dst_id[0]] = node_id
+                        for value in values.split(';'):
+                            try:
+                                dst_id = node_map[value]
+                                dst_node = self.panel.fetch_node(dst_id[1])
+                            except KeyError:
+                                raise LoadingError(node.gr_name,
+                                                   code=LoadingError.GOT_MEMORY_ERROR)
+                            else:
+                                if name in ('inputs', 'outputs'):  # io
+                                    model.io = (dst_id[1], name[0], dst_node.var_name_item)
+                                else:  # ref
+                                    item.ref_to = (dst_id[1], dst_node.var_name_item)
+                                    dst_node.ref_by = (gr_node_id, item, model.var_name_item)
+                                    ref_edges[dst_id[0]] = node_id
                     else:
                         if item.tag == 0:
-                            model.reassign_value(item, value)
+                            model.reassign_value(item, values)
                         elif item.tag == 1:
-                            model.reassign_state(idx, value)
+                            model.reassign_state(idx, values)
                         elif item.tag == 2:
-                            model.reassign_item(idx, value)
+                            model.reassign_item(idx, values)
                         else:
                             raise LoadingError(item.tag, code=LoadingError.GOT_UNKNOWN_TAG)
             return ref_edges

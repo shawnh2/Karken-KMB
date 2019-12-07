@@ -1,6 +1,6 @@
 import yaml
 
-__version__ = '1.0.3 beta'
+__version__ = '1.0.4 beta'
 __author__ = 'ShawnHu'
 
 # Loading color configure.
@@ -23,6 +23,10 @@ with open('cfg/tips.yml', 'r') as tf:
 EDGE_WIDTH = 4.0
 EDGE_DIRECT = 1
 EDGE_CURVES = 2
+
+# Loading configure for scene
+SCENE_WIDTH = 10000
+SCENE_HEIGHT = 10000
 
 # Loading configure for User Custom Pins.
 UCP_LOC = 'user/'

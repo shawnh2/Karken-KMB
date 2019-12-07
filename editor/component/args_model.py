@@ -39,9 +39,9 @@ class ArgsSuperModel(QStandardItemModel):
         # only two headers available
         self.setHorizontalHeaderLabels((header1, header2))
 
-    def _get_inherit_args(self):
+    def _get_inherit_args(self, count):
         for i, arg in self.db.get_inh_args(self.inherit):
-            self.feed_inherit_item(i, arg)
+            self.feed_inherit_item(i, arg, count)
             # add counter
             self.n += 1
         self.io_separator = self.n  # record here
@@ -50,13 +50,10 @@ class ArgsSuperModel(QStandardItemModel):
         for i, arg in self.db.get_org_args(self.id_string):
             self.feed_original_item(i + self.n, arg)
 
-    def _get_custom_args(self, count):
-        name = ArgNameItem('var',
-                           'The variable name of this node.',
+    def _get_custom_args(self):
+        name = ArgNameItem('var', 'The variable name of this node.',
                            'var_name')
-        init_value = self.node_name.lower()
-        value = ArgEditItem(init_value if count <= 1
-                            else init_value + '_' + str(count),
+        value = ArgEditItem(self.node_name.lower(),
                             'String', 'var_name')
         self.set_col_items(self.n, name, value)
         self.var_name_idx = self.n  # record here
@@ -65,13 +62,13 @@ class ArgsSuperModel(QStandardItemModel):
     def get_args(self, add_custom_args=False, count=1):
         # call this method to get all the args
         if self.inherit:
-            self._get_inherit_args()
+            self._get_inherit_args(count)
         if add_custom_args:
-            self._get_custom_args(count)
+            self._get_custom_args()
         if self.id_string:
             self._get_original_args()
 
-    def feed_inherit_item(self, idx, unpack_item):
+    def feed_inherit_item(self, idx, unpack_item, count):
         raise NotImplementedError
 
     def feed_original_item(self, idx, unpack_item):
@@ -111,7 +108,7 @@ class ArgsPreviewModel(ArgsSuperModel):
         # set header labels for this model
         self.set_header_labels("Type", "Argument Name")
 
-    def feed_inherit_item(self, idx, unpack_item):
+    def feed_inherit_item(self, idx, unpack_item, _):
         # id, name, init, type, info
         _, arg_name, arg_init, arg_type, arg_info = unpack_item
         arg_name_item = ArgNameItem('inh', arg_info, arg_name)
@@ -205,13 +202,16 @@ class ArgsEditableModel(ArgsSuperModel):
         arg_item.value = state
         arg_item.is_changed = ~arg_item.is_changed
 
-    def feed_inherit_item(self, idx, unpack_item):
+    def feed_inherit_item(self, idx, unpack_item, count):
         # id, name, init, type, info
         _, arg_name, arg_init, arg_type, arg_info = unpack_item
         # inherit item doesn't have any required args.
         pin_marker = False
         arg_type_item = ArgTypeItem(arg_type)  # provide dtype for each arg item.
         arg_name_item = ArgNameItem('inh', arg_info, arg_name)
+        # auto increase the arg 'name' value.
+        if arg_name == 'name':
+            arg_init = f'{self.node_name.lower()}_{count}'
         # replace org value with pin value if it has.
         pin_value = self.feed_with_pins(arg_name)
         if pin_value is not None:
