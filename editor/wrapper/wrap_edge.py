@@ -1,6 +1,6 @@
 from editor.component.edge_type import KMBGraphicEdgeDirect, KMBGraphicEdgeBezier
 from editor.wrapper.serializable import Serializable
-from cfg import EDGE_CURVES, EDGE_DIRECT
+from cfg import EDGE_CURVES, EDGE_DIRECT, color
 
 
 class KMBEdge(Serializable):
@@ -12,6 +12,9 @@ class KMBEdge(Serializable):
         self.start_item = start_item
         self.end_item = end_item
         self.edge_type = edge_type
+        # properties
+        self._io_type: str = None  # assign i/o or None.
+        self.ref_box: int = None   # assign the idx of ref's dst node item.
 
         if self.edge_type == EDGE_DIRECT:
             self.gr_edge = KMBGraphicEdgeDirect(self)
@@ -29,6 +32,25 @@ class KMBEdge(Serializable):
     def __repr__(self):
         return f"<Edge {id(self)}>"
 
+    # ------PROPERTIES------
+
+    def get_io_type(self):
+        return self._io_type
+
+    def set_io_type(self, io_type: str):
+        """ The IO edge dot has two different color. """
+        assert io_type in ('i', 'o')
+        if io_type == 'i':
+            dot_color = color['DOT_IO_I']
+        else:
+            dot_color = color['DOT_IO_O']
+        self._io_type = io_type
+        self.gr_edge.set_marker_color(dot_color)
+
+    io_type = property(get_io_type, set_io_type)
+
+    # ----------------------
+
     def store(self):
         """ Check state of storing into scene's edges. """
         check_state = self.scene.check_edge(self, self.edge_type)
@@ -37,7 +59,7 @@ class KMBEdge(Serializable):
                 self.scene.add_edge(self)
             # feed ref, so can create ref relation.
             if self.edge_type == EDGE_CURVES:
-                self.end_item.gr_node.feed_ref(self.start_item)
+                self.end_item.gr_node.feed_ref(self.start_item, self.id)
             # feed io, so can create io relation in Model.
             if self.end_item.gr_name == 'Model':
                 self.end_item.gr_node.feed_io(self.start_item, self.id)
@@ -54,9 +76,6 @@ class KMBEdge(Serializable):
         else:
             self.gr_edge.set_dst(src_pos.x()+patch, src_pos.y()+patch)
         self.gr_edge.update()
-
-    def update_dot_color(self, color_hex):
-        self.gr_edge.set_marker_color(color_hex)
 
     def remove_from_current_items(self):
         self.end_item = None

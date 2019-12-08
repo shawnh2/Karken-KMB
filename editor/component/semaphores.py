@@ -99,7 +99,7 @@ class ModelIOSemaphore:
 
     def add(self, io: tuple):
         node_id, sign, node_vn_item = io
-        assert sign in ('i', 'o')
+        assert sign in ('i', 'o'), f'got {sign} instead'
         if sign == 'i':
             self._inputs[node_id] = node_vn_item
         else:

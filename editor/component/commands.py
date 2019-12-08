@@ -1,6 +1,8 @@
+""" All the commands have been hard-coded. """
 from PyQt5.QtWidgets import QUndoCommand
 
 from lib import debug
+from cfg import EDGE_DIRECT, EDGE_CURVES
 
 
 class SkipFirstRedoCommand(QUndoCommand):
@@ -70,11 +72,30 @@ class CreateEdgeCmd(SkipFirstRedoCommand):
         self.gr_scene = gr_scene
 
     def after_first_redo(self):
+        edge_type = self.edge.gr_edge.type
+        dst_gr_node_id = self.edge.end_item.gr_node.id_str
+        src_gr_node_id = self.edge.start_item.gr_node.id_str
+        dst_model = self.args.get(dst_gr_node_id)
+        src_model = self.args.get(src_gr_node_id)
+
+        if edge_type == EDGE_DIRECT:
+            dst_model.io = (src_gr_node_id, self.edge.io_type, src_model.var_name_item)
+        elif edge_type == EDGE_CURVES:
+            dst_item = dst_model.item(self.edge.ref_box, 1)
+            dst_item.ref_to = (src_gr_node_id, src_model.var_name_item)
+            src_model.ref_by = (dst_gr_node_id, dst_item, dst_model.var_name_item)
+
         self.gr_scene.addItem(self.edge.gr_edge)
         self.src[self.edge.id] = self.edge
         debug(f"*[EDGE {len(self.src)} ADD] < {self.edge}")
 
     def undo(self):
+        edge_type = self.edge.gr_edge.type
+        if edge_type == EDGE_DIRECT:
+            pass
+        elif edge_type == EDGE_CURVES:
+            pass
+
         self.gr_scene.removeItem(self.edge.gr_edge)
         self.src.pop(self.edge.id)
         debug(f"*[EDGE {len(self.src)} ADD] > {self.edge}")
@@ -82,18 +103,40 @@ class CreateEdgeCmd(SkipFirstRedoCommand):
 
 class DeleteEdgeCmd(SkipFirstRedoCommand):
 
-    def __init__(self, edge, src: dict, gr_scene):
+    def __init__(self, edge, src: dict, args: dict, gr_scene):
         super().__init__()
         self.edge = edge
         self.src = src
+        self.args = args
         self.gr_scene = gr_scene
 
     def after_first_redo(self):
+        # delete the io & ref relation here.
+        edge_type = self.edge.gr_edge.type
+        if edge_type == EDGE_DIRECT:
+            pass
+        elif edge_type == EDGE_CURVES:
+            pass
+
         self.gr_scene.removeItem(self.edge.gr_edge)
         self.src.pop(self.edge.id)
         debug(f"*[EDGE {len(self.src)} DEL] < {self.edge}")
 
     def undo(self):
+        # reconnect the io & ref relation here.
+        edge_type = self.edge.gr_edge.type
+        dst_gr_node_id = self.edge.end_item.gr_node.id_str
+        src_gr_node_id = self.edge.start_item.gr_node.id_str
+        dst_model = self.args.get(dst_gr_node_id)
+        src_model = self.args.get(src_gr_node_id)
+
+        if edge_type == EDGE_DIRECT:
+            dst_model.io = (src_gr_node_id, self.edge.io_type, src_model.var_name_item)
+        elif edge_type == EDGE_CURVES:
+            dst_item = dst_model.item(self.edge.ref_box, 1)
+            dst_item.ref_to = (src_gr_node_id, src_model.var_name_item)
+            src_model.ref_by = (dst_gr_node_id, dst_item, dst_model.var_name_item)
+
         self.gr_scene.addItem(self.edge.gr_edge)
         self.src[self.edge.id] = self.edge
         debug(f"*[EDGE {len(self.src)} DEL] > {self.edge}")
@@ -135,3 +178,34 @@ class DeleteNoteCmd(SkipFirstRedoCommand):
         self.gr_scene.addItem(self.note)
         self.src[self.note.id] = self.note
         debug(f"*[NOTE {len(self.src)} DEL] > {self.note}")
+
+
+class NodeMoveCmd(SkipFirstRedoCommand):
+
+    def __init__(self):
+        super().__init__()
+
+    def after_first_redo(self):
+        pass
+
+    def undo(self):
+        pass
+
+
+class ArgItemModifyCmd(SkipFirstRedoCommand):
+
+    def __init__(self):
+        super().__init__()
+
+    def after_first_redo(self):
+        pass
+
+    def undo(self):
+        pass
+
+
+class GroupDeleteCmd:
+    """ Has been tear down to several signal Delete command.
+    For example, delete one node will also delete the edge(s) that connected with.
+    But undo that, first undo the deleted node, then undo the deleted edge(s).
+    """

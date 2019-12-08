@@ -7,13 +7,14 @@ from lib import Counter, debug
 
 class KMBHistoryStack(QUndoStack):
 
-    def __init__(self, gr_scene):
+    def __init__(self, gr_scene, args_menu):
         super().__init__()
         self._nodes = {}
         self._edges = {}
         self._notes = {}
 
         self.gr_scene = gr_scene
+        self.args_menu = args_menu
         self.counter = Counter()
 
     @property
@@ -53,7 +54,8 @@ class KMBHistoryStack(QUndoStack):
     def remove_edge(self, edge):
         try:
             self._edges.pop(edge.id)
-            self.push(DeleteEdgeCmd(edge, self._edges, self.gr_scene))
+            self.push(DeleteEdgeCmd(edge, self._edges,
+                                    self.args_menu.edit_model, self.gr_scene))
             debug(f"*[EDGE {len(self._edges)}] - {edge}")
         except KeyError:
             debug(f"*[EDGE NOT EXIST AND IGNORE] - {edge}")

@@ -31,6 +31,7 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
             self.height = 85
         self.pix.setDevicePixelRatio(self.ratio)
 
+        self._arg_model = None
         # right menu for pin
         self.right_menu = QMenu()
         self.rm_pin = QIcon(icon['PIN_RM'])
@@ -43,7 +44,8 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         self.rm_input = QIcon(icon['INPUTS'])
         self.rm_output = QIcon(icon['OUTPUTS'])
         self._io_item = None
-        self._edge_id = None
+        self._io_edge_id = None
+        self._ref_edge_id = None
         # text around item
         self.text = KMBNodeTextItem(self.name, self, self.height)
 
@@ -66,20 +68,22 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
     def feed_args(self, dst_model):
         self._arg_model = dst_model
 
-    def feed_ref(self, ref_item):
+    def feed_ref(self, ref_item, edge_id):
         # get ref edge's (wrapper) start item.
         self._ref_item = ref_item
+        self._ref_edge_id = edge_id
 
     def feed_io(self, io_item, edge_id):
         self._io_item = io_item
         # the id of edge wrapper.
-        self._edge_id = edge_id
+        self._io_edge_id = edge_id
 
     def clean_feed(self):
         self._arg_model = None
         self._ref_item = None
         self._io_item = None
-        self._edge_id = None
+        self._io_edge_id = None
+        self._ref_edge_id = None
 
     # ------------OVERRIDE METHODS--------------
 
@@ -92,7 +96,7 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         super().mouseMoveEvent(event)
         self.is_modified()
         # update selected node and its edge
-        for node in self.scene().scene.nodes.values():
+        for node in self.scene().scene.history.nodes.values():
             if node.gr_node.isSelected():
                 node.update_connect_edges()
 
@@ -313,15 +317,14 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
             if not action_units_type_check():
                 action.setDisabled(True)
         elif self.name in ("TimeDistributed", "Bidirectional") and\
-             self._ref_item.gr_type == 'Layers':
+                self._ref_item.gr_type == 'Layers':
             if not action_layer_type_check():
                 action.setDisabled(True)
         # signal field:
-        # TYPE - DST_ID - SRC-ID - ARG_IDX
-        action.setObjectName(f'REF-'
-                             f'{self.id_str}-'
-                             f'{self._ref_item.gr_node.id_str}-'
-                             f'{idx}')
+        # TYPE - DST_ID - SRC-ID - ARG_IDX - EDGE_ID
+        action.setObjectName(f'REF-{self.id_str}'
+                             f'-{self._ref_item.gr_node.id_str}'
+                             f'-{idx}-{self._ref_edge_id}')
         action.triggered.connect(self.node.gr_scene.right_menu_listener)
 
     def _pre_activate_io_action(self, action, mark):
@@ -330,7 +333,7 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         # TYPE - DST_ID - SRC-ID - SIGN - EDGE_ID
         action.setObjectName(f'IO-{self.id_str}'
                              f'-{self._io_item.gr_node.id_str}'
-                             f'-{mark}-{self._edge_id}')
+                             f'-{mark}-{self._io_edge_id}')
         # mark: 'i' is inputs, 'o' is outputs.
         action.triggered.connect(self.node.gr_scene.right_menu_listener)
 

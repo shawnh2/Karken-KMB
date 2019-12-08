@@ -69,6 +69,8 @@ class KMBNodeGraphicView(QGraphicsView):
 
         self.mode = MOUSE_SELECT
         self.edge_type = None
+        # signals from note.
+        self.note_mode = False
         # signals from sidebar.
         self.disable_wheel = False
         self.has_pressed_zoom_btn = False
@@ -237,6 +239,26 @@ class KMBNodeGraphicView(QGraphicsView):
             self.scale(zoom_factor, zoom_factor)
 
     def keyPressEvent(self, event):
+        """ Shortcut: available only view is focused.
+        key V - select
+        key H - move
+        key D - direct edge
+        key R - curve edge
+        key T - note
+        """
+        if self.note_mode:
+            pass
+        else:
+            if event.key() == Qt.Key_V:
+                self.set_select_mode()
+            elif event.key() == Qt.Key_H:
+                self.set_movable_mode()
+            elif event.key() == Qt.Key_D:
+                self.set_edge_direct_mode()
+            elif event.key() == Qt.Key_R:
+                self.set_edge_curve_mode()
+            elif event.key() == Qt.Key_T:
+                self.set_note_mode()
         super().keyPressEvent(event)
 
     def contextMenuEvent(self, event):
@@ -393,6 +415,7 @@ class KMBNodeGraphicView(QGraphicsView):
 
     def add_note(self):
         # add note in scene.
+        self.note_mode = True
         x, y = self.get_last_xy()
         KMBNote(self.gr_scene, x, y)
 

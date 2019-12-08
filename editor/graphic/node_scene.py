@@ -43,11 +43,16 @@ class KMBNodeGraphicScene(QGraphicsScene):
         receive = self.sender().objectName()
         args = receive.split('-')
         if args[0] == 'REF':
+            # args field:
+            # TYPE - DST_ID - SRC-ID - ARG_IDX - EDGE_ID
             self.PICKED_ONE_ARG_TO_REF.emit(args[1], int(args[3]), args[2])
+            self.scene.assign_edge_ref_box(args[4], args[3])
         elif args[0] == 'IO':
+            # args field:
+            # TYPE - DST_ID - SRC-ID - SIGN - EDGE_ID
             self.PICKED_ONE_TO_IO.emit(args[1], args[3], args[2])
             # after picking successfully, change the dot color.
-            self.scene.change_color_for_io(args[4], args[3])
+            self.scene.assign_edge_io_type(args[4], args[3])
         # else ...
 
         # if had clicked the menu item, will trigger this signal.

@@ -16,13 +16,13 @@ class MainNodeEditor(QWidget):
         super().__init__(parent)
 
         # init UI
+        self.nodes_menu = KMBNodesMenu(self)
+        self.args_menu = KMBArgsMenu(self)
         self.nodes_scene = KMBNodeScene(self)
         self.nodes_view = KMBNodeGraphicView(
             self.nodes_scene.graphic_scene,
             parent.statusBar().showMessage, self
         )
-        self.nodes_menu = KMBNodesMenu(self)
-        self.args_menu = KMBArgsMenu(self)
         self.splitter = QSplitter(self)
         self.history = self.nodes_scene.history
         # setup

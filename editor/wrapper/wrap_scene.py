@@ -14,13 +14,14 @@ class KMBNodeScene(Serializable):
     def __init__(self, parent):
         super().__init__()
         self.parent = parent  # main editor widget
+        self.args_menu = self.parent.args_menu.panel
 
         self.scene_width = SCENE_WIDTH
         self.scene_height = SCENE_HEIGHT
         self.graphic_scene = KMBNodeGraphicScene(self)
         self.graphic_scene.set_graphic_scene(self.scene_width,
                                              self.scene_height)
-        self.history = KMBHistoryStack(self.graphic_scene)
+        self.history = KMBHistoryStack(self.graphic_scene, self.args_menu)
 
     # -------------------------------
     #              CHECK
@@ -158,14 +159,15 @@ class KMBNodeScene(Serializable):
     def get_node_count(self, node_name):
         return self.history.counter.get(node_name)
 
-    def change_color_for_io(self, edge_id, io_type):
-        """ The edge to Model has two different dot color. """
+    def assign_edge_io_type(self, edge_id, io_type):
+        # assign i/o type of one edge.
         io_edge = self.history.edges.get(edge_id)
-        if io_type == 'i':
-            dot_color = color['DOT_IO_I']
-        else:
-            dot_color = color['DOT_IO_O']
-        io_edge.update_dot_color(dot_color)
+        io_edge.io_type = io_type
+
+    def assign_edge_ref_box(self, edge_id, dst_idx: str):
+        # assign ref_box of one edge.
+        ref_edge = self.history.edges.get(edge_id)
+        ref_edge.ref_box = int(dst_idx)
 
     # -------------------------------
     #               IO
