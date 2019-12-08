@@ -6,7 +6,7 @@ from editor.wrapper.wrap_args import KMBArgsMenu
 from editor.wrapper.serializable import Serializable
 from editor.component.commands_stack import KMBHistoryStack
 
-from cfg import EDGE_DIRECT, EDGE_CURVES, SCENE_WIDTH, SCENE_HEIGHT, color
+from cfg import EDGE_DIRECT, EDGE_CURVES, SCENE_WIDTH, SCENE_HEIGHT
 
 
 class KMBNodeScene(Serializable):
@@ -236,8 +236,7 @@ class KMBNodeScene(Serializable):
 
         # Second Loop
         for old_id, node in feeds.items():
-            # deserialize io Edge by node_map.
-            # todo: io edge dot color
+            # deserialize io Edge by node_map except the one to Model.
             ipts: str = node.get('input')
             opts: str = node.get('output')
             if ipts is not None and opts is not None:
@@ -245,28 +244,41 @@ class KMBNodeScene(Serializable):
                     for opt in opts.split(';'):
                         end_id = node_map[opt][0]
                         end_item = self.history.nodes[end_id]
-                        new_io_edge = KMBEdge(self,
-                                              start_item=self.history.nodes[node_map[old_id][0]],
-                                              end_item=end_item, edge_type=EDGE_DIRECT)
-                        self.history.dump_edge(new_io_edge)
+                        # create this edge later.
+                        if end_item.gr_name == 'Model':
+                            pass
+                        else:
+                            new_io_edge = KMBEdge(self,
+                                                  start_item=self.history.nodes[node_map[old_id][0]],
+                                                  end_item=end_item, edge_type=EDGE_DIRECT)
+                            self.history.dump_edge(new_io_edge)
                 else:
                     # ipts != null and opts == null, is repeating.
                     # ipts == null and opts == null, is nothing.
                     pass
             # deserialize Args: for args
             if node.__contains__('arg'):
-                ref_edges = args_menu.deserialize(
+                edges = args_menu.deserialize(
                     feed=node,
                     new_nodes=self.history.nodes,
                     node_map=node_map,
                     old_id=old_id,
                     include_args=True
-                )
-                # deserialize ref Edge by ref_edges.
-                if ref_edges:
-                    for src, dst in ref_edges.items():
+                )  # refs and ios
+                if edges is not None:
+                    # deserialize ref Edge.
+                    for src, (dst, idx) in edges[0].items():
                         new_ref_edge = KMBEdge(self,
                                                start_item=self.history.nodes[src],
                                                end_item=self.history.nodes[dst],
                                                edge_type=EDGE_CURVES)
+                        new_ref_edge.ref_box = idx
                         self.history.dump_edge(new_ref_edge)
+                    # deserialize Model's io Edge.
+                    for src, (dst, io_type) in edges[1].items():
+                        new_io_edge = KMBEdge(self,
+                                              start_item=self.history.nodes[src],
+                                              end_item=self.history.nodes[dst],
+                                              edge_type=EDGE_DIRECT)
+                        new_io_edge.io_type = io_type
+                        self.history.dump_edge(new_io_edge)

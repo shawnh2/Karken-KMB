@@ -79,7 +79,10 @@ class CreateEdgeCmd(SkipFirstRedoCommand):
         src_model = self.args.get(src_gr_node_id)
 
         if edge_type == EDGE_DIRECT:
-            dst_model.io = (src_gr_node_id, self.edge.io_type, src_model.var_name_item)
+            if self.edge.end_item.gr_name == 'Model':
+                dst_model.io = (src_gr_node_id, self.edge.io_type, src_model.var_name_item)
+            else:
+                pass
         elif edge_type == EDGE_CURVES:
             dst_item = dst_model.item(self.edge.ref_box, 1)
             dst_item.ref_to = (src_gr_node_id, src_model.var_name_item)
@@ -91,8 +94,12 @@ class CreateEdgeCmd(SkipFirstRedoCommand):
 
     def undo(self):
         edge_type = self.edge.gr_edge.type
+
         if edge_type == EDGE_DIRECT:
-            pass
+            if self.edge.end_item.gr_name == 'Model':
+                pass
+            else:
+                pass
         elif edge_type == EDGE_CURVES:
             pass
 
@@ -131,7 +138,10 @@ class DeleteEdgeCmd(SkipFirstRedoCommand):
         src_model = self.args.get(src_gr_node_id)
 
         if edge_type == EDGE_DIRECT:
-            dst_model.io = (src_gr_node_id, self.edge.io_type, src_model.var_name_item)
+            if self.edge.end_item.gr_name == 'Model':
+                dst_model.io = (src_gr_node_id, self.edge.io_type, src_model.var_name_item)
+            else:
+                pass
         elif edge_type == EDGE_CURVES:
             dst_item = dst_model.item(self.edge.ref_box, 1)
             dst_item.ref_to = (src_gr_node_id, src_model.var_name_item)
@@ -207,5 +217,4 @@ class ArgItemModifyCmd(SkipFirstRedoCommand):
 class GroupDeleteCmd:
     """ Has been tear down to several signal Delete command.
     For example, delete one node will also delete the edge(s) that connected with.
-    But undo that, first undo the deleted node, then undo the deleted edge(s).
-    """
+    But undo that, first undo the deleted node, then undo the deleted edge(s). """

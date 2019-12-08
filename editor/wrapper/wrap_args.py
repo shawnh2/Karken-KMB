@@ -54,6 +54,7 @@ class KMBArgsMenu(Serializable):
         # Second Call
         else:
             ref_edges = {}  # node wrapper id. from: to.
+            io_edges = {}   # node wrapper id. from-to: i/o.
             # modify the value of items.
             model = self.panel.fetch_node(gr_node_id)
             # if it's null, then early stop.
@@ -85,10 +86,11 @@ class KMBArgsMenu(Serializable):
                             else:
                                 if name in ('inputs', 'outputs'):  # io
                                     model.io = (dst_id[1], name[0], dst_node.var_name_item)
+                                    io_edges[dst_id[0]] = (node_id, name[0])
                                 else:  # ref
                                     item.ref_to = (dst_id[1], dst_node.var_name_item)
                                     dst_node.ref_by = (gr_node_id, item, model.var_name_item)
-                                    ref_edges[dst_id[0]] = node_id
+                                    ref_edges[dst_id[0]] = (node_id, idx)
                     else:
                         if item.tag == 0:
                             model.reassign_value(item, values)
@@ -98,4 +100,4 @@ class KMBArgsMenu(Serializable):
                             model.reassign_item(idx, values)
                         else:
                             raise LoadingError(item.tag, code=LoadingError.GOT_UNKNOWN_TAG)
-            return ref_edges
+            return ref_edges, io_edges

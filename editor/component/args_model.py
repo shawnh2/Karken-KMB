@@ -9,6 +9,10 @@ from lib import pin_args_dict, type_tag_map
 
 class ArgsSuperModel(QStandardItemModel):
 
+    AUTO_COUNT_NAME = (
+        'Input', 'Model', 'PlaceHolder'
+    )  # nodes that its var_name is auto increasing.
+
     def __init__(self,
                  db_link,
                  node_name: str,
@@ -50,11 +54,15 @@ class ArgsSuperModel(QStandardItemModel):
         for i, arg in self.db.get_org_args(self.id_string):
             self.feed_original_item(i + self.n, arg)
 
-    def _get_custom_args(self):
+    def _get_custom_args(self, count):
         name = ArgNameItem('var', 'The variable name of this node.',
                            'var_name')
-        value = ArgEditItem(self.node_name.lower(),
-                            'String', 'var_name')
+        var_name = self.node_name.lower()
+        if self.node_name in self.AUTO_COUNT_NAME:
+            var_name += (f'_{count}' if count > 1 else '')
+        else:
+            pass
+        value = ArgEditItem(var_name, 'String', 'var_name')
         self.set_col_items(self.n, name, value)
         self.var_name_idx = self.n  # record here
         self.n += 1
@@ -64,7 +72,7 @@ class ArgsSuperModel(QStandardItemModel):
         if self.inherit:
             self._get_inherit_args(count)
         if add_custom_args:
-            self._get_custom_args()
+            self._get_custom_args(count)
         if self.id_string:
             self._get_original_args()
 
