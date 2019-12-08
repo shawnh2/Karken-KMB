@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# This is for installing source code only.
+# This is for installing source code and packages only.
 
 # Determine whether has Anaconda
 CONDA=$(which conda)
+
 # Determine which is the default package manager
 APT=$(which apt)
 PACMAN=$(which pacman)
@@ -42,15 +43,24 @@ while true; do
                     # requirements will be installed also
                     sudo conda create -n karken-kmb python=3.6 lxml=4.3.2 pyyaml=5.1.2 PyQt
                 elif [[ $ans = "N" || $ans = "n" ]]; then
-                    echo 'You still can create your own env, following:'
-                    echo ''
-                    echo '      `conda create -n <YOUR_ENV_NAME> python=3.6(RECOMMEND)`'
-                    echo '      `conda activate <YOUR_NEW_NAME>`'
-                    echo '      `pip install -r requirements.txt`'
-                    echo '      `conda deactivate`'
-                    echo ''
-                    echo 'Having fun with Karken: KMB.'
-                    exit 1
+                    echo 'Do you want this env to use your name? [Y/n]'
+                    read ans
+                    if [[ $ans = "Y" || $ans = "y" ]]; then
+                        echo 'Please input the name of this env:'
+                        read name
+                        # create by custom name
+                        sudo conda create -n $name python=3.6 lxml=4.3.2 pyyaml=5.1.2 PyQt
+                    elif [[ $ans = "N" || $ans = "n" ]]; then
+                        echo 'You still can create your own env, following:'
+                        echo ''
+                        echo '      `conda create -n <YOUR_ENV_NAME> python=3.6(RECOMMEND)`'
+                        echo '      `conda activate <YOUR_NEW_NAME>`'
+                        echo '      `pip install -r requirements.txt`'
+                        echo '      `conda deactivate`'
+                        echo ''
+                        echo 'Having fun with Karken: KMB.'
+                        exit 1
+                    fi
                 fi
             else
                 echo 'Please install Anaconda then retry.'
