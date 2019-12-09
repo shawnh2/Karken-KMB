@@ -41,6 +41,7 @@ class KMBMainWindow(QMainWindow):
         self.action_new = QAction(QIcon(icon['NEW']), '', self)
         self.action_open = QAction(QIcon(icon['OPEN']), '', self)
         self.action_import = QAction(QIcon(icon['IMPORT']), '', self)
+        self.action_import.setEnabled(False)
         self.action_save = QAction(QIcon(icon['SAVE']), '', self)
         self.action_export = QAction(QIcon(icon['EXPORT']), '', self)
         # ------
@@ -96,8 +97,8 @@ class KMBMainWindow(QMainWindow):
         self.action_import.setStatusTip(tips['ST_IMPORT'])
         self.action_export.setStatusTip(tips['ST_EXPORT'])
         # ------
-        self.action_select.setToolTip("Select")
-        self.action_hand.setToolTip("Move")
+        self.action_select.setToolTip("Select (V)")
+        self.action_hand.setToolTip("Move (H)")
         self.action_undo.setToolTip("Undo (Ctrl+Z)")
         self.action_redo.setToolTip("Redo (Alt+Z)")
 
@@ -106,9 +107,9 @@ class KMBMainWindow(QMainWindow):
         self.action_undo.setStatusTip(tips['ST_UNDO'])
         self.action_redo.setStatusTip(tips['ST_REDO'])
         # ------
-        self.action_edge_direct.setToolTip("Connect: I/O Direct")
-        self.action_edge_curve.setToolTip("Connect: Ref Curve")
-        self.action_note.setToolTip("Note")
+        self.action_edge_direct.setToolTip("Connect: I/O Direct (D)")
+        self.action_edge_curve.setToolTip("Connect: Ref Curve (R)")
+        self.action_note.setToolTip("Note (T)")
         self.action_delete.setToolTip("Delete")
 
         self.action_edge_direct.setStatusTip(tips['ST_EDGE_DIRECT'])

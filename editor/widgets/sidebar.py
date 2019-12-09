@@ -1,40 +1,13 @@
-from PyQt5.QtWidgets import QWidget, QPushButton, QVBoxLayout
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtWidgets import QWidget, QHBoxLayout
+from PyQt5.QtCore import pyqtSignal, QPropertyAnimation, QPoint, QEasingCurve
 
-from cfg import icon, SS_SIDEBTN
-from lib import load_stylesheet
-
-
-class SideBarButton(QPushButton):
-    """ The button that exists in sidebar. """
-
-    def __init__(self,
-                 btn_img: str,
-                 tooltip: str,
-                 parent,
-                 btn_checked_img: str = None,
-                 btn_pressed_img: str = None):
-        super().__init__(parent)
-        # add support for both Normal and Retina screen.
-        self.btn_size = 32
-        # setup ui.
-        self.setStatusTip(tooltip)
-        press_block = ''
-        check_block = ''
-        if btn_checked_img:
-            check_block = f'image: url({btn_checked_img});'
-        if btn_pressed_img:
-            press_block = f'image: url({btn_pressed_img});'
-        self.setStyleSheet(load_stylesheet(SS_SIDEBTN).format(
-            b_size=self.btn_size, i_path=btn_img,
-            check_block=check_block, press_block=press_block
-        ))
+from editor.component.sidebar_button import SideBarButton
+from cfg import icon
 
 
 class KMBViewSideBar(QWidget):
     """ The side floating button of editor view. """
     # todo: locate function.
-    # todo: auto hide and show with animation.
 
     LOCK_WHEEL = pyqtSignal(bool)
     ZOOM_IN = pyqtSignal(bool)   # to view
@@ -42,10 +15,15 @@ class KMBViewSideBar(QWidget):
 
     def __init__(self, parent):
         super().__init__(parent)
-        self.w = 65
-        self.h = 190
+        self.w = 185
+        self.h = 65
+        self.x = 0
+        self.y = 0
+        self.margin_bottom = 10
+        self.ani_duration = 600
+        self.on_display = False
         # setup layout
-        self.inner_layout = QVBoxLayout(self)
+        self.inner_layout = QHBoxLayout(self)
         # setup buttons in sidebar
         self.lock_roll_btn = SideBarButton(
             icon['S_LOCK'], 'Disable Roll Wheel', self,
@@ -76,6 +54,11 @@ class KMBViewSideBar(QWidget):
         self.zoom_in_btn.pressed.connect(self.zoom_in_pressed)
         self.zoom_out_btn.pressed.connect(self.zoom_out_pressed)
 
+    def update_pos(self, width: int, height: int):
+        self.x = width/2 - self.w/2
+        self.y = height - self.h
+        self.move(self.x, self.y + self.h)
+
     def lock_roll_pressed(self):
         if not self.lock_roll_btn.isChecked():
             self.LOCK_WHEEL.emit(True)
@@ -89,3 +72,21 @@ class KMBViewSideBar(QWidget):
 
     def zoom_out_pressed(self):
         self.ZOOM_OUT.emit(True)
+
+    def slide_in_animation(self):
+        self.on_display = True
+        ani_in = QPropertyAnimation(self, b'pos', self)
+        ani_in.setDuration(self.ani_duration)
+        ani_in.setStartValue(QPoint(self.x, self.y + self.h))
+        ani_in.setEndValue(QPoint(self.x, self.y + self.margin_bottom))
+        ani_in.setEasingCurve(QEasingCurve.InOutQuad)
+        ani_in.start()
+
+    def slide_out_animation(self):
+        self.on_display = False
+        ani_out = QPropertyAnimation(self, b'pos', self)
+        ani_out.setDuration(self.ani_duration)
+        ani_out.setStartValue(QPoint(self.x, self.y + self.margin_bottom))
+        ani_out.setEndValue(QPoint(self.x, self.y + self.h))
+        ani_out.setEasingCurve(QEasingCurve.InOutQuad)
+        ani_out.start()

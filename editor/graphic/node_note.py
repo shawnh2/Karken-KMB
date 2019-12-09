@@ -48,6 +48,7 @@ class KMBNote(QGraphicsTextItem, Serializable):
         # prepare editor.
         self.setTextInteractionFlags(Qt.TextEditorInteraction)
         self.setTextWidth(self.width)
+        self.setCursor(Qt.IBeamCursor)
         self.setFocus()
 
     def hoverEnterEvent(self, event):

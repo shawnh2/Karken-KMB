@@ -8,7 +8,8 @@ from editor.graphic.node_note import KMBNote
 from editor.wrapper.wrap_item import KMBNodeItem
 from editor.wrapper.wrap_edge import KMBEdge
 from editor.component.edge_type import KMBGraphicEdgeBezier, KMBGraphicEdgeDirect
-from editor.component.sidebar import KMBViewSideBar
+from editor.widgets.sidebar import KMBViewSideBar
+from editor.widgets.search_bar import KMBSearchBar
 
 from cfg import icon, EDGE_CURVES, EDGE_DIRECT
 from lib import debug
@@ -65,12 +66,11 @@ class KMBNodeGraphicView(QGraphicsView):
         self.gr_scene = graphic_scene
         self.status_bar_msg = status_bar_msg
         self.sidebar = KMBViewSideBar(self)
+        # self.search_bar = KMBSearchBar(self)
         self.parent = parent
 
         self.mode = MOUSE_SELECT
         self.edge_type = None
-        # signals from note.
-        self.note_mode = False
         # signals from sidebar.
         self.disable_wheel = False
         self.has_pressed_zoom_btn = False
@@ -197,17 +197,28 @@ class KMBNodeGraphicView(QGraphicsView):
             super().mouseMoveEvent(event)
 
     def mouseMoveEvent(self, event):
+        pos = event.pos()
         if self.mode == EDGE_DRAG:
-            pos = self.mapToScene(event.pos())
-            self.drag_edge.gr_edge.set_dst(pos.x(), pos.y())
+            sc_pos = self.mapToScene(pos)
+            self.drag_edge.gr_edge.set_dst(sc_pos.x(), sc_pos.y())
             self.drag_edge.gr_edge.update()
 
         # emit pos changed signal
-        self.last_scene_mouse_pos = self.mapToScene(event.pos())
+        self.last_scene_mouse_pos = self.mapToScene(pos)
         self.SCENE_POS_CHANGED.emit(
             int(self.last_scene_mouse_pos.x()),
             int(self.last_scene_mouse_pos.y())
         )
+        # enter the hot area of sidebar.
+        if (
+            self.sidebar.x + self.sidebar.w >= pos.x() >= self.sidebar.x and
+            self.sidebar.y + self.sidebar.h >= pos.y() >= self.sidebar.y + self.sidebar.margin_bottom
+        ):
+            if not self.sidebar.on_display:
+                self.sidebar.slide_in_animation()
+        else:
+            if self.sidebar.on_display:
+                self.sidebar.slide_out_animation()
 
         super().mouseMoveEvent(event)
 
@@ -246,8 +257,9 @@ class KMBNodeGraphicView(QGraphicsView):
         key R - curve edge
         key T - note
         """
-        if self.note_mode:
-            pass
+        if self.mode == MOUSE_NOTE:
+            if event.key() == Qt.Key_Escape:
+                self.set_select_mode()
         else:
             if event.key() == Qt.Key_V:
                 self.set_select_mode()
@@ -268,6 +280,11 @@ class KMBNodeGraphicView(QGraphicsView):
             self.POP_UP_RIGHT_MENU.emit(item.id_str)
             # get item self right menu to display
             item.contextMenuEvent(event)
+
+    def resizeEvent(self, event):
+        w = event.size().width()
+        h = event.size().height()
+        self.sidebar.update_pos(w, h)
 
     # ------------------EVENT--------------------
 
@@ -415,7 +432,6 @@ class KMBNodeGraphicView(QGraphicsView):
 
     def add_note(self):
         # add note in scene.
-        self.note_mode = True
         x, y = self.get_last_xy()
         KMBNote(self.gr_scene, x, y)
 
@@ -604,9 +620,8 @@ class KMBNodeGraphicView(QGraphicsView):
     def set_one_zoom_in(self):
         # zoom in once.
         fake_wheel_event = QWheelEvent(
-            # todo: zoom with certain center.
-            QPoint(100, 100),  # pos(fake)
-            QPoint(500, 200),  # global-pos(fake)
+            QPoint(0, 0),      # pos(fake)
+            QPoint(0, 0),      # global-pos(fake)
             QPoint(0, 2),      # pixel-delta(fake)
             QPoint(0, 120),    # angle-delta(fake)
             0,                 # phase
@@ -622,8 +637,8 @@ class KMBNodeGraphicView(QGraphicsView):
     def set_one_zoom_out(self):
         # zoom out once.
         fake_wheel_event = QWheelEvent(
-            QPoint(100, 100),
-            QPoint(500, 200),
+            QPoint(0, 0),
+            QPoint(0, 0),
             QPoint(0, -2),
             QPoint(0, -120),
             0,
