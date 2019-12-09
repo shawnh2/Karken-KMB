@@ -1,0 +1,16 @@
+/* For Search Bar */
+.KMBSearchBarLineEdit {
+    min-height: 30px;
+    font-size: 13px;
+    border-radius: 10px;
+    background-color: #fafafa;
+
+    selection-color: white;
+    selection-background-color: #ff5336;
+}
+
+/* For Search body */
+.KMBSearchBrowserBody {
+    background: #fafafa;
+    border-radius: 10px;
+}

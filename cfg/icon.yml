@@ -67,3 +67,6 @@ S_ZOOM_OUT: 'lib/icon/other/sidebar/zoom_out.png'
 S_ZOOM_OUT_PRESS: lib/icon/other/sidebar/zoom_out_press.png
 S_LOCATE: 'lib/icon/other/sidebar/locate.png'
 S_LOCATE_PRESS: 'lib/icon/other/sidebar/locate_press.png'
+
+# for search bar icon
+C_CLEAR: 'lib/icon/other/clear.png'

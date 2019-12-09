@@ -41,6 +41,7 @@ EXPORT_SUPPORT = (
 SS_COMMON = 'lib/skin/common.css'
 SS_ARGBOX = 'lib/skin/argcombobox.css'
 SS_SIDEBTN = 'lib/skin/sidebarbtn.css'
+SS_SEARCH = 'lib/skin/searchbar.css'
 
 # Loading configure for debug.
 DEBUG = True

@@ -170,7 +170,9 @@ class KMBMainWindow(QMainWindow):
         # ------
         self.action_undo.triggered.connect(self.undo_history)
         self.action_redo.triggered.connect(self.redo_history)
-        # self.action_search
+        self.action_search.triggered.connect(
+            self.node_editor.nodes_view.bring_search_bar
+        )
         # ------
         self.action_select.triggered.connect(
             self.node_editor.nodes_view.set_select_mode

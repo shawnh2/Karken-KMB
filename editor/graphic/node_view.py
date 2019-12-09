@@ -66,7 +66,7 @@ class KMBNodeGraphicView(QGraphicsView):
         self.gr_scene = graphic_scene
         self.status_bar_msg = status_bar_msg
         self.sidebar = KMBViewSideBar(self)
-        # self.search_bar = KMBSearchBar(self)
+        self.search_bar = KMBSearchBar(self)
         self.parent = parent
 
         self.mode = MOUSE_SELECT
@@ -271,6 +271,10 @@ class KMBNodeGraphicView(QGraphicsView):
                 self.set_edge_curve_mode()
             elif event.key() == Qt.Key_T:
                 self.set_note_mode()
+            elif event.key() == Qt.Key_Escape:
+                # it can bring back the search bar.
+                if self.search_bar.on_display:
+                    self.search_bar.slide_out_animation()
         super().keyPressEvent(event)
 
     def contextMenuEvent(self, event):
@@ -285,6 +289,7 @@ class KMBNodeGraphicView(QGraphicsView):
         w = event.size().width()
         h = event.size().height()
         self.sidebar.update_pos(w, h)
+        self.search_bar.update_size(w, h)
 
     # ------------------EVENT--------------------
 
@@ -574,6 +579,12 @@ class KMBNodeGraphicView(QGraphicsView):
         """ Drop all the received pin value after using. """
         self.current_node_pin_id = None
         self.current_node_pin_args = None
+
+    def bring_search_bar(self):
+        if self.search_bar.on_display:
+            self.search_bar.slide_out_animation()
+        else:
+            self.search_bar.slide_in_animation()
 
     def get_item_at_click(self, event):
         """ Return the object that clicked on. """
