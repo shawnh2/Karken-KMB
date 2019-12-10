@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QGraphicsTextItem
 from PyQt5.QtGui import QColor, QBrush, QFont
-from PyQt5.QtCore import Qt, QRectF
+from PyQt5.QtCore import Qt, QRectF, pyqtSignal
 
 from cfg import color
 from lib import debug, tagger
@@ -8,6 +8,8 @@ from editor.wrapper.serializable import Serializable
 
 
 class KMBNote(QGraphicsTextItem, Serializable):
+
+    FINISHED_EDITING = pyqtSignal(bool)
 
     def __init__(self, gr_scene, x, y, parent=None, with_focus=True):
         super().__init__(parent)
@@ -48,7 +50,7 @@ class KMBNote(QGraphicsTextItem, Serializable):
         # prepare editor.
         self.setTextInteractionFlags(Qt.TextEditorInteraction)
         self.setTextWidth(self.width)
-        self.setCursor(Qt.IBeamCursor)
+        # self.setCursor(Qt.IBeamCursor)
         self.setFocus()
 
     def hoverEnterEvent(self, event):
@@ -68,10 +70,12 @@ class KMBNote(QGraphicsTextItem, Serializable):
             self.adjustSize()  # adjust size for text
             self.setTextInteractionFlags(Qt.NoTextInteraction)
             self.wrap_scene.add_note(self)
+        self.FINISHED_EDITING.emit(True)
 
     def mouseDoubleClickEvent(self, event):
         # double click to edit text.
         self.into_editor()
+        self.FINISHED_EDITING.emit(False)
 
     def mouseMoveEvent(self, event):
         self.is_modified()

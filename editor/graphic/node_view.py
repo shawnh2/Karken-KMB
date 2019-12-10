@@ -77,6 +77,8 @@ class KMBNodeGraphicView(QGraphicsView):
         # signals from right menu.
         self.has_chosen_from_rm = False
         self.has_chosen_to_del_from_rm = False
+        # signals from note.
+        self.has_finished_editing = False
 
         # current dynamic variables.
         self.last_scene_mouse_pos = None
@@ -171,6 +173,7 @@ class KMBNodeGraphicView(QGraphicsView):
 
     def set_note_mode(self):
         self.mode = MOUSE_NOTE
+        self.has_finished_editing = False
         self.setCursor(Qt.IBeamCursor)
         debug("Now is <note> mode")
 
@@ -257,7 +260,7 @@ class KMBNodeGraphicView(QGraphicsView):
         key R - curve edge
         key T - note
         """
-        if self.mode == MOUSE_NOTE:
+        if self.mode == MOUSE_NOTE or not self.has_finished_editing:
             if event.key() == Qt.Key_Escape:
                 self.set_select_mode()
         else:
@@ -438,7 +441,9 @@ class KMBNodeGraphicView(QGraphicsView):
     def add_note(self):
         # add note in scene.
         x, y = self.get_last_xy()
-        KMBNote(self.gr_scene, x, y)
+        note = KMBNote(self.gr_scene, x, y)
+        note.FINISHED_EDITING.connect(self.set_finished_editing)
+        self.set_select_mode()
 
     def set_node(self, item):
         # get args of node and edit it
@@ -627,6 +632,10 @@ class KMBNodeGraphicView(QGraphicsView):
     def set_wheel_disable(self, state: bool):
         # on Mac: touch pad may have bad exp if wheel is enable.
         self.disable_wheel = state
+
+    def set_finished_editing(self, state: bool):
+        # note has finished editing.
+        self.has_finished_editing = state
 
     def set_one_zoom_in(self):
         # zoom in once.
