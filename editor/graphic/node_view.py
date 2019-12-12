@@ -8,6 +8,7 @@ from editor.graphic.node_note import KMBNote
 from editor.wrapper.wrap_item import KMBNodeItem
 from editor.wrapper.wrap_edge import KMBEdge
 from editor.component.edge_type import KMBGraphicEdgeBezier, KMBGraphicEdgeDirect
+from editor.component.messages import PopMessageBox
 from editor.widgets.sidebar import KMBViewSideBar
 from editor.widgets.search_bar import KMBSearchBar
 
@@ -68,6 +69,7 @@ class KMBNodeGraphicView(QGraphicsView):
         self.sidebar = KMBViewSideBar(self)
         self.search_bar = KMBSearchBar(self)
         self.parent = parent
+        self.del_items_msg = PopMessageBox('Delete items', self)
 
         self.mode = MOUSE_SELECT
         self.edge_type = None
@@ -78,7 +80,7 @@ class KMBNodeGraphicView(QGraphicsView):
         self.has_chosen_from_rm = False
         self.has_chosen_to_del_from_rm = False
         # signals from note.
-        self.has_finished_editing = False
+        self.has_finished_editing = True
 
         # current dynamic variables.
         self.last_scene_mouse_pos = None
@@ -334,11 +336,9 @@ class KMBNodeGraphicView(QGraphicsView):
         elif self.mode == NODE_DELETE:
             # delete group
             if self.rubber_select:
-                msg_box = QMessageBox()
-                msg_box.setText("Are you sure to delete all the selected items?")
-                msg_box.setStandardButtons(QMessageBox.No | QMessageBox.Yes)
-                msg_box.setDefaultButton(QMessageBox.No)
-                res = msg_box.exec()
+                self.del_items_msg.make('Sure to delete all selected items?',
+                                        PopMessageBox.TYPE_YES_OR_NO)
+                res = self.del_items_msg.exec()
                 if res == QMessageBox.Yes:
                     self.del_selected_items()
             # delete single
@@ -546,7 +546,7 @@ class KMBNodeGraphicView(QGraphicsView):
             # remove gr-edge under this situation.
             if saving_state == 0:
                 self.gr_scene.removeItem(new_edge.gr_edge)
-                debug("[dropped] repeating edge without stored.")
+                debug("[dropped] not displaying unnecessary edge.")
 
     def _curve_edge_drag_end(self, event, new_edge, state: int):
         """ Event while end up dragging curve edge. """
@@ -558,7 +558,7 @@ class KMBNodeGraphicView(QGraphicsView):
             self.has_chosen_from_rm = False
             # saving successfully but invalid.
             if state == 1:
-                self.gr_scene.scene.remove_edge(new_edge)
+                self.gr_scene.scene.history.destroy_edge(new_edge)
             debug("[dropped] triggered no item in right menu.")
         else:
             self.is_modified()
@@ -571,7 +571,7 @@ class KMBNodeGraphicView(QGraphicsView):
             self.contextMenuEvent(event)
             if not self.has_chosen_from_rm:
                 self.gr_scene.removeItem(new_edge.gr_edge)
-                self.gr_scene.scene.remove_edge(new_edge)
+                self.gr_scene.scene.history.destroy_edge(new_edge)
                 debug("[dropped] triggered no item in right menu.")
             else:
                 self.is_modified()

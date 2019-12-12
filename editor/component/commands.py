@@ -65,10 +65,11 @@ class DeleteNodeCmd(SkipFirstRedoCommand):
 
 class CreateEdgeCmd(SkipFirstRedoCommand):
 
-    def __init__(self, edge, src: dict, gr_scene):
+    def __init__(self, edge, src: dict, args: dict, gr_scene):
         super().__init__()
         self.edge = edge
         self.src = src
+        self.args = args
         self.gr_scene = gr_scene
 
     def after_first_redo(self):
@@ -88,24 +89,31 @@ class CreateEdgeCmd(SkipFirstRedoCommand):
             dst_item.ref_to = (src_gr_node_id, src_model.var_name_item)
             src_model.ref_by = (dst_gr_node_id, dst_item, dst_model.var_name_item)
 
-        self.gr_scene.addItem(self.edge.gr_edge)
+        if self.edge.is_display:
+            self.gr_scene.addItem(self.edge.gr_edge)
         self.src[self.edge.id] = self.edge
-        debug(f"*[EDGE {len(self.src)} ADD] < {self.edge}")
+        debug(f"*[EDGE {self.src} ADD] < {self.edge}")
 
     def undo(self):
         edge_type = self.edge.gr_edge.type
+        dst_gr_node_id = self.edge.end_item.gr_node.id_str
+        src_gr_node_id = self.edge.start_item.gr_node.id_str
+        dst_model = self.args.get(dst_gr_node_id)
+        src_model = self.args.get(src_gr_node_id)
 
         if edge_type == EDGE_DIRECT:
             if self.edge.end_item.gr_name == 'Model':
-                pass
+                dst_model.io_semaphore.popup(src_gr_node_id)
             else:
                 pass
         elif edge_type == EDGE_CURVES:
-            pass
+            dst_item = dst_model.item(self.edge.ref_box, 1)
+            src_model.rb_semaphore.popup(dst_gr_node_id, dst_item.id_str)
 
-        self.gr_scene.removeItem(self.edge.gr_edge)
+        if self.edge.is_display:
+            self.gr_scene.removeItem(self.edge.gr_edge)
         self.src.pop(self.edge.id)
-        debug(f"*[EDGE {len(self.src)} ADD] > {self.edge}")
+        debug(f"*[EDGE {self.src} ADD] > {self.edge}")
 
 
 class DeleteEdgeCmd(SkipFirstRedoCommand):
@@ -120,14 +128,24 @@ class DeleteEdgeCmd(SkipFirstRedoCommand):
     def after_first_redo(self):
         # delete the io & ref relation here.
         edge_type = self.edge.gr_edge.type
-        if edge_type == EDGE_DIRECT:
-            pass
-        elif edge_type == EDGE_CURVES:
-            pass
+        dst_gr_node_id = self.edge.end_item.gr_node.id_str
+        src_gr_node_id = self.edge.start_item.gr_node.id_str
+        dst_model = self.args.get(dst_gr_node_id)
+        src_model = self.args.get(src_gr_node_id)
 
-        self.gr_scene.removeItem(self.edge.gr_edge)
+        if edge_type == EDGE_DIRECT:
+            if self.edge.end_item.gr_name == 'Model':
+                dst_model.io_semaphore.popup(src_gr_node_id)
+            else:
+                pass
+        elif edge_type == EDGE_CURVES:
+            dst_item = dst_model.item(self.edge.ref_box, 1)
+            src_model.rb_semaphore.popup(dst_gr_node_id, dst_item.id_str)
+
+        if self.edge.is_display:
+            self.gr_scene.removeItem(self.edge.gr_edge)
         self.src.pop(self.edge.id)
-        debug(f"*[EDGE {len(self.src)} DEL] < {self.edge}")
+        debug(f"*[EDGE {self.src} DEL] < {self.edge}")
 
     def undo(self):
         # reconnect the io & ref relation here.
@@ -147,9 +165,10 @@ class DeleteEdgeCmd(SkipFirstRedoCommand):
             dst_item.ref_to = (src_gr_node_id, src_model.var_name_item)
             src_model.ref_by = (dst_gr_node_id, dst_item, dst_model.var_name_item)
 
-        self.gr_scene.addItem(self.edge.gr_edge)
+        if self.edge.is_display:
+            self.gr_scene.addItem(self.edge.gr_edge)
         self.src[self.edge.id] = self.edge
-        debug(f"*[EDGE {len(self.src)} DEL] > {self.edge}")
+        debug(f"*[EDGE {self.src} DEL] > {self.edge}")
 
 
 class CreateNoteCmd(SkipFirstRedoCommand):
@@ -188,6 +207,18 @@ class DeleteNoteCmd(SkipFirstRedoCommand):
         self.gr_scene.addItem(self.note)
         self.src[self.note.id] = self.note
         debug(f"*[NOTE {len(self.src)} DEL] > {self.note}")
+
+
+class NoteUpdateCmd(SkipFirstRedoCommand):
+
+    def __init__(self):
+        super().__init__()
+
+    def after_first_redo(self):
+        pass
+
+    def undo(self):
+        pass
 
 
 class NodeMoveCmd(SkipFirstRedoCommand):
