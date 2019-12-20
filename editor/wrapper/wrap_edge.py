@@ -14,8 +14,7 @@ class KMBEdge(Serializable):
         self.edge_type = edge_type
         # properties
         self._io_type: str = None  # assign i/o or None.
-        self.ref_box: int = None   # assign the idx of ref's dst node item.
-        self.is_display = True     # assign the displaying state of this edge.
+        self.ref_box: int = None   # assign ref item idx.
 
         if self.edge_type == EDGE_DIRECT:
             self.gr_edge = KMBGraphicEdgeDirect(self)
@@ -56,8 +55,6 @@ class KMBEdge(Serializable):
         """ Check state of storing into scene's edges. """
         check_state = self.scene.check_edge(self, self.edge_type)
         if check_state != -1:
-            if check_state == 0:
-                self.is_display = False
             self.scene.add_edge(self)
             # feed ref, so can create ref relation.
             if self.edge_type == EDGE_CURVES:

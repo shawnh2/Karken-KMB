@@ -96,10 +96,6 @@ class MainNodeEditor(QWidget):
         # +++++++++++++++++++++++++++++++++++
         #            FROM ARG-MENU
         # +++++++++++++++++++++++++++++++++++
-        # sending the rest items count of ref dst node.
-        self.args_menu.panel.REST_REF_ITEMS_COUNT.connect(
-            self.nodes_view.set_rest_ref_dst_items_count
-        )
         # do not pick one item to del.
         self.args_menu.panel.WAS_DONE_PICKING_ONE.connect(
             self.nodes_view.set_chosen_to_del_from_rm

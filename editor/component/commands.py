@@ -89,8 +89,7 @@ class CreateEdgeCmd(SkipFirstRedoCommand):
             dst_item.ref_to = (src_gr_node_id, src_model.var_name_item)
             src_model.ref_by = (dst_gr_node_id, dst_item, dst_model.var_name_item)
 
-        if self.edge.is_display:
-            self.gr_scene.addItem(self.edge.gr_edge)
+        self.gr_scene.addItem(self.edge.gr_edge)
         self.src[self.edge.id] = self.edge
         debug(f"*[EDGE {self.src} ADD] < {self.edge}")
 
@@ -110,8 +109,7 @@ class CreateEdgeCmd(SkipFirstRedoCommand):
             dst_item = dst_model.item(self.edge.ref_box, 1)
             src_model.rb_semaphore.popup(dst_gr_node_id, dst_item.id_str)
 
-        if self.edge.is_display:
-            self.gr_scene.removeItem(self.edge.gr_edge)
+        self.gr_scene.removeItem(self.edge.gr_edge)
         self.src.pop(self.edge.id)
         debug(f"*[EDGE {self.src} ADD] > {self.edge}")
 
@@ -142,8 +140,7 @@ class DeleteEdgeCmd(SkipFirstRedoCommand):
             dst_item = dst_model.item(self.edge.ref_box, 1)
             src_model.rb_semaphore.popup(dst_gr_node_id, dst_item.id_str)
 
-        if self.edge.is_display:
-            self.gr_scene.removeItem(self.edge.gr_edge)
+        self.gr_scene.removeItem(self.edge.gr_edge)
         self.src.pop(self.edge.id)
         debug(f"*[EDGE {self.src} DEL] < {self.edge}")
 
@@ -165,8 +162,7 @@ class DeleteEdgeCmd(SkipFirstRedoCommand):
             dst_item.ref_to = (src_gr_node_id, src_model.var_name_item)
             src_model.ref_by = (dst_gr_node_id, dst_item, dst_model.var_name_item)
 
-        if self.edge.is_display:
-            self.gr_scene.addItem(self.edge.gr_edge)
+        self.gr_scene.addItem(self.edge.gr_edge)
         self.src[self.edge.id] = self.edge
         debug(f"*[EDGE {self.src} DEL] > {self.edge}")
 

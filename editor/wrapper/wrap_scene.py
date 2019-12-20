@@ -30,7 +30,7 @@ class KMBNodeScene(Serializable):
     def check_edge(self, edge, edge_type):
         """ Check edge valid.
 
-        :return -1 (Invalid), 0 (Valid but not ignore), 1 (Valid).
+        :return -1 (Invalid), 1 (Valid).
         """
         if edge_type == EDGE_DIRECT:
             # add constraints on Direct(IO) edge.
@@ -120,7 +120,7 @@ class KMBNodeScene(Serializable):
                     e.start_item == edge.start_item and
                     e.end_item is edge.end_item
                 ):
-                    return 0
+                    return -1
             # which means ref curves allow user to drag from same node,
             # but it must link to the different arg item.
             # good thing is referenced arg item will be disable,

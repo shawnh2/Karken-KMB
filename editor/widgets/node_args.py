@@ -9,7 +9,6 @@ from lib import DataBase4Args, debug, AutoInspector
 
 class KMBNodesArgsMenu(QTableView):
 
-    REST_REF_ITEMS_COUNT = pyqtSignal(int)     # count
     WAS_DONE_PICKING_ONE = pyqtSignal(bool)    # boolean
     IS_MODIFIED = pyqtSignal(bool)
 
@@ -223,7 +222,6 @@ class KMBNodesArgsMenu(QTableView):
         if self.current_ref_model.rb_semaphore.count(dst_model_id) == 1:
             self.current_ref_model.rb_semaphore.popup(dst_model_id, None)
             # single connected ref edge still needs these signals.
-            self.REST_REF_ITEMS_COUNT.emit(0)
             self.WAS_DONE_PICKING_ONE.emit(True)
         # if one start item connected with one node but multi items.
         # then pop up a menu to decide which edge.
@@ -235,11 +233,6 @@ class KMBNodesArgsMenu(QTableView):
         # deleted the one item that selected in right menu.
         ref_item_id = self.sender().objectName()
         self.current_ref_model.rb_semaphore.popup(self.current_ref_dst_model_id, ref_item_id)
-        # if one ref node has multi ref edges connected to one node,
-        # view will only display one of the them.
-        # so do not delete ref edge until there's no edge left.
-        rest_ref_edge_count = self.current_ref_model.rb_semaphore.count(self.current_ref_dst_model_id)
-        self.REST_REF_ITEMS_COUNT.emit(rest_ref_edge_count)
         self.WAS_DONE_PICKING_ONE.emit(True)
 
     def contextMenuEvent(self, event):

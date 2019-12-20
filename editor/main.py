@@ -48,7 +48,9 @@ class KMBMainWindow(QMainWindow):
         self.action_select = QAction(QIcon(icon['ARROW']), '', self)
         self.action_hand = QAction(QIcon(icon['HAND']), '', self)
         self.action_undo = QAction(QIcon(icon['UNDO']), '', self)
+        self.action_undo.setEnabled(False)
         self.action_redo = QAction(QIcon(icon['REDO']), '', self)
+        self.action_redo.setEnabled(False)
         # ------
         self.action_delete = QAction(QIcon(icon['DELETE']), '', self)
         self.action_edge_direct = QAction(QIcon(icon['SLINE']), '', self)
@@ -206,6 +208,7 @@ class KMBMainWindow(QMainWindow):
     def update_modify_state(self):
         # call by node_editor.
         self.is_modified = True
+        self.update_history_state()
         if self.save_path and not self.save_path.endswith('*'):
             self.setWindowTitle(self.save_path + '*')
 

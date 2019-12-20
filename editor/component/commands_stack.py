@@ -53,15 +53,17 @@ class KMBHistoryStack(QUndoStack):
         debug(f"*[EDGE {len(self._edges)}] + {edge}")
 
     def remove_edge(self, edge):
-        try:
+        if edge.id in self._edges:
             self._edges.pop(edge.id)
-            self.push(DeleteEdgeCmd(edge, self._edges,
-                                    self.args_menu.edit_model, self.gr_scene))
+            del_cmd = DeleteEdgeCmd(edge, self._edges,
+                                    self.args_menu.edit_model, self.gr_scene)
+            self.push(del_cmd)
             debug(f"*[EDGE {len(self._edges)}] - {edge}")
-        except KeyError:
+        else:
             debug(f"*[EDGE NOT EXIST AND IGNORE] - {edge}")
 
     def destroy_edge(self, edge):
+        # destroy one edge without saving into command stack.
         self._edges.pop(edge.id)
 
     @property

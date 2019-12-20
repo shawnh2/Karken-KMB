@@ -87,7 +87,6 @@ class KMBNodeGraphicView(QGraphicsView):
         self.current_node_item_name = None
         self.current_node_item_type = None
         self.current_node_item_sort = None
-        self.rest_ref_items_count = 0
         # optional
         self.current_node_pin_args = None
         self.current_node_pin_id = None
@@ -490,9 +489,7 @@ class KMBNodeGraphicView(QGraphicsView):
             src_item_id = str(id(edge.edge.start_item.gr_node))
             dst_item_id = str(id(edge.edge.end_item.gr_node))
             self.DEL_REF_RELATED_ITEMS.emit(src_item_id, dst_item_id)
-            # will not be deleted under these situations.
-            if self.rest_ref_items_count != 0:
-                return
+
             if not self.has_chosen_to_del_from_rm:
                 return
 
@@ -502,8 +499,9 @@ class KMBNodeGraphicView(QGraphicsView):
                 src_item_id = str(id(edge.edge.start_item.gr_node))
                 dst_item_id = str(id(edge.edge.end_item.gr_node))
                 self.DEL_IO_EDGE_ITEM.emit(src_item_id, dst_item_id)
+            self.gr_scene.removeItem(edge)
+        # remove edge from view and history.
         self.gr_scene.scene.remove_edge(edge.edge)
-        # del the edge in view.
         self.gr_scene.removeItem(edge)
 
     def _del_note_item(self, note):
@@ -530,7 +528,7 @@ class KMBNodeGraphicView(QGraphicsView):
         self.drag_edge = None
         # saving for the new edge.
         saving_state = new_edge.store()
-        # -1 (Invalid), 0 (Valid without display or store), 1 (Valid and display)
+        # -1 (Invalid), 1 (Valid and display)
         if saving_state == -1:  # fail to add new edge.
             self.gr_scene.removeItem(new_edge.gr_edge)
             debug("[dropped] invalid connection.")
@@ -539,16 +537,12 @@ class KMBNodeGraphicView(QGraphicsView):
             # only ref edge is able to pop up right menu of the end item,
             # so now you're able to pick up which arg it ref to.
             if self.edge_type == EDGE_CURVES:
-                self._curve_edge_drag_end(event, new_edge, saving_state)
+                self._curve_edge_drag_end(event, new_edge)
             # for Model, show its input and output in right menu.
             if self.edge_type == EDGE_DIRECT:
                 self._direct_edge_drag_end(event, item, new_edge)
-            # remove gr-edge under this situation.
-            if saving_state == 0:
-                self.gr_scene.removeItem(new_edge.gr_edge)
-                debug("[dropped] not displaying unnecessary edge.")
 
-    def _curve_edge_drag_end(self, event, new_edge, state: int):
+    def _curve_edge_drag_end(self, event, new_edge):
         """ Event while end up dragging curve edge. """
         self.contextMenuEvent(event)
         # if hadn't chosen a item in right menu,
@@ -556,9 +550,7 @@ class KMBNodeGraphicView(QGraphicsView):
         if not self.has_chosen_from_rm:
             self.gr_scene.removeItem(new_edge.gr_edge)
             self.has_chosen_from_rm = False
-            # saving successfully but invalid.
-            if state == 1:
-                self.gr_scene.scene.history.destroy_edge(new_edge)
+            self.gr_scene.scene.history.destroy_edge(new_edge)
             debug("[dropped] triggered no item in right menu.")
         else:
             self.is_modified()
@@ -624,10 +616,6 @@ class KMBNodeGraphicView(QGraphicsView):
         # if not choose one arg item from menu to del,
         # then give up this operation.
         self.has_chosen_to_del_from_rm = True
-
-    def set_rest_ref_dst_items_count(self, count: int):
-        # when count == 0, then shall remove the ref edge.
-        self.rest_ref_items_count = count
 
     def set_wheel_disable(self, state: bool):
         # on Mac: touch pad may have bad exp if wheel is enable.
