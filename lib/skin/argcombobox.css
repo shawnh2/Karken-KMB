@@ -3,34 +3,34 @@
 For the combobox in node args menu.
  &
 For support type combobox in export dialog */
-ArgComboBox{
+.ArgComboBox{
     background-color: whitesmoke;
     border-style: none;
 }
-ArgComboBox:on{
+.ArgComboBox:on{
     background: transparent;
 }
 
-ArgComboBox::drop-down {
+.ArgComboBox::drop-down {
     border-style: none;
 }
 
-ArgComboBox::down-arrow {
+.ArgComboBox::down-arrow {
     image: url('lib/icon/other/argsmenu/down.png');
 }
 
-ArgComboBox::down-arrow:on {
+.ArgComboBox::down-arrow:on {
     image: url('lib/icon/other/argsmenu/up.png');
 }
 
 /* items in combobox. */
-ArgComboBox QAbstractItemView::item {
+.ArgComboBox QAbstractItemView::item {
 	height: 25px;
 	color: #555555;
 	background-color: transparent;
 }
 
-ArgComboBox QAbstractItemView::item:selected {
+.ArgComboBox QAbstractItemView::item:selected {
 	color: none;
 	background-color: #60c5ba;
 }

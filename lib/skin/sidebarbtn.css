@@ -1,5 +1,5 @@
 /* For SideBarButton */
-SideBarButton {{
+.SideBarButton {{
     min-height: {b_size}px;
     min-width: {b_size}px;
     image: url({i_path});
@@ -7,10 +7,10 @@ SideBarButton {{
     border: 0px solid white;
 }}
 
-SideBarButton:pressed {{
+.SideBarButton:pressed {{
     {press_block}
 }}
 
-SideBarButton:checked {{
+.SideBarButton:checked {{
     {check_block}
 }}

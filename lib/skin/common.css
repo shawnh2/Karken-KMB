@@ -1,57 +1,57 @@
 /* For the tool button in toolbar and node menu. */
-QToolButton {
+.QToolButton {
     padding-bottom: 3px;
     padding-top: 3px;
     border-style: none;
 }
 
-QToolButton:hover {
+.QToolButton:hover {
     border-radius: 7px;
     background: lightgray;
 }
 
-QToolButton:checked, QToolButton:pressed {
+.QToolButton:checked, .QToolButton:pressed {
     border-radius: 7px;
     background: #a5a5a5;
 }
 
 /* For the node menu. */
-QToolBox {
+.QToolBox {
     background: #f5f5f5;
     padding-top: 5px;
     padding-bottom: 5px;
 }
 
-QToolBox:tab {
+.QToolBox:tab {
     background-color: whitesmoke;
     border: 1px solid #a5a5a5;
     border-radius: 10px;
     padding-left: 20px;
 }
 
-QToolBox:tab:hover {
+.QToolBox:tab:hover {
     background-color: #e2e2e2;
 }
 
-QToolBoxButton {
+.QToolBoxButton {
     /*tool box button embedding in tool box.*/
     min-height: 25px;
     font-family: monospace;
 }
 
-QGroupBox {
+.QGroupBox {
     background: #f5f5f5;
     padding-left: 11px;
     border-style: none;
 }
 
 /* For the checkbox in node args menu. */
-QCheckBox {
+.QCheckBox {
     padding-left: 5px;
 }
 
 /* For line edit item and text field item */
-QLineEdit {
+.QLineEdit {
     border-radius: 5px;
     border: none white;
     font-size: 16px;
@@ -61,7 +61,7 @@ QLineEdit {
     padding-left: 5px;
 }
 
-QTextEdit {
+.QTextEdit {
     border-style: none;
     border-radius: 5px;
     background: white;
@@ -70,7 +70,7 @@ QTextEdit {
 }
 
 /* For PushButton */
-QPushButton {
+.QPushButton {
     border: 1px solid #dedbd9;
     border-radius: 5px;
     background-color: whitesmoke;
@@ -78,17 +78,17 @@ QPushButton {
     min-height: 23px;
 }
 
-QPushButton:default {
+.QPushButton:default {
     color: white;
     border: 1px solid #ff7559;
     background-color: #ff4b2b;
 }
 
-QPushButton:pressed {
+.QPushButton:pressed {
     border: 2px solid #ff8874;
 }
 
-QPushButton:default:pressed {
+.QPushButton:default:pressed {
     border: 2px solid #ff5336;
     background-color: #e74427;
 }
