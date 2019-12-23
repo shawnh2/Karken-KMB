@@ -7,10 +7,21 @@
 
     selection-color: white;
     selection-background-color: #ff5336;
+
+    padding-left: 9px;
 }
 
 /* For Search body */
 .KMBSearchBrowserBody {
-    background: #fafafa;
+    background: #f8f8f8;
+    alternate-background-color: #f0f0f0;
+    show-decoration-selected: 1;
     border-radius: 10px;
+
+    padding-bottom: 9px;
+    padding-top: 9px;
+}
+
+.KMBSearchBrowserBody::item:selected {
+    background: #ff5336;
 }
