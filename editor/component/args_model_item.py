@@ -236,6 +236,7 @@ class _ArgIOOrderPanel(QDialog):
         self.setWindowTitle(parent.title)
         # init widgets
         self.order_list = QListWidget(self)
+        self.order_list.setAlternatingRowColors(True)
         # init buttons
         self.btn_up = MiniSquareButton(icon=icon['MINI_UP'])
         self.btn_down = MiniSquareButton(icon=icon['MINI_DOWN'])

@@ -92,3 +92,10 @@
     border: 2px solid #ff5336;
     background-color: #e74427;
 }
+
+.QListWidget {
+    background: white;
+    alternate-background-color: whitesmoke;
+    border: none;
+    border-radius: 5px;
+}
