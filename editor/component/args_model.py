@@ -145,6 +145,8 @@ class ArgsEditableModel(ArgsSuperModel):
         self.combo_args = []
         # args: check button style cell
         self.check_args = []
+        # args: io order style cell
+        self.io_order_args = []
         # args: for pin args
         if pin_args != 'None':
             self.pin_args = pin_args_dict(pin_args)
@@ -279,6 +281,16 @@ class ArgsEditableModel(ArgsSuperModel):
                                         is_required=is_required)
             self.check_args.append(idx)
             self.set_col_items(idx, arg_name_item, arg_mark_item)
+        elif self.node_name == 'Model' and arg_name in ('inputs', 'outputs'):
+            # setup for model io order panel
+            arg_order_item = ArgEditItem(arg_init,
+                                         dtype=arg_type_item.raw_type_name,
+                                         belong_to=arg_name,
+                                         tag=3,
+                                         store_bg=True,
+                                         is_required=is_required)
+            self.io_order_args.append(idx)
+            self.set_col_items(idx, arg_name_item, arg_order_item)
         else:
             arg_init_item = ArgEditItem(arg_init,
                                         dtype=arg_type_item.raw_type_name,

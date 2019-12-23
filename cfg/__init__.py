@@ -38,10 +38,12 @@ EXPORT_SUPPORT = (
 )
 
 # Loading configure for stylesheet
-SS_COMMON = 'lib/skin/common.css'
-SS_ARGBOX = 'lib/skin/argcombobox.css'
-SS_SIDEBTN = 'lib/skin/sidebarbtn.css'
-SS_SEARCH = 'lib/skin/searchbar.css'
+SS_ROOT = 'lib/skin/{}.css'
+SS_COMMON = SS_ROOT.format('common')
+SS_ARGBOX = SS_ROOT.format('argcombobox')
+SS_SIDEBTN = SS_ROOT.format('sidebarbtn')
+SS_SEARCH = SS_ROOT.format('searchbar')
+SS_MINIBTN = SS_ROOT.format('minibtn')
 
 # Loading configure for debug.
 DEBUG = True

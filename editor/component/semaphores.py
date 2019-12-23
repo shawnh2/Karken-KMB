@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from PyQt5.QtGui import QColor
 
 from cfg import color
@@ -94,8 +96,8 @@ class ModelIOSemaphore:
 
     def __init__(self, owner):
         self._owner = owner
-        self._inputs = {}
-        self._outputs = {}
+        self._inputs = OrderedDict()
+        self._outputs = OrderedDict()
 
     def add(self, io: tuple):
         node_id, sign, node_vn_item = io
@@ -104,18 +106,29 @@ class ModelIOSemaphore:
             self._inputs[node_id] = node_vn_item
         else:
             self._outputs[node_id] = node_vn_item
-        debug(f'[IO {sign}] add {node_id} in model: {self._owner.var_name}')
+        debug(f'[IO {sign}pt] add {node_id} in {self._owner.var_name}')
 
     def get(self):
         return self._inputs, self._outputs
 
     def popup(self, node_id):
         # pop up while deleting io edge.
-        if self._inputs.__contains__(node_id):
+        if node_id in self._inputs:
             self._inputs.pop(node_id)
             debug(f'[DEL I] at {node_id}')
-        elif self._outputs.__contains__(node_id):
+        elif node_id in self._outputs:
             self._outputs.pop(node_id)
             debug(f'[DEL O] at {node_id}')
+
+    def order(self, order_key: list, io_type: str):
+        # change the order of io
+        assert io_type in ('i', 'o')
+        new_dict = OrderedDict.fromkeys(order_key)
+        if io_type == 'i':
+            for key in new_dict.keys():
+                new_dict[key] = self._inputs[key]
+            self._inputs = new_dict
         else:
-            debug('[!!!] No such I/O, maybe a BUG.')
+            for key in new_dict.keys():
+                new_dict[key] = self._outputs[key]
+            self._outputs = new_dict

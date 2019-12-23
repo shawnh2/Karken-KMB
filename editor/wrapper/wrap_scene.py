@@ -112,19 +112,13 @@ class KMBNodeScene(Serializable):
                 edge.end_item.gr_name == "Model"
             ):
                 return -1
-            # 3. check through all the edges,
-            # ref curve allow to repeat, but it's very unnecessary to
-            # display the edge again, so just display the line once.
+            # 3. check through all the edges, refuse to repeat edge.
             for e in self.history.edges.values():
                 if (
                     e.start_item == edge.start_item and
                     e.end_item is edge.end_item
                 ):
                     return -1
-            # which means ref curves allow user to drag from same node,
-            # but it must link to the different arg item.
-            # good thing is referenced arg item will be disable,
-            # so it's unnecessary to add few more `if` block.
         return 1
 
     # -------------------------------

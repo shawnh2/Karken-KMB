@@ -3,7 +3,7 @@ from PyQt5.QtGui import QStandardItemModel, QContextMenuEvent, QCursor
 from PyQt5.QtCore import Qt, pyqtSignal
 
 from editor.component.args_model import ArgsPreviewModel, ArgsEditableModel
-from editor.component.args_model_item import ArgComboBox, ArgCheckBox
+from editor.component.args_model_item import ArgComboBox, ArgCheckBox, ArgIOOrderButton
 from lib import DataBase4Args, debug, AutoInspector
 
 
@@ -70,6 +70,9 @@ class KMBNodesArgsMenu(QTableView):
             # try to set check button args
             if self.current_model.check_args:
                 self.add_checkbox_cell()
+            # try to set io order args
+            if self.current_model.io_order_args:
+                self.add_io_order_cell(node_id)
             self.current_model.itemChanged.connect(self.modify_item)
         except KeyError:
             self.setModel(self.null_model)
@@ -105,6 +108,14 @@ class KMBNodesArgsMenu(QTableView):
             check = ArgCheckBox(item.value, at=row)
             self.setIndexWidget(index, check)
             check.clicked.connect(self.modify_state)
+
+    def add_io_order_cell(self, model_id):
+        for row in self.current_model.io_order_args:
+            index = self.model().index(row, 1)
+            item = self.current_model.item(row, 1)
+            order = ArgIOOrderButton(item.belong_to, row, model_id)
+            self.setIndexWidget(index, order)
+            order.clicked.connect(self.modify_io_order)
 
     # ------Operations on Model Arg Item------
 
@@ -153,6 +164,14 @@ class KMBNodesArgsMenu(QTableView):
         src_model = self.edit_model.get(src_node_id)
         # load in IO semaphore by io.
         dst_model.io = (src_node_id, io_sign, src_model.var_name_item)
+
+    def modify_io_order(self):
+        # manage the order of io by showing its list panel.
+        btn = self.sender()
+        key = btn.show_panel(self.current_model.io)
+        if key is not None:
+            model = self.edit_model.get(btn.model_id)
+            model.io_semaphore.order(key, io_type=btn.io_type)
 
     # ------Operations on Node Model------
 

@@ -1,0 +1,6 @@
+/* Style for Mini buttons */
+
+.MiniSquareButton {{
+    min-height: {size}px;
+    min-width: {size}px;
+}}

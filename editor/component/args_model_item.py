@@ -1,8 +1,11 @@
-from PyQt5.QtWidgets import QComboBox, QCheckBox, QListView
+from PyQt5.QtWidgets import (QComboBox, QCheckBox, QListView, QPushButton,
+                             QDialog, QListWidget, QListWidgetItem, QHBoxLayout, QVBoxLayout)
 from PyQt5.QtGui import QStandardItem, QColor, QIcon
+from PyQt5.QtCore import Qt
 
 from cfg import color, icon, SS_ARGBOX
 from lib import type_color_map, load_stylesheet
+from editor.component.mini_button import MiniSquareButton
 
 
 class ArgNameItem(QStandardItem):
@@ -60,7 +63,7 @@ class ArgEditItem(QStandardItem):
             super().__init__(self._value)
         # default tag is 0.
         # when self is token by other widget,
-        # 1 is checkbox, 2 is combobox.
+        # 1 is checkbox, 2 is combobox, 3 is io-order.
         self.tag = tag
 
         self.is_changed = False
@@ -71,13 +74,7 @@ class ArgEditItem(QStandardItem):
         self.pln_color = QColor(color['ARG_NORMAL'])
         self.chg_color = QColor(color['ARG_CHANGED'])
         self.ref_color = QColor(color['ARG_REFED'])
-        self.ipt_color = QColor(color['DOT_IO_I'])
-        self.opt_color = QColor(color['DOT_IO_O'])
 
-        if belong_to == 'inputs':
-            self.setBackground(self.ipt_color)
-        elif belong_to == 'outputs':
-            self.setBackground(self.opt_color)
         self.setEditable(True)
         self.setToolTip(self.dtype)
 
@@ -197,3 +194,120 @@ class ArgCheckBox(QCheckBox):
             self.setChecked(True)
         else:
             self.setChecked(False)
+
+
+class ArgIOOrderButton(QPushButton):
+    """ Active in Model node input and output items.
+    Show up a list panel by clicking it, and can change
+    the order of input or output items inside panel. """
+
+    def __init__(self, name: str, at: int, model_id: str):
+        self.title = f'{name.capitalize()} Panel'
+        super().__init__(self.title)
+        self.at = at  # index in model
+        self.io_type = name[0]
+        self.model_id = model_id
+        # init panel
+        self.io_panel = _ArgIOOrderPanel(self)
+
+    def show_panel(self, io_semaphore):
+        assert self.io_type in ('i', 'o')
+        if self.io_type == 'i':
+            res = self.io_panel(io_semaphore[0])
+        else:
+            res = self.io_panel(io_semaphore[1])
+        return res
+
+
+class _ArgIOOrderPanelListItem(QListWidgetItem):
+    """ Override list widget item. """
+
+    def __init__(self, text: str, key: str):
+        super().__init__(text)
+        self.key = key
+
+
+class _ArgIOOrderPanel(QDialog):
+    """ The panel of I/O order list. """
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.setFixedSize(320, 280)
+        self.setWindowTitle(parent.title)
+        # init widgets
+        self.order_list = QListWidget(self)
+        # init buttons
+        self.btn_up = MiniSquareButton(icon=icon['MINI_UP'])
+        self.btn_down = MiniSquareButton(icon=icon['MINI_DOWN'])
+        self.btn_cancel = MiniSquareButton(icon=icon['MINI_CANCEL'])
+        self.btn_confirm = MiniSquareButton(icon=icon['MINI_CONFIRM'])
+        # buttons layout
+        self.btn1_layout = QVBoxLayout()
+        self.btn1_layout.addWidget(self.btn_up, alignment=Qt.AlignTop)
+        self.btn1_layout.addWidget(self.btn_down, alignment=Qt.AlignTop)
+        self.btn1_layout.addStretch(1)
+        self.btn2_layout = QVBoxLayout()
+        self.btn2_layout.addWidget(self.btn_cancel, alignment=Qt.AlignBottom)
+        self.btn2_layout.addWidget(self.btn_confirm, alignment=Qt.AlignBottom)
+        self.btn2_layout.addStretch(1)
+        self.btn_layout = QVBoxLayout()
+        self.btn_layout.addLayout(self.btn1_layout)
+        self.btn_layout.addLayout(self.btn2_layout)
+        # main layout
+        self.layout = QHBoxLayout(self)
+        self.layout.addWidget(self.order_list, alignment=Qt.AlignLeft)
+        self.layout.addLayout(self.btn_layout)
+        # init slots
+        self.btn_up.clicked.connect(self._up_pressed_handler)
+        self.btn_down.clicked.connect(self._down_pressed_handler)
+        self.btn_cancel.clicked.connect(self._cancel_pressed_handler)
+        self.btn_confirm.clicked.connect(self._confirm_pressed_handler)
+        # temp
+        self.semaphore: dict = None
+        self.result: list = None
+
+    def __call__(self, semaphore: dict):
+        self.semaphore = semaphore
+        self.initialize_semaphore()
+        self.exec()
+        return self.result
+
+    def initialize_semaphore(self):
+        # load items into list widget.
+        self.order_list.clear()
+        for key, vn_item in self.semaphore.items():
+            self.order_list.addItem(
+                _ArgIOOrderPanelListItem(vn_item.value, key=key)
+            )
+
+    def _up_pressed_handler(self):
+        # selected or first item
+        idx = self.order_list.currentRow()
+        if idx > 0:
+            item = self.order_list.takeItem(idx)
+            self.order_list.insertItem(idx - 1, item)
+            del item
+
+    def _down_pressed_handler(self):
+        idx = self.order_list.currentRow()
+        if idx < self.order_list.count() - 1:
+            item = self.order_list.takeItem(idx)
+            self.order_list.insertItem(idx + 1, item)
+            del item
+
+    def _cancel_pressed_handler(self):
+        # close and recover
+        self.close()
+        self.initialize_semaphore()
+        self.semaphore = None
+        self.result = None
+
+    def _confirm_pressed_handler(self):
+        # close and accept changes
+        self.close()
+        new_keys = []
+        for row in range(self.order_list.count()):
+            item = self.order_list.item(row)
+            new_keys.append(item.key)
+        self.result = new_keys
+        self.semaphore = None

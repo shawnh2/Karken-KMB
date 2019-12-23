@@ -67,6 +67,15 @@ S_ZOOM_OUT: 'lib/icon/other/sidebar/zoom_out.png'
 S_ZOOM_OUT_PRESS: lib/icon/other/sidebar/zoom_out_press.png
 S_LOCATE: 'lib/icon/other/sidebar/locate.png'
 S_LOCATE_PRESS: 'lib/icon/other/sidebar/locate_press.png'
+S_ORGANIZE: 'lib/icon/other/sidebar/organize.png'
+S_ORGANIZE_PRESS: 'lib/icon/other/sidebar/organize_press.png'
 
 # for search bar icon
 C_CLEAR: 'lib/icon/other/clear.png'
+
+# for mini buttons
+MINI_UP: 'lib/icon/other/minibtn/up.png'
+MINI_DOWN: 'lib/icon/other/minibtn/down.png'
+MINI_REMOVE: 'lib/icon/other/minibtn/remove.png'
+MINI_CANCEL: 'lib/icon/other/minibtn/cancel.png'
+MINI_CONFIRM: 'lib/icon/other/minibtn/confirm.png'
