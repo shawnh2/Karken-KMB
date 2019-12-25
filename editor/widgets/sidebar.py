@@ -7,15 +7,16 @@ from cfg import icon
 
 class KMBViewSideBar(QWidget):
     """ The side floating button of editor view. """
-    # todo: locate function.
 
-    LOCK_WHEEL = pyqtSignal(bool)
-    ZOOM_IN = pyqtSignal(bool)   # to view
-    ZOOM_OUT = pyqtSignal(bool)  # to view
+    LOCK_WHEEL = pyqtSignal(bool)      # to view
+    ZOOM_IN = pyqtSignal(bool)         # to view
+    ZOOM_OUT = pyqtSignal(bool)        # to view
+    NODE_ORGANIZE = pyqtSignal(bool)   # to view
+    NODE_LOCATE = pyqtSignal(bool)     # to view
 
     def __init__(self, parent):
         super().__init__(parent)
-        self.w = 185
+        self.w = 200
         self.h = 65
         self.x = 0
         self.y = 0
@@ -41,11 +42,16 @@ class KMBViewSideBar(QWidget):
             icon['S_LOCATE'], 'Locating', self,
             btn_pressed_img=icon['S_LOCATE_PRESS']
         )
+        self.auto_organize_btn = SideBarButton(
+            icon['S_ORGANIZE'], 'Organize All Nodes', self,
+            btn_pressed_img=icon['S_ORGANIZE_PRESS']
+        )
         # setup sidebar body
         self.inner_layout.addWidget(self.lock_roll_btn)
         self.inner_layout.addWidget(self.zoom_in_btn)
         self.inner_layout.addWidget(self.zoom_out_btn)
         self.inner_layout.addWidget(self.auto_locate_btn)
+        self.inner_layout.addWidget(self.auto_organize_btn)
         # setup ui
         self.setFixedSize(self.w, self.h)
         # setup actions
@@ -53,6 +59,8 @@ class KMBViewSideBar(QWidget):
         self.lock_roll_btn.pressed.connect(self.lock_roll_pressed)
         self.zoom_in_btn.pressed.connect(self.zoom_in_pressed)
         self.zoom_out_btn.pressed.connect(self.zoom_out_pressed)
+        self.auto_locate_btn.pressed.connect(self.auto_locate_pressed)
+        self.auto_organize_btn.pressed.connect(self.auto_organize_pressed)
 
     def update_pos(self, width: int, height: int):
         self.x = width/2 - self.w/2
@@ -72,6 +80,14 @@ class KMBViewSideBar(QWidget):
 
     def zoom_out_pressed(self):
         self.ZOOM_OUT.emit(True)
+
+    def auto_locate_pressed(self):
+        # move view to selected node center.
+        self.NODE_LOCATE.emit(True)
+
+    def auto_organize_pressed(self):
+        # organize and align all the nodes automatically.
+        self.NODE_ORGANIZE.emit(True)
 
     def slide_in_animation(self):
         self.on_display = True

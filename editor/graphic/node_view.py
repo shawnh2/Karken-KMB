@@ -11,6 +11,7 @@ from editor.component.edge_type import KMBGraphicEdgeBezier, KMBGraphicEdgeDirec
 from editor.component.messages import PopMessageBox
 from editor.widgets.sidebar import KMBViewSideBar
 from editor.widgets.search_bar import KMBSearchBar
+from editor.threads import OrganizeThread
 
 from cfg import icon, EDGE_CURVES, EDGE_DIRECT
 from lib import debug
@@ -122,6 +123,7 @@ class KMBNodeGraphicView(QGraphicsView):
         self.sidebar.LOCK_WHEEL.connect(self.set_wheel_disable)
         self.sidebar.ZOOM_IN.connect(self.set_one_zoom_in)
         self.sidebar.ZOOM_OUT.connect(self.set_one_zoom_out)
+        self.sidebar.NODE_ORGANIZE.connect(self.organize_nodes)
 
     # ------------------MODE--------------------
 
@@ -656,3 +658,7 @@ class KMBNodeGraphicView(QGraphicsView):
         )
         self.has_pressed_zoom_btn = True
         self.wheelEvent(fake_wheel_event)
+
+    def organize_nodes(self):
+        # start organize nodes pos in another thread.
+        OrganizeThread(self.gr_scene.scene.history.nodes)()

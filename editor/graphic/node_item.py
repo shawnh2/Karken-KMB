@@ -1,8 +1,10 @@
 from PyQt5.QtWidgets import (QGraphicsItem, QGraphicsPixmapItem,
                              QMenu, QAction, QInputDialog, QApplication)
 from PyQt5.QtGui import QPixmap, QCursor, QIcon
+from PyQt5.QtCore import Qt, QPropertyAnimation, QPointF, QEasingCurve
 
 from editor.graphic.node_text import KMBNodeTextItem
+from editor.component.attrs_manager import GrPosManager
 from lib import debug, write_custom_pin, update_custom_pin
 from cfg import NODE_ICONx85_PATH, NODE_ICONx120_PATH, icon
 
@@ -49,10 +51,16 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         # text around item
         self.text = KMBNodeTextItem(self.name, self, self.height)
 
+        # manager of pos attr, used only for animate.
+        self.pos_manager = GrPosManager(self.pos())
+        self.pos_manager.POS_CHANGED.connect(self.setPos)
+
         self.setPixmap(self.pix)
         self.setFlag(QGraphicsItem.ItemIsSelectable)
         self.setFlag(QGraphicsItem.ItemIsMovable)
         self.setAcceptHoverEvents(True)
+        self.setTransformationMode(Qt.SmoothTransformation)
+        self.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
 
     def __repr__(self):
         return f"<NodeGrItem {self.name} {id(self)}>"
@@ -60,6 +68,18 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
     def set_pos(self, x, y):
         dis = self.width / 2
         self.setPos(x - dis, y - dis)
+
+    def move_to_pos(self, x: float, y: float):
+        # move node to one pos with animation.
+        # call by organize thread in athreads.
+        move = QPropertyAnimation(self.pos_manager, b'pos', self.pos_manager)
+        move.setDuration(600)
+        move.setStartValue(self.pos())
+        move.setEndValue(QPointF(x, y))
+        move.setEasingCurve(QEasingCurve.OutQuart)
+        # also update the edges that connect with.
+        move.valueChanged.connect(self.node.update_connect_edges)
+        move.start()
 
     def is_modified(self):
         # send self modified state.
