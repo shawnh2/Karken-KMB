@@ -172,6 +172,7 @@ class KMBNodesArgsMenu(QTableView):
         if key is not None:
             model = self.edit_model.get(btn.model_id)
             model.io_semaphore.order(key, io_type=btn.io_type)
+            self.is_modified()
 
     # ------Operations on Node Model------
 

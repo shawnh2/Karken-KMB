@@ -16,6 +16,7 @@ class KMBHistoryStack(QUndoStack):
         self.gr_scene = gr_scene
         self.args_menu = args_menu
         self.counter = Counter()
+        self.setUndoLimit(30)
 
     @property
     def nodes(self):

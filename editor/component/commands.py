@@ -245,3 +245,7 @@ class GroupDeleteCmd:
     """ Has been tear down to several signal Delete command.
     For example, delete one node will also delete the edge(s) that connected with.
     But undo that, first undo the deleted node, then undo the deleted edge(s). """
+
+
+class ModelIOOrderChanged:
+    pass

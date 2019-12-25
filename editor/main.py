@@ -5,7 +5,7 @@ from editor.widgets.about import AboutKMB
 from editor.widgets.forms import ExportFormDialog
 from editor.widgets.node_editor import MainNodeEditor
 from editor.component.messages import PopMessageBox
-from editor.component.pthreads import SavingThread, LoadingThread
+from editor.threads import SavingThread, LoadingThread
 from cfg import icon, tips
 
 

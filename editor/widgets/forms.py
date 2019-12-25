@@ -1,10 +1,10 @@
 from PyQt5.QtWidgets import (QFormLayout, QDialog, QHBoxLayout, QMessageBox, QFileDialog,
-                             QLineEdit, QPushButton, QComboBox, QLabel, QTextEdit, QListView)
+                             QLineEdit, QPushButton, QComboBox, QLabel, QTextEdit)
 from PyQt5.QtGui import QIcon, QPixmap, QFont
 from PyQt5.QtCore import Qt
 
 from cfg import EXPORT_SUPPORT, icon
-from editor.component.pthreads import ExportThread
+from editor.threads import ExportThread
 from editor.component.messages import PopMessageBox
 
 
