@@ -3,6 +3,16 @@ import sqlite3
 from lib import split_args_id
 
 
+def blur_query(key_word: str) -> list:
+    # blur query in database.
+    db = sqlite3.connect('lib/node.db')
+    cursor = db.cursor()
+    query = cursor.execute(
+        f"SELECT NAME, INFO, SORT, CATEGORY FROM nodes WHERE NAME LIKE '%{key_word}%'"
+    )
+    return query.fetchall()
+
+
 class DataBase4Args:
     """ Get arguments from Database. """
 

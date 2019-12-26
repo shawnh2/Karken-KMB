@@ -1,13 +1,17 @@
-from PyQt5.QtWidgets import QLineEdit, QAction, QWidget, QVBoxLayout, QListWidget, QListWidgetItem
-from PyQt5.QtCore import QPropertyAnimation, QPoint, QEasingCurve, Qt, QSize, pyqtSignal
-from PyQt5.QtGui import QIcon
+from typing import Generator
 
-from cfg import SS_SEARCH, icon
+from PyQt5.QtWidgets import (QLineEdit, QAction, QWidget, QVBoxLayout, QApplication,
+                             QHBoxLayout, QListWidget, QListWidgetItem, QLabel, QScrollArea)
+from PyQt5.QtCore import QPropertyAnimation, QPoint, QEasingCurve, Qt, QSize, pyqtSignal
+from PyQt5.QtGui import QIcon, QPixmap, QFont
+
+from cfg import SS_SEARCH, icon, NODE_ICONx85_PATH
 from lib import load_stylesheet
+from editor.threads import SearchingThread
 from editor.component.delay_timer import DelayedTimer
 
 
-QUERY_HEIGHT = 50
+QUERY_HEIGHT = 70
 
 
 class KMBSearchBar(QWidget):
@@ -33,22 +37,27 @@ class KMBSearchBar(QWidget):
         self.layout.addWidget(self.search_line, alignment=Qt.AlignTop)
         self.layout.addWidget(self.search_body, alignment=Qt.AlignBottom)
         self.search_body.setHidden(True)
-        # init delay timer
+        # init delay timer and search thread
         self.delay_timer = DelayedTimer(self.search_line)
+        self.search_thread = SearchingThread()
         # init slots
         self.search_line.textChanged.connect(self.delay_timer.trigger)
         self.delay_timer.triggered.connect(self.do_query)
         self.search_line.FOCUS_ON_BODY.connect(self.focus_on_body)
         self.search_body.FOCUS_ON_LINE.connect(self.focus_on_line)
         # init ui
-        self.setFixedHeight(50)
+        self.setFixedHeight(self.h)
         self.setStyleSheet(load_stylesheet(SS_SEARCH))
 
     def do_query(self, query_str: str):
         # begin search and updates browser body.
-        query_count = len(query_str)
-        # todo: search thread
-        self.update_height(query_count)
+        if not query_str:
+            self.recover()
+        else:
+            count = self.search_thread.search(query_str)
+            gen = self.search_thread.fetchall()
+            self.search_body.feed_items(gen)
+            self.update_height(count)
 
     def update_size(self, width: int, height: int):
         self.w = int(width * self.width_ratio)
@@ -62,14 +71,14 @@ class KMBSearchBar(QWidget):
 
     def update_height(self, count: int):
         if count == 0:
-            self.search_body.setHidden(True)
-            self.setFixedHeight(self.h)
+            self.recover()
         else:
             body_height = (count + 1) * QUERY_HEIGHT
-            if not body_height > self.max_body_h:
-                self.search_body.setHidden(False)
-                self.search_body.setFixedHeight(body_height)
-                self.setFixedHeight(self.h + body_height + self.margin_bottom)
+            if body_height > self.max_body_h:
+                body_height = self.max_body_h
+            self.search_body.setHidden(False)
+            self.search_body.setFixedHeight(body_height)
+            self.setFixedHeight(self.h + body_height + self.margin_bottom)
 
     def slide_in_animation(self):
         # pre-actions
@@ -104,6 +113,11 @@ class KMBSearchBar(QWidget):
 
     def focus_on_line(self):
         self.search_line.setFocus()
+
+    def recover(self):
+        # back to where begins.
+        self.search_body.setHidden(True)
+        self.setFixedHeight(self.h)
 
 
 class KMBSearchBarLineEdit(QLineEdit):
@@ -149,18 +163,11 @@ class KMBSearchBrowserBody(QListWidget):
     def __init__(self, parent):
         super().__init__(parent)
         self.setIconSize(QSize(32, 32))
-
-        self.addItem(KMBSearchBrowserBodyItem('All Results'))  # todo: this item is not selectable
-        self.addItem(KMBSearchBrowserBodyItem('test1', icon['S_LOCK']))
-        self.addItem(KMBSearchBrowserBodyItem('test2', icon['S_LOCK']))
-        self.addItem(KMBSearchBrowserBodyItem('test3', icon['S_LOCK']))
-        self.addItem(KMBSearchBrowserBodyItem('test4', icon['S_LOCK']))
-
-        # setup ui
         self.setViewMode(QListWidget.ListMode)
         self.setMovement(QListWidget.Static)
         self.setItemAlignment(Qt.AlignCenter)
         self.setAlternatingRowColors(True)
+        self._width = self.width()
 
     def focusOutEvent(self, event):
         self.clearSelection()
@@ -177,28 +184,109 @@ class KMBSearchBrowserBody(QListWidget):
                 self.FOCUS_ON_LINE.emit(True)
             else:
                 super().keyPressEvent(event)
+        elif event.key() in (Qt.Key_Return, Qt.Key_Enter):
+            self.enter_item()
         else:
             event.ignore()
 
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        # update item size hint when width changed.
+        if self._width != self.width():
+            self._width = self.width()
+            for i in range(self.count()):
+                item = self.item(i)
+                item.setSizeHint(QSize(self._width, QUERY_HEIGHT))
+        else:
+            pass
+
+    def mouseDoubleClickEvent(self, event):
+        # actions on selected item.
+        self.enter_item()
+
     def slide_in_actions(self):
         # clean.
-        pass
+        self.clear()
 
     def slide_out_actions(self):
         # disappear.
         self.setHidden(True)
 
+    def feed_items(self, items_gen: Generator):
+        # clean first.
+        self.clear()
+        # show the result items.
+        for item, from_idx, step in items_gen:
+            real_item = KMBCustomQueryItem(
+                header=f'<b>{item[0]}</b> - {item[3]}',
+                sub_text=item[1],
+                icon_path=NODE_ICONx85_PATH.format(item[2], item[0]),
+                key_word_selection=(from_idx, step)
+            )
+            fake_item = QListWidgetItem(self)
+            fake_item.setSizeHint(QSize(self.width(), QUERY_HEIGHT))
+            self.addItem(fake_item)
+            self.setItemWidget(fake_item, real_item)
 
-class KMBSearchBrowserBodyItem(QListWidgetItem):
+    def enter_item(self):
+        # actions after choosing one item.
+        pass
+
+
+class KMBCustomQueryItem(QWidget):
     """ The query item of search body. """
 
-    def __init__(self, text: str, icon_path: str = None):
-        super().__init__()
-        self.setText(text)
-        if icon_path:
-            self.setIcon(QIcon(icon_path))
-            self.setSizeHint(QSize(200, QUERY_HEIGHT))
-            self.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+    def __init__(self,
+                 header: str,
+                 sub_text: str,
+                 icon_path: str = None,
+                 parent=None,
+                 key_word_selection: tuple = None):
+        super().__init__(parent)
+        self.setFixedHeight(QUERY_HEIGHT)
+        # init layouts
+        self.main_layout = QHBoxLayout(self)
+        self.text_layout = QVBoxLayout()
+        # init widgets
+        # main header
+        self.header = QLabel(header)
+        if key_word_selection is not None:
+            self.header.setSelection(*key_word_selection)
+        # scroll sub header
+        self.sub_text = ScrollableLabel(sub_text)
+        # icon placeholder
+        self.icon = QLabel()
+        self.init_icon(icon_path)
+        # combine
+        self.text_layout.addWidget(self.header, alignment=Qt.AlignLeft)
+        self.text_layout.addWidget(self.sub_text, alignment=Qt.AlignLeft)
+        self.main_layout.addWidget(self.icon, alignment=Qt.AlignLeft)
+        self.main_layout.addLayout(self.text_layout)
+        self.main_layout.addStretch(-1)
+
+    def init_icon(self, icon_path):
+        # set compatible
+        pix = QPixmap(icon_path)
+        ratio = QApplication.desktop().screen().devicePixelRatio()
+        if ratio == 1:
+            pass
         else:
-            self.setSelected(False)
-            self.setTextAlignment(1)
+            pix.setDevicePixelRatio(ratio)
+        self.icon.setPixmap(pix)
+
+
+class ScrollableLabel(QScrollArea):
+    """ Scrollable text label. """
+    def __init__(self, text: str, parent=None):
+        super().__init__(parent)
+        # init content
+        self.font = QFont()
+        self.font.setPointSize(10)
+        self.label = QLabel(text)
+        self.label.setFont(self.font)
+        self.label.setEnabled(False)
+        self.label.setStyleSheet("background: transparent")
+        # init self
+        self.setWidget(self.label)
+        self.setWidgetResizable(True)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)

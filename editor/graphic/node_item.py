@@ -80,6 +80,7 @@ class KMBNodeGraphicItem(QGraphicsPixmapItem):
         # also update the edges that connect with.
         move.valueChanged.connect(self.node.update_connect_edges)
         move.start()
+        self.is_modified()
 
     def is_modified(self):
         # send self modified state.

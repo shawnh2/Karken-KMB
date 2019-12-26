@@ -1,10 +1,10 @@
-""" Some animation threads """
+""" Animation threads """
 from PyQt5.QtCore import QThread, QPointF
 
 from cfg import SCENE_WIDTH, SCENE_HEIGHT
 
 
-class OrganizeThread(QThread):
+class OrganizingThread(QThread):
     """ A thread for organizing the nodes pos.
     Basically, split one scene into matrix, and
     change the node pos to the nearest cell center. """
@@ -59,3 +59,17 @@ class OrganizeThread(QThread):
         sx = x - self.map_center_x
         sy = self.map_center_y - y
         return sx, sy
+
+
+class LocatingThread(QThread):
+    """ A thread for locating node,
+    and move view center to its pos. """
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def __call__(self):
+        self.run()
+
+    def run(self):
+        pass

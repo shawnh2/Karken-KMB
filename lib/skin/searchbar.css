@@ -23,5 +23,11 @@
 }
 
 .KMBSearchBrowserBody::item:selected {
-    background: #ff5336;
+    selection-background-color: #ff7351;
+    selection-color: white;
+}
+
+.ScrollableLabel {
+    border: none;
+    background-color: transparent;
 }
