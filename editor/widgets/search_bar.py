@@ -7,7 +7,6 @@ from PyQt5.QtGui import QIcon, QPixmap, QFont
 
 from cfg import SS_SEARCH, icon, NODE_ICONx85_PATH
 from lib import load_stylesheet
-from editor.threads import SearchingThread
 from editor.component.delay_timer import DelayedTimer
 
 
@@ -16,7 +15,7 @@ QUERY_HEIGHT = 70
 
 class KMBSearchBar(QWidget):
 
-    def __init__(self, parent):
+    def __init__(self, parent, search_thread):
         super().__init__(parent)
         # common
         self.h = 50  # read only
@@ -36,15 +35,17 @@ class KMBSearchBar(QWidget):
         self.search_body = KMBSearchBrowserBody(self)
         self.layout.addWidget(self.search_line, alignment=Qt.AlignTop)
         self.layout.addWidget(self.search_body, alignment=Qt.AlignBottom)
-        self.search_body.setHidden(True)
+        self.search_body.close()
         # init delay timer and search thread
         self.delay_timer = DelayedTimer(self.search_line)
-        self.search_thread = SearchingThread()
+        self.search_thread = search_thread
         # init slots
         self.search_line.textChanged.connect(self.delay_timer.trigger)
         self.delay_timer.triggered.connect(self.do_query)
         self.search_line.FOCUS_ON_BODY.connect(self.focus_on_body)
+        self.search_line.PRESS_ENTER.connect(self.do_query)
         self.search_body.FOCUS_ON_LINE.connect(self.focus_on_line)
+        self.search_body.ENTER_NEW_ITEM.connect(self.recover)
         # init ui
         self.setFixedHeight(self.h)
         self.setStyleSheet(load_stylesheet(SS_SEARCH))
@@ -55,8 +56,10 @@ class KMBSearchBar(QWidget):
             self.recover()
         else:
             count = self.search_thread.search(query_str)
-            gen = self.search_thread.fetchall()
-            self.search_body.feed_items(gen)
+            generator = self.search_thread.fetchall()
+            candies = self.search_thread.fetch_candies()
+            self.search_body.feed_items(generator)
+            self.search_body.feed_candies(candies)
             self.update_height(count)
 
     def update_size(self, width: int, height: int):
@@ -76,7 +79,7 @@ class KMBSearchBar(QWidget):
             body_height = (count + 1) * QUERY_HEIGHT
             if body_height > self.max_body_h:
                 body_height = self.max_body_h
-            self.search_body.setHidden(False)
+            self.search_body.show()
             self.search_body.setFixedHeight(body_height)
             self.setFixedHeight(self.h + body_height + self.margin_bottom)
 
@@ -98,6 +101,7 @@ class KMBSearchBar(QWidget):
         self.on_display = False
         self.search_line.slide_out_actions()
         self.search_body.slide_out_actions()
+        self.recover()
         # animation
         slide_out = QPropertyAnimation(self, b'pos', self)
         slide_out.setDuration(self.slide_duration)
@@ -116,7 +120,8 @@ class KMBSearchBar(QWidget):
 
     def recover(self):
         # back to where begins.
-        self.search_body.setHidden(True)
+        self.search_body.clear()
+        self.search_body.close()
         self.setFixedHeight(self.h)
 
 
@@ -124,6 +129,7 @@ class KMBSearchBarLineEdit(QLineEdit):
     """ The input line of search bar. """
 
     FOCUS_ON_BODY = pyqtSignal(bool)
+    PRESS_ENTER = pyqtSignal(str)
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -139,6 +145,8 @@ class KMBSearchBarLineEdit(QLineEdit):
         # down key will change focus to browser body.
         if event.key() == Qt.Key_Down:
             self.FOCUS_ON_BODY.emit(True)
+        elif event.key() in (Qt.Key_Enter, Qt.Key_Return):
+            self.PRESS_ENTER.emit(self.text())
         else:
             super().keyPressEvent(event)
 
@@ -159,6 +167,7 @@ class KMBSearchBrowserBody(QListWidget):
     """ The output results of search bar. """
 
     FOCUS_ON_LINE = pyqtSignal(bool)
+    ENTER_NEW_ITEM = pyqtSignal(str, str, str, str)  # name, sort, category, args
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -168,6 +177,7 @@ class KMBSearchBrowserBody(QListWidget):
         self.setItemAlignment(Qt.AlignCenter)
         self.setAlternatingRowColors(True)
         self._width = self.width()
+        self._candies: (int, str) = None  # like cookies, but carrying something else.
 
     def focusOutEvent(self, event):
         self.clearSelection()
@@ -209,8 +219,7 @@ class KMBSearchBrowserBody(QListWidget):
         self.clear()
 
     def slide_out_actions(self):
-        # disappear.
-        self.setHidden(True)
+        pass
 
     def feed_items(self, items_gen: Generator):
         # clean first.
@@ -218,45 +227,48 @@ class KMBSearchBrowserBody(QListWidget):
         # show the result items.
         for item, from_idx, step in items_gen:
             real_item = KMBCustomQueryItem(
-                header=f'<b>{item[0]}</b> - {item[3]}',
-                sub_text=item[1],
-                icon_path=NODE_ICONx85_PATH.format(item[2], item[0]),
-                key_word_selection=(from_idx, step)
+                *item, key_word_selection=(from_idx, step)
             )
             fake_item = QListWidgetItem(self)
             fake_item.setSizeHint(QSize(self.width(), QUERY_HEIGHT))
             self.addItem(fake_item)
             self.setItemWidget(fake_item, real_item)
 
+    def feed_candies(self, candies: (int, str)):
+        self._candies = candies
+
     def enter_item(self):
         # actions after choosing one item.
-        pass
+        item = self.itemWidget(self.currentItem())
+        for _ in range(self._candies[0]):
+            self.ENTER_NEW_ITEM.emit(item.name, item.sort, item.category, self._candies[1])
+        # eat all the candies after entering.
+        self._candies = None
 
 
 class KMBCustomQueryItem(QWidget):
     """ The query item of search body. """
 
     def __init__(self,
-                 header: str,
-                 sub_text: str,
-                 icon_path: str = None,
+                 *args: str,
                  parent=None,
                  key_word_selection: tuple = None):
         super().__init__(parent)
+        self.name, self.info, self.sort, self.category = args
         self.setFixedHeight(QUERY_HEIGHT)
         # init layouts
         self.main_layout = QHBoxLayout(self)
         self.text_layout = QVBoxLayout()
         # init widgets
         # main header
-        self.header = QLabel(header)
+        self.header = QLabel(f'<b>{self.name}</b> - {self.category}')
         if key_word_selection is not None:
             self.header.setSelection(*key_word_selection)
         # scroll sub header
-        self.sub_text = ScrollableLabel(sub_text)
+        self.sub_text = ScrollableLabel(self.info)
         # icon placeholder
         self.icon = QLabel()
-        self.init_icon(icon_path)
+        self.init_icon()
         # combine
         self.text_layout.addWidget(self.header, alignment=Qt.AlignLeft)
         self.text_layout.addWidget(self.sub_text, alignment=Qt.AlignLeft)
@@ -264,9 +276,9 @@ class KMBCustomQueryItem(QWidget):
         self.main_layout.addLayout(self.text_layout)
         self.main_layout.addStretch(-1)
 
-    def init_icon(self, icon_path):
+    def init_icon(self):
         # set compatible
-        pix = QPixmap(icon_path)
+        pix = QPixmap(NODE_ICONx85_PATH.format(self.sort, self.name))
         ratio = QApplication.desktop().screen().devicePixelRatio()
         if ratio == 1:
             pass

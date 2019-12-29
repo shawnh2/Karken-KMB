@@ -10,8 +10,7 @@ from editor.wrapper.wrap_edge import KMBEdge
 from editor.component.edge_type import KMBGraphicEdgeBezier, KMBGraphicEdgeDirect
 from editor.component.messages import PopMessageBox
 from editor.widgets.sidebar import KMBViewSideBar
-from editor.widgets.search_bar import KMBSearchBar
-from editor.threads import OrganizeThread
+from editor.threads import OrganizingThread, LocatingThread, SearchBarThread
 
 from cfg import icon, EDGE_CURVES, EDGE_DIRECT
 from lib import debug
@@ -68,7 +67,7 @@ class KMBNodeGraphicView(QGraphicsView):
         self.gr_scene = graphic_scene
         self.status_bar_msg = status_bar_msg
         self.sidebar = KMBViewSideBar(self)
-        self.search_bar = KMBSearchBar(self)
+        self.search_bar = SearchBarThread(self)
         self.parent = parent
         self.del_items_msg = PopMessageBox('Delete items', self)
 
@@ -120,10 +119,12 @@ class KMBNodeGraphicView(QGraphicsView):
         self.setContextMenuPolicy(Qt.DefaultContextMenu)
 
     def init_slots(self):
+        # init slots from sidebar.
         self.sidebar.LOCK_WHEEL.connect(self.set_wheel_disable)
         self.sidebar.ZOOM_IN.connect(self.set_one_zoom_in)
         self.sidebar.ZOOM_OUT.connect(self.set_one_zoom_out)
         self.sidebar.NODE_ORGANIZE.connect(self.organize_nodes)
+        self.sidebar.NODE_LOCATE.connect(self.locating_node)
 
     # ------------------MODE--------------------
 
@@ -279,8 +280,8 @@ class KMBNodeGraphicView(QGraphicsView):
                 self.set_note_mode()
             elif event.key() == Qt.Key_Escape:
                 # it can bring back the search bar.
-                if self.search_bar.on_display:
-                    self.search_bar.slide_out_animation()
+                if self.search_bar.is_display():
+                    self.search_bar(self.search_bar.cb_slide_out)
         super().keyPressEvent(event)
 
     def contextMenuEvent(self, event):
@@ -295,7 +296,7 @@ class KMBNodeGraphicView(QGraphicsView):
         w = event.size().width()
         h = event.size().height()
         self.sidebar.update_pos(w, h)
-        self.search_bar.update_size(w, h)
+        self.search_bar((self.search_bar.cb_set_size, w, h))
 
     # ------------------EVENT--------------------
 
@@ -418,16 +419,25 @@ class KMBNodeGraphicView(QGraphicsView):
 
     # ------------------OPERATIONS--------------------
 
-    def add_node(self):
-        # add new node
+    def add_node(self, *args):
+        # add new node, args is feeding from search bar.
         self.is_modified()
-        x, y = self.get_last_xy()
+        if args:
+            self.current_node_item_name = args[0]
+            self.current_node_item_sort = args[1]
+            self.current_node_item_type = args[2]
+            self.current_node_pin_id = None
+            self.current_node_pin_args = args[3]
+            x, y = args[4]
+        else:
+            x, y = self.get_last_xy()
         node = KMBNodeItem(self.gr_scene,
                            self.current_node_item_name,
                            self.current_node_item_type,
                            self.current_node_item_sort,
                            self.current_node_pin_id,
                            self.parent)
+        node.set_pos(x, y)
         # add into scene and get count of nodes.
         self.gr_scene.scene.add_node(node)
         count = self.gr_scene.scene.get_node_count(node.gr_name)
@@ -437,7 +447,6 @@ class KMBNodeGraphicView(QGraphicsView):
                                     count, str(self.current_node_pin_args))
         self.status_bar_msg(f'Add: {self.current_node_item_name} node.')
         self.drop_received_pin()
-        node.set_pos(x, y)
 
     def add_note(self):
         # add note in scene.
@@ -580,10 +589,10 @@ class KMBNodeGraphicView(QGraphicsView):
         self.current_node_pin_args = None
 
     def bring_search_bar(self):
-        if self.search_bar.on_display:
-            self.search_bar.slide_out_animation()
+        if self.search_bar.is_display():
+            self.search_bar(self.search_bar.cb_slide_out)
         else:
-            self.search_bar.slide_in_animation()
+            self.search_bar(self.search_bar.cb_slide_in)
 
     def get_item_at_click(self, event):
         """ Return the object that clicked on. """
@@ -660,5 +669,10 @@ class KMBNodeGraphicView(QGraphicsView):
         self.wheelEvent(fake_wheel_event)
 
     def organize_nodes(self):
-        # start organize nodes pos in another thread.
-        OrganizeThread(self.gr_scene.scene.history.nodes)()
+        # start organizing nodes in another thread.
+        OrganizingThread(self.gr_scene.scene.history.nodes)()
+
+    def locating_node(self):
+        # locating node to center with animation in another thread.
+        # LocatingThread()()
+        pass

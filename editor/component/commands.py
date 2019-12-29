@@ -249,3 +249,7 @@ class GroupDeleteCmd:
 
 class ModelIOOrderChanged:
     pass
+
+
+class OrganizeNodesCmd:
+    pass
