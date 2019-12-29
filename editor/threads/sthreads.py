@@ -63,6 +63,7 @@ class SearchBarThread(QThread):
 
 
 class SearchingThread(QThread):
+    """ A thread only for searching process. """
 
     def __init__(self, parent=None):
         super().__init__(parent)

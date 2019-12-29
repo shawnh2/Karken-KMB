@@ -10,7 +10,7 @@ from editor.wrapper.wrap_edge import KMBEdge
 from editor.component.edge_type import KMBGraphicEdgeBezier, KMBGraphicEdgeDirect
 from editor.component.messages import PopMessageBox
 from editor.widgets.sidebar import KMBViewSideBar
-from editor.threads import OrganizingThread, LocatingThread, SearchBarThread
+from editor.threads import OrganizingThread, SearchBarThread
 
 from cfg import icon, EDGE_CURVES, EDGE_DIRECT
 from lib import debug
@@ -124,7 +124,7 @@ class KMBNodeGraphicView(QGraphicsView):
         self.sidebar.ZOOM_IN.connect(self.set_one_zoom_in)
         self.sidebar.ZOOM_OUT.connect(self.set_one_zoom_out)
         self.sidebar.NODE_ORGANIZE.connect(self.organize_nodes)
-        self.sidebar.NODE_LOCATE.connect(self.locating_node)
+        self.sidebar.NODE_LOCATE.connect(self.locating_center)
 
     # ------------------MODE--------------------
 
@@ -672,7 +672,8 @@ class KMBNodeGraphicView(QGraphicsView):
         # start organizing nodes in another thread.
         OrganizingThread(self.gr_scene.scene.history.nodes)()
 
-    def locating_node(self):
-        # locating node to center with animation in another thread.
-        # LocatingThread()()
-        pass
+    def locating_center(self):
+        # locating to view center.
+        self.centerOn(0, 0)
+        item = self.grab()
+        item.save('test/test.png')

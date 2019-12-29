@@ -26,7 +26,8 @@ class KMBArgsMenu(Serializable):
                 get_referenced=True,
                 get_required=True,
                 get_datatype=True,
-                get_io=True
+                get_io=True,
+                get_pined=True
             )
             var_names_dict[node_id] = model.var_name
         return args_dict, var_names_dict

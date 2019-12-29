@@ -39,7 +39,7 @@ class KMBViewSideBar(QWidget):
             btn_pressed_img=icon['S_ZOOM_OUT_PRESS']
         )
         self.auto_locate_btn = SideBarButton(
-            icon['S_LOCATE'], 'Locating', self,
+            icon['S_LOCATE'], 'Locate to Center', self,
             btn_pressed_img=icon['S_LOCATE_PRESS']
         )
         self.auto_organize_btn = SideBarButton(
