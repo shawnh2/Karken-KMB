@@ -11,7 +11,7 @@ class SearchBarThread(QThread):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.search_bar = KMBSearchBar(parent,
-                                       SearchingThread())
+                                       SearchingThread(parent))
         self.callbacks = []
         self.view = parent
         self.coords = [0, -300]
@@ -65,8 +65,8 @@ class SearchBarThread(QThread):
 class SearchingThread(QThread):
     """ A thread only for searching process. """
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, parent):
+        super().__init__(parent)  # view
         self.query_word: str = None
         self.query_results = []
         self.query_candies = None
@@ -124,7 +124,3 @@ class SearchingThread(QThread):
         # do query through database.
         # fields: name, info, sort, category
         self.query_results += blur_query(self.query_word)
-
-    def _query_stack(self):
-        # do query through history stack.
-        pass

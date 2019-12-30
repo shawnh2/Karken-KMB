@@ -34,7 +34,7 @@ UCP_LOC = 'user/'
 # Loading support export type
 EXPORT_SUPPORT = (
     'Python Code (*.py)',
-    'Screenshots (*.png)',
+    # 'Model Summary (*.png)',
 )
 
 # Loading configure for stylesheet

@@ -23,6 +23,7 @@ class KMBSearchBar(QWidget):
         self.x = 0
         self.y = 10  # read only
         self.max_body_h = 300
+        self.results_h = 40
         self.margin_bottom = 10
         self.on_display = False
         self.width_ratio = 0.60   # max
@@ -74,14 +75,15 @@ class KMBSearchBar(QWidget):
 
     def update_height(self, count: int):
         if count == 0:
-            self.recover()
+            self.search_body.setFixedHeight(self.results_h)
+            self.setFixedHeight(self.h + self.results_h + self.margin_bottom)
         else:
             body_height = (count + 1) * QUERY_HEIGHT
             if body_height > self.max_body_h:
                 body_height = self.max_body_h
-            self.search_body.show()
             self.search_body.setFixedHeight(body_height)
             self.setFixedHeight(self.h + body_height + self.margin_bottom)
+        self.search_body.show()
 
     def slide_in_animation(self):
         # pre-actions
@@ -224,8 +226,10 @@ class KMBSearchBrowserBody(QListWidget):
     def feed_items(self, items_gen: Generator):
         # clean first.
         self.clear()
+        count = 0
         # show the result items.
         for item, from_idx, step in items_gen:
+            count += 1
             real_item = KMBCustomQueryItem(
                 *item, key_word_selection=(from_idx, step)
             )
@@ -233,6 +237,8 @@ class KMBSearchBrowserBody(QListWidget):
             fake_item.setSizeHint(QSize(self.width(), QUERY_HEIGHT))
             self.addItem(fake_item)
             self.setItemWidget(fake_item, real_item)
+        # summary results at last.
+        self.addItem(f'   {count} results')
 
     def feed_candies(self, candies: (int, str)):
         self._candies = candies
@@ -240,6 +246,8 @@ class KMBSearchBrowserBody(QListWidget):
     def enter_item(self):
         # actions after choosing one item.
         item = self.itemWidget(self.currentItem())
+        if item is None:
+            return
         for _ in range(self._candies[0]):
             self.ENTER_NEW_ITEM.emit(item.name, item.sort, item.category, self._candies[1])
         # eat all the candies after entering.

@@ -675,5 +675,3 @@ class KMBNodeGraphicView(QGraphicsView):
     def locating_center(self):
         # locating to view center.
         self.centerOn(0, 0)
-        item = self.grab()
-        item.save('test/test.png')

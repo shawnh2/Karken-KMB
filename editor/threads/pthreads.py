@@ -41,8 +41,8 @@ class LoadingThread(QThread):
 
 class ExportThread(QThread):
 
-    FMT_PY = 0
-    FMT_SS_PNG = 1
+    FMT_PY = 0  # python code
+    FMT_MS = 1  # model summary
 
     def __init__(self, fmt: int, *args, parent):
         super().__init__()
@@ -83,8 +83,8 @@ class ExportThread(QThread):
         """
         if self.fmt == self.FMT_PY:
             res = self._run_fmt_py()
-        elif self.fmt == self.FMT_SS_PNG:
-            res = self._run_fmt_ss_png()
+        elif self.fmt == self.FMT_MS:
+            res = self._run_fmt_ms()
         # elif: add more here.
         else:
             res = ('', -1)  # invalid fmt.
@@ -96,6 +96,6 @@ class ExportThread(QThread):
         handler = PyHandler(parser, name, author, comment)
         return handler.export(dst)
 
-    def _run_fmt_ss_png(self):
+    def _run_fmt_ms(self):
         _, dst, name, author, _ = self.args
         return '', -1
